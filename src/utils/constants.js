@@ -1,0 +1,10 @@
+export const GET = "GET"
+export const POST = "POST"
+export const PATCH = "PATCH"
+export const DELETE = "DELETE"
+export const VER = "v1";
+export const MIN_CART_VALUE = "minCartValue"
+export const EXPRESS_DELIVERY_CHARGE= "expressDeliveryCharge"
+export const CLIENT_ID=process.env.REACT_APP_CLIENT_ID
+export const CLIENT_SECRET=process.env.REACT_APP_CLIENT_SECRET
+export const REACT_APP_GEO_LOCATION=process.env.REACT_APP_GEO_LOCATION

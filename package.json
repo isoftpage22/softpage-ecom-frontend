@@ -16,23 +16,26 @@
     "framer-motion": "^4.1.17",
     "js-cookie": "^2.2.1",
     "lodash": "^4.17.21",
-    "next": "^13.1.2",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
     "react-icons": "^4.2.0",
     "react-redux": "^7.2.4",
     "react-ripples": "^2.2.1",
     "react-router-config": "^5.1.1",
+    "react-router-dom": "^5.2.0",
+    "react-scripts": "4.0.3",
     "redux": "^4.1.0",
     "redux-saga": "^1.1.3",
     "ui-neumorphism": "^1.1.3",
     "web-vitals": "^1.1.2"
   },
   "scripts": {
-    
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start"
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "setup": "cp ./build/index.html ./build/404.html",
+    "publish": "npm run build && npm run setup && zip -r -X staging_fatie_20220125.zip ./build"
   },
   "eslintConfig": {
     "extends": [
