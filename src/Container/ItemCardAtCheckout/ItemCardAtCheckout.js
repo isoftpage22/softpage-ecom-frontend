@@ -1,6 +1,6 @@
 import { Flex,Box,Text, Spacer,Button } from '@chakra-ui/react'
 import React from 'react'
-import Card from '../../Components/card/Card'
+import Card from '../../Components/Card/Card'
 import { ChevronDownIcon } from '@chakra-ui/icons'
 
 const ItemCardAtCheckout = () => {
@@ -16,7 +16,7 @@ const ItemCardAtCheckout = () => {
           true ?
            <> 
            <Flex w="20%">
-            < Text p="0px" size="xs" fontSize="12px" variant="mutedCart">CUSTOMIZED</Text>
+            < Text p="0px" size="xs"  variant="ghost" fontSize="12px" variant="mutedCart">CUSTOMIZED</Text>
             <ChevronDownIcon size="sm" />
             </Flex>
           </> 
