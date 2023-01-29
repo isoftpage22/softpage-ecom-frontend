@@ -16,7 +16,7 @@ import {
 import { ArrowBackIcon } from '@chakra-ui/icons'
 import { MdLocalOffer } from "react-icons/md";
 import Ripples from 'react-ripples'
-import '../../Assets/CSS/ShoppingCart.css'
+// import '../../Assets/CSS/ShoppingCart.css'
 import BasicTextAndImageComponent from '../../Components/BasicTextAndImageComponent/BasicTextAndImageComponent'
 import HeaderOfOffersDrawer from './HeaderOfOffersDrawer'
 import BasicTextAndImageContainer from '../BasicTextAndImageContainer/BasicTextAndImageContainer';
