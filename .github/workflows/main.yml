@@ -24,4 +24,4 @@ jobs:
       with:
         credentials: ${{ secrets.GCP_SA_KEY }}
         source: build
-        destination: gs://your-gcs-bucket-name
+        destination: gs://softpage-fastie.appspot.com
