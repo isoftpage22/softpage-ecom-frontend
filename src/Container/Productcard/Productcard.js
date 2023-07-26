@@ -2,8 +2,10 @@ import { Box, Flex, Spacer, Text, useDisclosure, Button, Collapse, Image } from 
 import React from 'react'
 import Card from '../../Components/Card/Card'
 
-const ProductCard = () => {
+const ProductCard = (props) => {
+  const {product}=props
   const { isOpen, onToggle } = useDisclosure()
+  console.log('ProductCard',product)
   return (
     <>
       <Card>
@@ -12,7 +14,7 @@ const ProductCard = () => {
             <Box m="1px" w="4.4px" h="4.4px" bg="#EC1010" />
           </Box>
           <Text fontWeight="extrabold" variant="solid" maxW={60} color="gray.700">
-            {'Mac Aloo Tikki'}
+            {product?.productName??'God Knows'}
           </Text>
           <Flex alignItems="center">
             <Box alignSelf="center">₹</Box>
@@ -22,7 +24,7 @@ const ProductCard = () => {
           </Flex>
           <Collapse startingHeight={20} in={isOpen}>
             <Text fontSize="12px" w="90%" pt="3px" variant="outline">
-              Cooling and nutritious organic blueberries are a great combination with the spicy and heating jalapenos creating a balanced yet sophisticated flavour. Organic lime juice acts as an antidote to alcohol while reducing the heat in the drink.
+             {product?.productDesc}
             </Text>
           </Collapse>
           <Text w="220px" pt="3px" color="black" variant="outline" onClick={onToggle}>Show {isOpen ? "Less" : "More"}
@@ -32,7 +34,7 @@ const ProductCard = () => {
         <Flex flexDirection="column"   >
           <Image
             alignSelf="center"
-            src={'https://cdn.dotpe.in/reports/item/2992/McAloo_Tikki_Burger_png_png'}
+            src={Array.isArray(product?.productImages) && product?.productImages[0]?.productImageUrl}
             objectFit="cover"
             width="110px"
             height="75px"
