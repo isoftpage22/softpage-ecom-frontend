@@ -29,7 +29,7 @@ const Dashboard = (props) => {
                 </Suspense>
               </div>
               
-              <Footer />
+               <h1>Kuch bhi</h1>
             </div>
           </div>
         </body>

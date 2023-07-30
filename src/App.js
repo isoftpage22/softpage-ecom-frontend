@@ -34,7 +34,6 @@ const options = {
 const resolvePrivateRoutes = (routes) => {
   if (routes && Array.isArray(routes)) {
     return routes.map((route) => {
-      console.log(route,"routes")
       if (route.isPrivate) {
         route.render = (props) => (
           <PrivateRoute component={route.component} {...props} />
@@ -56,7 +55,6 @@ function App(props) {
   const { } = props;
   return (
     <>
-    {console.log(routes,"routes")}
     <Router history={history} basename={process.env.PUBLIC_URL}>
       {renderRoutes(resolvePrivateRoutes(routes))}
     </Router>

@@ -3,15 +3,20 @@ import React, { Fragment } from 'react';
 import { Link } from 'react-router-dom';
 import FooterCartDetail from '../../../Components/FooterCartDetail';
 
-const Footer = props => {
+const Footer = (props) => {
     // props.productList
     // productList && productList.data.map(product => {
     //     const cartProduct = addToCart && addToCart.products.filter((cart)=>cart.product_id===product.id)
     // });
-   
-    const qty = 0;
-    let price = 2;
-    let displayQty = 1;
+   console.log(props,"checkFooter")
+    const qty = props.addToCart && props.addToCart.products.length;
+    let price = 0;
+    let displayQty = 0;
+    props.addToCart && props.addToCart.products.map((product)=>{
+        price = Number(price) + Number(product.total_amount);
+        displayQty = Number(displayQty) + Number(product.quantity);
+        return price;
+    });
    
     return (
         <Fragment>
@@ -33,7 +38,7 @@ const Footer = props => {
                 <Text textColor="#9ea6b9" mb="5px">© 2021 Fastie</Text>
 
             </Flex>
-            {qty > 0 && <FooterCartDetail qty={displayQty} price={price} />}
+            {qty > 0 && <FooterCartDetail qty={qty} price={price} />}
         </Fragment>
     );
 

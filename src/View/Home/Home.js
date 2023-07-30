@@ -8,16 +8,22 @@ import { Box } from '@chakra-ui/layout';
 
 
 const Home = (props) => {
-  const {getProductsList,productList} =props
+  const {getProductsList,productList,addToCart,addToCartProduct,deleteToCartProduct} =props
    useEffect(() => {
     getProductsList()
    }, [])
+   console.log(props,"checkProps")
   return (
    <>
    <ProductPromotions/>
    <CurrentOffers/>
    <ToggleSwitch/>
-    <CategoryWithProducts productList={productList}/>
+    <CategoryWithProducts 
+     productList={productList} 
+     addToCart={addToCart}
+     addToCartProduct={addToCartProduct}
+     deleteToCartProduct={deleteToCartProduct}
+     />
    </>
   )
 }

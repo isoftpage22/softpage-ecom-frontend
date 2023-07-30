@@ -3,7 +3,7 @@ import React, { Suspense } from 'react'
 import { renderRoutes } from "react-router-config";
 import BackButtonHeader from '../../Components/BackButtonHeader/BackButtonHeader'
 import CommonTopBar from '../Components/CommonTopBar/CommonTopBar';
-import Footer from './Components/Footer/Footer';
+import Footer from './Components/Footer';
 const Fallback = () => {
   return <h1>Loading</h1>
 }
