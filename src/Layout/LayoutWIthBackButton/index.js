@@ -1,7 +1,7 @@
 import { connect } from 'react-redux';
 import { bindActionCreators } from "redux";
 import { get as _get } from "lodash";
-import UserProfile from './UserProfile';
+import LayoutWIthBackButton from './LayoutWIthBackButton';
 
 // import { getProductList ,getSearchProductList, resetSearchProductList} from '../../Store/action/product'
 // import { showToastMessage, setStartLoader, setStopLoader, resetToastMessage } from '../../Store/action/loader'
@@ -23,5 +23,5 @@ function mapDispatchToProps(dispatch) {
 export default connect(
     mapStateToProps,
     mapDispatchToProps
-)(UserProfile);
+)(LayoutWIthBackButton);
 
