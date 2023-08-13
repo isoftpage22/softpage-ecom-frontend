@@ -40,10 +40,10 @@ const shoppingCart = (state = INITIAL_STATE, action) => {
         if (productIndex !== -1) {
           stateProducts[productIndex].quantity =
             stateProducts[productIndex].quantity + 1;
-          stateProducts[productIndex].total_amount = (
+          stateProducts[productIndex].total_amount = Math.round(
             parseFloat(stateProducts[productIndex].total_amount) +
             parseFloat(productInfo.discountedPrice!==null && productInfo.discountedPrice!=="0.00" && productInfo.discountedPrice!=="0.0" && productInfo.discountedPrice!=="0"?productInfo.discountedPrice:productInfo.productCost)
-          ).toFixed(2);
+          );
         } 
         else {
           let tempProduct = {
@@ -51,12 +51,14 @@ const shoppingCart = (state = INITIAL_STATE, action) => {
             quantity: 1,
             unit_price: parseFloat(productInfo.discountedPrice!==null && productInfo.discountedPrice!=="0.00" && productInfo.discountedPrice!=="0.0" && productInfo.discountedPrice!=="0"?productInfo.discountedPrice:productInfo.price).toFixed(2),
 
-            total_amount: parseFloat(productInfo.discountedPrice!==null && productInfo.discountedPrice!=="0.00" && productInfo.discountedPrice!=="0.0" && productInfo.discountedPrice!=="0"?productInfo.
-            discountedPrice:productInfo.price).toFixed(2),
+            total_amount: Math.round( parseFloat(productInfo.discountedPrice!==null && productInfo.discountedPrice!=="0.00" && productInfo.discountedPrice!=="0.0" && productInfo.discountedPrice!=="0"?productInfo.
+            discountedPrice:productInfo.price)),
 
             discountPercent: productInfo.productDiscount,
             discountedPrice:productInfo.discountedPrice,
-            product:productInfo.product,
+            product:productInfo,
+            productName:productInfo.productName,
+
           };
           stateProducts.push(tempProduct);
         }

@@ -25,12 +25,15 @@ export  const Button = {
   variants: {
     outline: {
       border: "1px",
-      borderColor: "#C7B9FF",
-      color: "black",
+      borderColor: "black",
+      color: "white",
       width:"20px",
-      backgroundColor:'#C7B9FF',
+      backgroundColor:'black',
       height:"15px",
       minWidth:'8px',
+
+    },
+    ghost:{
 
     },
     solid: {

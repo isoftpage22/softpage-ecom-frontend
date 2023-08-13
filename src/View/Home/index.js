@@ -13,7 +13,9 @@ function mapStateToProps(state, props) {
     console.log("mapStateToProps",state)
     return {
         productList:state.products.productList,
-        addToCart:state.shoppingCart.addToCart
+        addToCart:state.shoppingCart.addToCart,
+        detailedBill:state.shoppingCart.detailedBill
+
     };
 }
 

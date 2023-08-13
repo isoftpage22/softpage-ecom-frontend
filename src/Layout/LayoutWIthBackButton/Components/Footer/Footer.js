@@ -1,12 +1,12 @@
 import React, { Fragment } from 'react';
 import { Link } from 'react-router-dom';
-import LocationModal from '../../../../Components/Modal/LocationModal/LocationModal';
+// import LocationModal from '../../../../Components/Modal/LocationModal/LocationModal';
 import FooterCartDetail from '../../../Components/FooterCartDetail';
 
 const Footer = props => {
     return (
         <Fragment>
-            <LocationModal />
+            {/* <LocationModal /> */}
             <footer className="footer_part">
                 <div className="container">
                     <div className="row justify-content-around">

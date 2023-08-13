@@ -32,6 +32,7 @@ const options = {
   debug: false, // enable logs
 };
 const resolvePrivateRoutes = (routes) => {
+  
   if (routes && Array.isArray(routes)) {
     return routes.map((route) => {
       if (route.isPrivate) {
@@ -47,6 +48,8 @@ const resolvePrivateRoutes = (routes) => {
       if (route.routes) {
         resolvePrivateRoutes(route.routes);
       }
+      
+      console.log("route",route)
       return route;
     });
   }
