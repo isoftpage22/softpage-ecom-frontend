@@ -12,7 +12,9 @@ import {addToCartProduct,deleteToCartProduct } from '../../Store/action/shopping
 function mapStateToProps(state, props) {
     return {
         productList:state.products.productList,
-        addToCart:state.shoppingCart.addToCart
+        addToCart:state.shoppingCart.addToCart,
+        detailedBill:state.shoppingCart.detailedBill
+
     };
 }
 

@@ -5,6 +5,8 @@ import CurrentOffers from './Component/CurrentOffers'
 import ProductPromotions from './Component/ProductPromotions'
 import ToggleSwitch from './Component/ToggleSwitch'
 import { Box } from '@chakra-ui/layout';
+import CommonTopBar from '../../Layout/Components/CommonTopBar/CommonTopBar'
+import Footer from '../../Layout/Guest/Components/Footer'
 
 
 const Home = (props) => {
@@ -14,6 +16,7 @@ const Home = (props) => {
    }, [])
   return (
    <>
+   <CommonTopBar/>
    <ProductPromotions/>
    <CurrentOffers/>
    <ToggleSwitch/>
@@ -23,6 +26,8 @@ const Home = (props) => {
      addToCartProduct={addToCartProduct}
      deleteToCartProduct={deleteToCartProduct}
      />
+     <Footer/>
+
    </>
   )
 }

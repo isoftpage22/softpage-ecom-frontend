@@ -2,8 +2,10 @@ import { Flex, Image, Text,Box } from '@chakra-ui/react';
 import React, { Fragment } from 'react';
 import { Link } from 'react-router-dom';
 import FooterCartDetail from '../../../Components/FooterCartDetail';
+import CartPageFooter from '../../../Components/CartPageFooter/CartPageFooter';
 
 const Footer = (props) => {
+    const {isShoppingCart}=props
     // props.productList
     // productList && productList.data.map(product => {
     //     const cartProduct = addToCart && addToCart.products.filter((cart)=>cart.product_id===product.id)
@@ -37,7 +39,10 @@ const Footer = (props) => {
                 <Text textColor="#9ea6b9" mb="5px">© 2021 Fastie</Text>
 
             </Flex>
-            {qty > 0 && <FooterCartDetail qty={qty} price={price} />}
+            { qty > 0 && !isShoppingCart? <FooterCartDetail qty={qty} price={price} /> :
+            
+            qty > 0 && <CartPageFooter qty={qty} price={price}/>
+            }
         </Fragment>
     );
 

@@ -1,20 +1,13 @@
-/* eslint-disable react/no-multi-comp */
-/* eslint-disable react/display-name */
 import React, { lazy } from "react";
 import { Redirect } from "react-router-dom";
-
-// import AuthLayout from "../layouts/Auth";
-// import ErrorLayout from './layouts/Error';
 import GuestLayout from "../Layout/Guest";
-import UserProfileLayout from "../Layout/UserProfile";
-
-// const a=0
+import LayoutWIthBackButton from "../Layout/LayoutWIthBackButton/LayoutWIthBackButton";
+import Dashboard from "../Layout/Dashboard/Dashboard";
 
 const routes = [
- 
   {
-    route: "*",
-    component: GuestLayout,
+    path: "/",
+    component: Dashboard,
     routes: [
       {
         path: "/",
@@ -22,16 +15,21 @@ const routes = [
         component: lazy(() => import("../View/Home")),
         isPrivate: false,
       },
-     
       {
-        route: "/user-profile",
-        component: UserProfileLayout,
+        path: "/cart",
+        exact: true,
+        component: lazy(() => import("../View/ShoppingCart")),
+        isPrivate: false,
+      },
+      {
+        path: "/coupons",
+        component: LayoutWIthBackButton,
         routes: [
           {
-            path: "/user-profile/my-profile",
+            path: "/coupons",
             exact: true,
-            component: lazy(() => import("../View/Home")),        
-            isPrivate: true,
+            component: lazy(() => import("../View/ListOfCoupons/ListOfCoupons")),
+            isPrivate: false,
           },
           {
             component: () => <Redirect to="/" />,
@@ -39,11 +37,15 @@ const routes = [
         ],
       },
       {
+        path: "/point",
+        component: () => <div>Point Component</div>, // Replace with actual component
+      },
+      {
+        path: "*", // Catch-all route
         component: () => <Redirect to="/" />,
       },
     ],
   },
-
 ];
 
 export default routes;
