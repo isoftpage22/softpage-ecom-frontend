@@ -9,7 +9,7 @@ const products = (state = INITIAL_STATE, action) => {
     case GET_PRODUCT_LIST_SUCCESS:
       return {
         ...state,
-        productList: action.payload[0],
+        productList: action.payload.data[0],
       };
     case GET_PRODUCT_LIST_ERROR:
       return {

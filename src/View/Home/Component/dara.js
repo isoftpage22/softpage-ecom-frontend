@@ -14,7 +14,7 @@ const productsWithCategories = productList.categories
       {
         productsWithCategories.map((prodCateg)=>{
           return <>
-          { prodCateg.products.length>0 && <Text fontSize="24px" p="32px 21px 32px 6%">{prodCateg.categoryName}</Text> }
+           <Text fontSize="24px" p="32px 21px 32px 6%">{prodCateg.categoryName}</Text>
              {
                 Array.isArray(prodCateg.products) && prodCateg.products.map((product,index)=>{
                   const cartProduct =
