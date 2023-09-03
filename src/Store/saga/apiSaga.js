@@ -28,7 +28,6 @@ function* invokeAPI(action) {
     }
     let response = {};
     const api = getAxios();
-    console.log(api)
     
     switch (method) {
       case "GET": {

@@ -7,7 +7,6 @@ import * as consturl from "../../../utils/url";
 import { getToken } from "../../../utils/token";
 
 export const getProductsList = (_payload, resolve, reject) => {
-  console.log(_payload,"_payload")
   const url = `${consturl.BASE_URL}industries/currentUserIndustry/${_payload?.industryId??1}/${_payload?.industryTypeId??4}`;
   const payload = {
       action: GET_PRODUCT_LIST,

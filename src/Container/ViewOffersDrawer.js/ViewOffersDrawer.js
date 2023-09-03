@@ -22,7 +22,6 @@ import HeaderOfOffersDrawer from './HeaderOfOffersDrawer'
 import BasicTextAndImageContainer from '../BasicTextAndImageContainer/BasicTextAndImageContainer';
 const ViewOffersDrawer = ({toggleDrawer,setToggleDrawer}) => {
   const willTriggerWhenDrawerClosed=()=>{
-    console.log("closed")
     setToggleDrawer(!toggleDrawer)
   }
   let image="https://images.unsplash.com/photo-1555274175-75f4056dfd05?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1650&q=80"  

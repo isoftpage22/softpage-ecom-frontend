@@ -5,7 +5,6 @@ import Card from '../../Components/Card/Card'
 const ProductCard = (props) => {
   const {product,addToCartProduct,addToCart,quantity,deleteToCartProduct}=props
   const { isOpen, onToggle } = useDisclosure()
-  console.log(addToCart,'ProductCard',product,"quantity",quantity)
   
   return (
     <>

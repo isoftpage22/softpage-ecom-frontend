@@ -16,10 +16,8 @@ import Ripples from 'react-ripples'
 import '../../Assets/CSS/ShoppingCart.css'
 const SearchBarDrawer = ({ toggleDrawer, setToggleDrawer }) => {
   const getProductListOnSearch = (value) => {
-    console.log(value, "value")
   }
   const willTriggerWhenDrawerClosed=()=>{
-    console.log("closed")
     setToggleDrawer(!toggleDrawer)
   }
   return (

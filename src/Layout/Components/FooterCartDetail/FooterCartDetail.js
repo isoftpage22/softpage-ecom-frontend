@@ -3,7 +3,6 @@ import React, { Fragment } from 'react';
 import { Link } from 'react-router-dom';
 import { Button as NeumorphButton, Fab } from 'ui-neumorphism'
 const FooterCartDetail = (props) => {
-    console.log(props, "propsInFooterCartDetail")
     const {qty,price}=props
     // ReactPixel.trackCustom('AddToCart', props // or set to empty string
     // );

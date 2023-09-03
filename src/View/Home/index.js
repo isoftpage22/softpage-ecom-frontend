@@ -10,7 +10,6 @@ import {addToCartProduct,deleteToCartProduct } from '../../Store/action/shopping
 // import { showToastMessage, resetToastMessage } from '../../Store/action/loader';
 
 function mapStateToProps(state, props) {
-    console.log("mapStateToProps",state)
     return {
         productList:state.products.productList,
         addToCart:state.shoppingCart.addToCart

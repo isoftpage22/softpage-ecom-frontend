@@ -8,7 +8,6 @@ const Footer = (props) => {
     // productList && productList.data.map(product => {
     //     const cartProduct = addToCart && addToCart.products.filter((cart)=>cart.product_id===product.id)
     // });
-   console.log(props,"checkFooter")
     const qty = props.addToCart && props.addToCart.products.length;
     let price = 0;
     let displayQty = 0;

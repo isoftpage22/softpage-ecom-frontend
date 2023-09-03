@@ -12,7 +12,6 @@ const Home = (props) => {
    useEffect(() => {
     getProductsList()
    }, [])
-   console.log(props,"checkProps")
   return (
    <>
    <ProductPromotions/>
