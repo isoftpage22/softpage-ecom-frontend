@@ -5,7 +5,7 @@ import ProductCard from '../../../Container/Productcard/Productcard'
 const CategoryWithProducts = (props) => {
   const {productList,addToCart,addToCartProduct,deleteToCartProduct} =props
   // const{products}=productList
-const productsWithCategories = productList.categories
+const productsWithCategories = productList?.categories??[]
 
   return (
     <>
