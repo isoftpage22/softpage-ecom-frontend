@@ -1,10 +1,11 @@
-import Home from './Home';
+import UserFormContainer from './UserFormContainer';
 import { connect } from 'react-redux';
 import { bindActionCreators } from "redux";
 // import { getBannerList } from '../../Store/action/banner';
 import {getProductsList } from '../../Store/action/products';
-import {addToCartProduct,deleteToCartProduct } from '../../Store/action/shoppingCart';
+import {addToCartProduct,deleteToCartProduct, } from '../../Store/action/shoppingCart';
 import {toggleUserFormDrawer } from '../../Store/action/modalsNDrawers';
+
 
 // import { openLocation } from '../../Store/action/location';
 // import { downloadAppLink } from '../../Store/action/downloadApp';
@@ -16,7 +17,6 @@ function mapStateToProps(state, props) {
         addToCart:state.shoppingCart.addToCart,
         detailedBill:state.shoppingCart.detailedBill,
         userFormDrawerStatus:state.modalsNDrawers.userFormDrawerStatus
-
 
     };
 }
@@ -34,4 +34,4 @@ function mapDispatchToProps(dispatch) {
 export default connect(
     mapStateToProps,
     mapDispatchToProps
-)(Home);
+)(UserFormContainer);

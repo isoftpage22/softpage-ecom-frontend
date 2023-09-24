@@ -39,9 +39,9 @@ const Footer = (props) => {
                 <Text textColor="#9ea6b9" mb="5px">© 2021 Fastie</Text>
 
             </Flex>
-            { qty > 0 && !isShoppingCart? <FooterCartDetail qty={qty} price={price} /> :
+            { qty > 0 && !isShoppingCart? <FooterCartDetail {...props} qty={qty} price={price} /> :
             
-            qty > 0 && <CartPageFooter qty={qty} price={price}/>
+            qty > 0 && <CartPageFooter qty={qty} {...props} price={price}/>
             }
         </Fragment>
     );

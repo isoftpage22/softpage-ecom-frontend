@@ -20,6 +20,7 @@ import '../../Assets/CSS/ShoppingCart.css'
 import BasicTextAndImageComponent from '../../Components/BasicTextAndImageComponent/BasicTextAndImageComponent'
 import HeaderOfOffersDrawer from './HeaderOfOffersDrawer'
 import BasicTextAndImageContainer from '../BasicTextAndImageContainer/BasicTextAndImageContainer';
+import DrawerHeaderCustom from '../../Components/DrawerComp/DrawerHeaderCustom';
 const ViewOffersDrawer = ({toggleDrawer,setToggleDrawer}) => {
   const willTriggerWhenDrawerClosed=()=>{
     setToggleDrawer(!toggleDrawer)
@@ -42,7 +43,9 @@ const ViewOffersDrawer = ({toggleDrawer,setToggleDrawer}) => {
         py="5px"
         px="8px"
         borderBottomWidth="1px">
-        <HeaderOfOffersDrawer/>
+          <DrawerHeaderCustom text={"Offers"}>
+             
+            </DrawerHeaderCustom>
         </DrawerHeader>
         <DrawerBody>
           {/* BasicTextAndImageComponent */}
