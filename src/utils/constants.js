@@ -8,3 +8,4 @@ export const EXPRESS_DELIVERY_CHARGE= "expressDeliveryCharge"
 export const CLIENT_ID=process.env.REACT_APP_CLIENT_ID
 export const CLIENT_SECRET=process.env.REACT_APP_CLIENT_SECRET
 export const REACT_APP_GEO_LOCATION=process.env.REACT_APP_GEO_LOCATION
+export const LOCAL_STORAGE_CUSTOMER_ADDRESS = "CUSTOMER_ADDRESS"

@@ -4,6 +4,7 @@ export const Card = {
     display: "flex",
     background: "white",
     alignItems: "center",
+    justifyContent:"center",
     border:"5px",
     
   
@@ -11,11 +12,14 @@ export const Card = {
   // Two variants: rounded and smooth
   variants: {
     rounded: {
-      padding: 8,
-      borderRadius: "xl",
+      padding: 4,
+      borderRadius: "md",
       // boxShadow: "xl",
       width:'320px',
-      border:'2px solid black',
+      // height:'120px',
+
+      border:'0.5px solid #0000003b',
+      boxShadow:'0.5px 1px #ece6d4'
     },
     smooth: {
       padding: "6%",

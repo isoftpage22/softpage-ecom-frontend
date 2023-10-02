@@ -22,6 +22,24 @@ const routes = [
         isPrivate: false,
       },
       {
+        path: "/addresses",
+        exact: true,
+        component: lazy(() => import("../View/Address/AddressListing")),
+        isPrivate: false,
+      },
+      {
+        path: "/create-address",
+        exact: true,
+        component: lazy(() => import("../View/Address/CreateAddress")),
+        isPrivate: false,
+      },
+      {
+        path: "/edit-address/:id",
+        exact: true,
+        component: lazy(() => import("../View/Address/CreateAddress")),
+        isPrivate: false,
+      },
+      {
         path: "/coupons",
         component: LayoutWIthBackButton,
         routes: [

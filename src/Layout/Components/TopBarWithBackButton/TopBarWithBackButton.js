@@ -4,11 +4,10 @@ import { ArrowBackIcon, AddIcon, WarningIcon, SearchIcon } from '@chakra-ui/icon
 import { useHistory } from 'react-router'
 import SearchBarDrawer from '../../../Container/SearchBarDrawer/SearchBarDrawer'
 
-const TopBarWithBackButton = ({ addToCart, getProductListOnSearch, urlParamObject }) => {
+const TopBarWithBackButton = ({ addToCart, getProductListOnSearch, urlParamObject,headerText="Cart" }) => {
     const [toggleDrawer, setToggleDrawer] = useState(false)
     const { isOpen, onOpen, onClose } = useDisclosure()
     const history = useHistory()
-    const restaurant = "Cart"
     const restaurant2 = "Noida Sector 16"
 
     const fontSize = (length) => {
@@ -28,14 +27,14 @@ const TopBarWithBackButton = ({ addToCart, getProductListOnSearch, urlParamObjec
     return (
         <>
             <Flex bg="black" p="10px" h="80px" justify="space-around" alignItems="flex-">
-                <Box textAlign="center" wordBreak="break-all" boxSizing="border-box" as="p" fontSize={fontSize(restaurant)} fontWeight="700" alignSelf="center">
+                <Box textAlign="center" wordBreak="break-all" boxSizing="border-box" as="p" fontSize={fontSize(headerText)} fontWeight="700" alignSelf="center">
                     <Flex >
                         <IconButton
                             size="md"
                             color="white"
                             variant="ghost"
                             style={{ border: "none" }}
-                            onClick={() => history.push('/')}
+                            onClick={() => history.goBack()}
                             colorScheme="transparent"
                             icon={
                                 <ArrowBackIcon style={{ border: "none" }} boxSize="1.5em" />
@@ -50,7 +49,7 @@ const TopBarWithBackButton = ({ addToCart, getProductListOnSearch, urlParamObjec
                                 textAlign="left"
                                 fontSize="19px"
                                 ml="5px"
-                                extTransform="capitalize">{restaurant}</Text>
+                                extTransform="capitalize">{headerText}</Text>
                             {/* <Text
                                 color="#777171"
                                 lineHeight="15px"

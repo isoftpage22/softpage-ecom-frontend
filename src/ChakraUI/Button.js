@@ -6,6 +6,9 @@ export  const Button = {
     fontWeight: "bold",
     textTransform: "upperCase",
     borderRadius: "base", // <-- border radius is same for all variants and sizes
+    _focus: {
+      boxShadow: "none", // Remove the focus outline (box shadow)
+    },
   },
   // Two sizes: sm and md
   sizes: {
@@ -20,6 +23,12 @@ export  const Button = {
       px: 6, 
       py: 4, 
     },
+    lg:{
+      fontSize:"lg",
+      px: 6, 
+      py: 6, 
+    },
+   
   },
   // Two variants: outline and solid
   variants: {
@@ -31,9 +40,38 @@ export  const Button = {
       backgroundColor:'black',
       height:"15px",
       minWidth:'8px',
+      activeColor:'black',
+      focusBorderColor:"none" ,
+      focusBoxShadow:"none",
+      _hover: {
+        bg: "black", 
+      },
+      _active: {
+        bg: "black", 
+        border:'none'
+      },
+      
 
     },
     ghost:{
+
+    },
+    outlineGhost:{
+      border: "1px",
+      borderColor: "black",
+      color: "black",
+      width:"20px",
+      height:"15px",
+      minWidth:'8px',
+      activeColor:'black',
+      focusBorderColor:"none" ,
+      focusBoxShadow:"none",
+      _hover: {
+        bg: "none", 
+      },
+      _active: {
+        bg: "none", 
+      },
 
     },
     solid: {
@@ -41,6 +79,12 @@ export  const Button = {
       color: "white",
       height:"20px",
       width:"69px"
+    },
+    solidFull:{
+      bg: "black",
+      color: "white",
+      height:"39px",
+      width:"100%"
     },
     transLucent: {
       color: "black",

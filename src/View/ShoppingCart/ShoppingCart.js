@@ -8,9 +8,10 @@ import SpecialInstructions from './Components/SpecialInstructions'
 import { getDetailBill } from '../../utils/getdetailedBill'
 import TopBarWithBackButton from '../../Layout/Components/TopBarWithBackButton/TopBarWithBackButton'
 import Footer from '../../Layout/Guest/Components/Footer'
+import TopAddressBarContainer from '../../Container/TopAddressBarContainer/TopAddressBarContainer'
 const ShoppingCart = (props) => {
   console.log("CheckpropsData",props)
-  const{addToCart,deleteToCartProduct,addToCartProduct}=props
+  const{addToCart,deleteToCartProduct,addToCartProduct,usersAddress}=props
   const{products}=addToCart
   const qty = props.addToCart && props.addToCart.products.length;
   let price = 0;
@@ -24,6 +25,7 @@ const ShoppingCart = (props) => {
   return (
     <>
     {console.log(totalCartBill, "checkPropsdata")}
+    {Object.keys(usersAddress).length>0 && <TopAddressBarContainer/>}
     <TopBarWithBackButton/>
     <Box bg="#f4f4f5" >
       {
@@ -37,7 +39,7 @@ const ShoppingCart = (props) => {
      <DiscountCoupons/>
      <DetailedBill qty={qty} totalCartBill={totalCartBill} />
      </Box>
-    <Footer isShoppingCart={true}/>
+    <Footer usersAddress={usersAddress} isShoppingCart={true}/>
     </>
   )
 }

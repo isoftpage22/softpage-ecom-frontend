@@ -8,17 +8,21 @@ import { Box } from '@chakra-ui/layout';
 import CommonTopBar from '../../Layout/Components/CommonTopBar/CommonTopBar'
 import Footer from '../../Layout/Guest/Components/Footer'
 import UserFormContainer from '../../Container/UserFormContainer'
+import TopAddressBarContainer from '../../Container/TopAddressBarContainer/TopAddressBarContainer'
 
 
 const Home = (props) => {
-  const {getProductsList,productList,addToCart,addToCartProduct,deleteToCartProduct,toggleUserFormDrawer,userFormDrawerStatus} =props
+  const {getProductsList,productList,addToCart,addToCartProduct,deleteToCartProduct,toggleUserFormDrawer,userFormDrawerStatus,usersAddress} =props
    useEffect(() => {
-    getProductsList()
+     getProductsList()
    }, [])
    const [toggleDrawer, setToggleDrawer] = useState(false)
 
   return (
    <>
+        <UserFormContainer />
+        {console.log(usersAddress,"usersAddress",props)}
+  {Object.keys(usersAddress).length>0 && <TopAddressBarContainer/>}
    <CommonTopBar/>
    <ProductPromotions/>
    <CurrentOffers/>
@@ -33,7 +37,6 @@ const Home = (props) => {
      deleteToCartProduct={deleteToCartProduct}
      />
      <Footer {...props}/>
-     <UserFormContainer />
 
    </>
   )

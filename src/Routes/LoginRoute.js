@@ -2,7 +2,6 @@ import React from 'react';
 import { Redirect, Route } from 'react-router-dom';
 // import {getToken} from '../utils/token';
 const LoginRoute = ({ component: Component,trackPage, fbPixelPageView,...rest }) => {
-  debugger
   const userToken = 2;
   return (
       <Route {...rest} render={props => {

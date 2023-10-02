@@ -11,7 +11,7 @@ import {
   Flex, Box, Spacer, Text, Stack, Radio, RadioGroup, CheckboxGroup, Checkbox,
 } from "@chakra-ui/react"
 import { ArrowBackIcon } from '@chakra-ui/icons'
-import { Button as NeumorphButton, Fab } from 'ui-neumorphism'
+// import { Button as NeumorphButton, Fab } from 'ui-neumorphism'
 
 
 import DrawerComp from '../../Components/DrawerComp/DrawerComp';
@@ -39,7 +39,7 @@ const{children}=props
                 <Box m="0.8px" mt="0.9px" w="4.4px" h="4.4px" bg="#EC1010" />
               </Box>
             </Flex>
-            <Text ml="30px" mt="10px" fontSize="14px" lineHeight="17px" fontSize="14px" color="white" >₹{'25'}</Text>
+            <Text ml="30px" mt="10px" fontSize="14px" lineHeight="17px"  color="white" >₹{'25'}</Text>
           </Flex>
         </DrawerHeader>
         <DrawerBody>

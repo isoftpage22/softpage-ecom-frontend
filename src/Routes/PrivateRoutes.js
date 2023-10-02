@@ -3,7 +3,6 @@ import { Redirect, Route } from 'react-router-dom';
 import {getToken} from '../utils/token';
 const PrivateRoutes = ({ component: Component, trackPage, fbPixelPageView,...rest }) => {
   const userToken = getToken()
-  debugger
   return (
       <Route {...rest} render={props => {
         return (

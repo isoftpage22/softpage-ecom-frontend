@@ -9,7 +9,7 @@ import extendTheme from "./ChakraUI/theme";
 import "@fontsource/raleway/400.css"
 import "@fontsource/open-sans/700.css"
 import Store from "./Store/index";
-import 'ui-neumorphism/dist/index.css'
+// import 'ui-neumorphism/dist/index.css'
 const theme = extendTheme
 ReactDOM.render(
   <React.StrictMode>
