@@ -1,14 +1,17 @@
 import React from 'react';
-
-const Loader = ({show}) => {
+import './loader-styles.css'
+import { Text } from '@chakra-ui/react';
+const Loader = ({ isloading }) => {
     return (
-        <div className="loader" style={{display:show?"block":"none"}}>
-            <div className="loader_inner">
-                <div className="loader_content">
-                    {/* <img src="/assets/img/loader.gif" className="img-fluid loadingif" alt="loading"/> */}
-                    <div className="loadmore-ellipsis"><div></div><div></div><div></div><div></div></div>
-                </div>
+        <div className="loader" style={{ display: isloading ? "block" : "none" }}>
+            <div className="loader-container">
+             
+            <div class="spinner mb-2">
             </div>
+            <Text color={"white"}>Loading... Please wait</Text>
+
+            </div>
+
         </div>
     );
 }

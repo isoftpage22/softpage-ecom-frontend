@@ -3,6 +3,7 @@ import { actionChannel, take, fork, call, put } from "redux-saga/effects";
 import getAxios from "./axiosAPI";
 // import { setStartLoader, setStopLoader } from "../action/loader";
 import { logout } from "../../utils/token";
+import { setLoader } from "../action/loader";
 // import { setPageLoaderStop, setPageLoaderStart, showToastMessage } from "../action/loader/loader";
 // import { logoutUser, resetUserProfile, clearCartData } from "../action/user";
 
@@ -24,7 +25,7 @@ function* invokeAPI(action) {
   } = payload;
   try {
     if (action.payload.action !== "ADD_TO_CART") {
-      // yield put(setStartLoader());
+      yield put(setLoader(true));
     }
     let response = {};
     const api = getAxios();
@@ -93,7 +94,7 @@ function* invokeAPI(action) {
     }
     // yield put(showToastMessage({ message: 'Internal error, Try again', type: 'error' }));
   } finally {
-    // yield put(setStopLoader());
+    yield put(setLoader(false));
   }
 }
 

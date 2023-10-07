@@ -58,6 +58,7 @@ function App(props) {
   const { } = props;
   return (
     <>
+     <Loader/>
     <Router history={history} basename={process.env.PUBLIC_URL}>
       {renderRoutes(resolvePrivateRoutes(routes))}
     </Router>
