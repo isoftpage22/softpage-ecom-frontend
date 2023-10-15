@@ -1,6 +1,5 @@
 import {
   API_INVOCATION,
-  GET_PRODUCT_LIST,
   TOGGLE_USER_FORM_DRAWER
 } from "../../actionTypes";
 import * as constdata from "../../../utils/constants";

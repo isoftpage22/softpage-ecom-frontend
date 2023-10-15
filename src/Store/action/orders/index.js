@@ -1,16 +1,17 @@
 import {
     API_INVOCATION,
+    CREATE_ORDER,
     GET_PRODUCT_LIST
   } from "../../actionTypes";
   import * as constdata from "../../../utils/constants";
   import * as consturl from "../../../utils/url";
   import { getToken } from "../../../utils/token";
   
-  export const getProductsList = (_payload, resolve, reject) => {
-    const url = `${consturl.BASE_URL}/order`;
+  export const createOrder = (_payload, resolve, reject) => {
+    const url = `${consturl.BASE_URL}order`;
     const payload = {
-        action: GET_PRODUCT_LIST,
-        method: constdata.GET,
+        action: CREATE_ORDER,
+        method: constdata.POST,
         apiConfig: {
             headers: {
                 'Content-Type':'application/json',
@@ -23,6 +24,7 @@ import {
                 ]
             }
         },
+        data:_payload,
         url: url,
         resolve,
         reject

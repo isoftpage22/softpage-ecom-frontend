@@ -4,6 +4,9 @@ import { bindActionCreators } from "redux";
 // import { getBannerList } from '../../Store/action/banner';
 import {getProductsList } from '../../Store/action/products';
 import {addToCartProduct,deleteToCartProduct } from '../../Store/action/shoppingCart';
+import {setLoader } from '../../Store/action/loader';
+import {createOrder } from '../../Store/action/orders';
+
 
 // import { openLocation } from '../../Store/action/location';
 // import { downloadAppLink } from '../../Store/action/downloadApp';
@@ -25,7 +28,10 @@ function mapDispatchToProps(dispatch) {
     return bindActionCreators({
         getProductsList,
         addToCartProduct,
-        deleteToCartProduct
+        deleteToCartProduct,
+        setLoader,
+        createOrder
+        
         
     }, dispatch);
 }

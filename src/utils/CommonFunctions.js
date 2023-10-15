@@ -59,6 +59,40 @@ export const getAdrresFromLocal = ()=>{
    
  }
 
+ export const createOrderBodyParams = (productList,addToCart,usersAddress,totalCartBill,usersDetailingForOrder,storeDetail)=>{
+   let body = {
+    industryId:storeDetail.industryId,
+    ecommerceId:storeDetail.ecommerceId,
+    userId:productList.userId,
+    latitude:usersAddress?.latitude??'2302',
+    longitude:usersAddress?.longitude??'4302',
+    customerAddress1:usersAddress?.customerAddress1??'Lesisure Park',
+    customerAddress2:usersAddress?.customerAddress2??'Lesisure Park Face View',
+    customerAddressType:usersAddress?.customerAddressType??"Home",
+    customerPincode:usersAddress?.customerPincode??201010,
+    orderId:"22NOV95",
+    paymentStatus:"Pending",
+    paymentType:"Online",
+    paymentGetaway:"RAZORPAY",
+    deliveryType:"Delivery",
+    deliveryPartner:"DHL",
+    amountPaidbyCustomer:totalCartBill.totalFinalPriceAmount,
+    taxAmount:totalCartBill.taxAmount,
+    CGST:totalCartBill.CGST,
+    SGST:totalCartBill.SGST,
+    tipAmount:totalCartBill.tip,
+    discountAmount:totalCartBill.discount,
+    discountType:totalCartBill.discountType,
+    discountRate:totalCartBill.discountRate,
+    specialInstructions:usersDetailingForOrder?.specialInstructions??"Nothing",
+    orderedProducts:addToCart.products
+   
+   }
+
+   return body
+   
+ }
+
 
 
 

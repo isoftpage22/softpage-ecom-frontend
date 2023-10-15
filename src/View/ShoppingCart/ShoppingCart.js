@@ -1,5 +1,5 @@
 import { Box } from '@chakra-ui/react'
-import React from 'react'
+import React,{useEffect} from 'react'
 import ItemCardAtCheckout from '../../Container/ItemCardAtCheckout/ItemCardAtCheckout'
 import DetailedBill from './Components/DetailedBill'
 import DiscountCoupons from './Components/DiscountCoupons'
@@ -11,7 +11,7 @@ import Footer from '../../Layout/Guest/Components/Footer'
 import TopAddressBarContainer from '../../Container/TopAddressBarContainer/TopAddressBarContainer'
 const ShoppingCart = (props) => {
   console.log("CheckpropsData",props)
-  const{addToCart,deleteToCartProduct,addToCartProduct,usersAddress}=props
+  const{addToCart,deleteToCartProduct,addToCartProduct,usersAddress,setLoader}=props
   const{products}=addToCart
   const qty = props.addToCart && props.addToCart.products.length;
   let price = 0;
@@ -22,9 +22,12 @@ const ShoppingCart = (props) => {
       return price;
   });
   const totalCartBill  = getDetailBill(addToCart)
+  useEffect(() => {
+    setLoader(false)
+  }, [])
+  
   return (
     <>
-    {console.log(totalCartBill, "checkPropsdata")}
     {Object.keys(usersAddress).length>0 && <TopAddressBarContainer/>}
     <TopBarWithBackButton/>
     <Box bg="#f4f4f5" >
@@ -39,7 +42,7 @@ const ShoppingCart = (props) => {
      <DiscountCoupons/>
      <DetailedBill qty={qty} totalCartBill={totalCartBill} />
      </Box>
-    <Footer usersAddress={usersAddress} isShoppingCart={true}/>
+    <Footer {...props} usersAddress={usersAddress} isShoppingCart={true} totalCartBill={totalCartBill}/>
     </>
   )
 }

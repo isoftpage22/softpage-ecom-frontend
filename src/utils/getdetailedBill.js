@@ -27,6 +27,8 @@ export const getDetailBill = (_addToCart,discType='percentage',discountVal=18,ti
         discount: getDiscount(discountType, discountRate, totalAmount),
         priceAfterDiscount: priceAfterDiscount,
         taxAmount : taxAmount,
+        CGST:Math.round(taxAmount/2),
+        SGST:Math.round(taxAmount/2),
         tip:tip,
         totalFinalPriceAmount : totalFinalPriceAmount
      }

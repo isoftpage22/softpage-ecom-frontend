@@ -5,7 +5,7 @@ import FooterCartDetail from '../../../Components/FooterCartDetail';
 import CartPageFooter from '../../../Components/CartPageFooter/CartPageFooter';
 
 const Footer = (props) => {
-    const {isShoppingCart}=props
+    const {isShoppingCart,totalCartBill}=props
     // props.productList
     // productList && productList.data.map(product => {
     //     const cartProduct = addToCart && addToCart.products.filter((cart)=>cart.product_id===product.id)
