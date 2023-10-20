@@ -5,13 +5,12 @@ import { bindActionCreators } from "redux";
 import {getProductsList } from '../../Store/action/products';
 import {addToCartProduct,deleteToCartProduct } from '../../Store/action/shoppingCart';
 import {toggleUserFormDrawer } from '../../Store/action/modalsNDrawers';
-
+import { setLoader } from '../../Store/action/loader';
 // import { openLocation } from '../../Store/action/location';
 // import { downloadAppLink } from '../../Store/action/downloadApp';
 // import { showToastMessage, resetToastMessage } from '../../Store/action/loader';
 
 function mapStateToProps(state, props) {
-    console.log(state,"state")
     return {
         productList:state.products.productList,
         addToCart:state.shoppingCart.addToCart,
@@ -29,7 +28,8 @@ function mapDispatchToProps(dispatch) {
         getProductsList,
         addToCartProduct,
         deleteToCartProduct,
-        toggleUserFormDrawer
+        toggleUserFormDrawer,
+        setLoader
         
     }, dispatch);
 }

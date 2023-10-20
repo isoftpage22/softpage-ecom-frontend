@@ -1,18 +1,19 @@
 import { Box, Text, Flex } from '@chakra-ui/react';
 import React, { Fragment,useState } from 'react';
 import { Link } from 'react-router-dom';
-import { createOrderBodyParams } from '../../../utils/CommonFunctions';
+import { createOrderBodyParams, getUserInFromLocal } from '../../../utils/CommonFunctions';
 // import { Button as NeumorphButton, Fab } from 'ui-neumorphism'
 import Razorpay from 'razorpay';
+import axios from 'axios';
 
 const CartPageFooter = (props) => {
     const {createOrder,totalCartBill,productList,addToCart}=props
     const [orderId, setOrderId] = useState('');
-
+    const [customerInfo, setcustomerInfo] = useState(getUserInFromLocal())
     let storeDetail ={ecommerceId:1,industryId:1}
     let usersDetailingForOrder= ""
     const { qty, price,usersAddress } = props
-    const bodyParams = createOrderBodyParams(productList,addToCart,usersAddress,totalCartBill,usersDetailingForOrder,storeDetail)
+    const bodyParams = createOrderBodyParams(productList,addToCart,usersAddress,totalCartBill,usersDetailingForOrder,storeDetail,customerInfo)
 
     const onSuccess = (res)=>{
         const data =res.data
@@ -30,17 +31,49 @@ const CartPageFooter = (props) => {
         // };
         var options = {
             "key": "rzp_test_eaVLpYIkJzcDuU", // Enter the Key ID generated from the Dashboard
-            "amount": "50000", // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
-            "currency": "INR",
+            "amount": data.amount, // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
+            "currency": data.currency,
             "name": "Acme Corp",
             "description": "Test Transaction",
             "image": "https://example.com/your_logo",
-            "order_id": "order_IluGWxBm9U8zJ8", //This is a sample Order ID. Pass the `id` obtained in the response of Step 1
-            "callback_url": "https://eneqd3r9zrjok.x.pipedream.net/",
+            "order_id": data.orderId, //This is a sample Order ID. Pass the `id` obtained in the response of Step 1
+            "handler":async(responses)=>{
+                // try {
+                // // const verifyUrl= "http://localhost:3000/order/payment-verify"    
+                // const verifyUrl= "http://apis.softpage.in/order/payment-verify"
+                //   const {data} = await axios.post(verifyUrl,response) 
+                //   console.log(data,"verifyresponse")    
+                // } catch (error) {
+                //     console.log(error.response,"verifyresponse")    
+
+                // }
+                try {
+                    const verifyUrl= "http://apis.softpage.in/order/payment-verify"
+                    // const verifyUrl= "http://localhost:3000/order/payment-verify"
+                  
+                    const response = await axios.post(verifyUrl, responses);
+                    
+                    // Handle a successful response
+                    console.log('Response data:', response.data);
+                  } catch (error) {
+                    if (error.response) {
+                      // The request was made, and the server responded with a non-2xx status code
+                      console.error('Status Code:', error.response.status);
+                      console.error('Error Message:', error.response.data);
+                    } else if (error.request) {
+                      // The request was made, but no response was received
+                      console.error('No response received:', error.request);
+                    } else {
+                      // Something happened in setting up the request that triggered an error
+                      console.error('Request setup error:', error.message);
+                    }
+                  }
+            },
+            // "callback_url": "https://eneqd3r9zrjok.x.pipedream.net/",
             "prefill": {
-                "name": "Gaurav Kumar",
+                "name": customerInfo.customerName ,
                 "email": "gaurav.kumar@example.com",
-                "contact": "9000090000"
+                "contact": customerInfo.whatsAppNumber
             },
             "notes": {
                 "address": "Razorpay Corporate Office"
@@ -49,7 +82,7 @@ const CartPageFooter = (props) => {
                 "color": "#3399cc"
             }
         };
-        const razorpay = new Razorpay(options);
+        const razorpay = new window.Razorpay(options);
         razorpay.open();
       }
     
@@ -60,7 +93,7 @@ const CartPageFooter = (props) => {
     return (
 
         <Fragment>
-            {console.log(window,"windowData")}
+            {console.log(customerInfo,"windowData")}
             {Object.keys(usersAddress).length>0 ? <Flex bg="#444" color="white" justifyContent="center" height="60px" position="fixed" width="100%" bottom="0px" >
                 <Flex px="10px" py="7px" color="white" justifyContent="space-between" alignItems="flex-end" w="100%" h="100%" >
                     <Text alignSelf="center" fontWeight="extrabold" color="white">Total - ₹{price}</Text>

@@ -31,6 +31,7 @@ import InputErrorMessage from '../../Components/InputErrorMessage/InputErrorMess
 import ContactFields from './ContactFields';
 import OtpFields from './OtpFields';
 import { method } from 'lodash';
+import { CUSTOMER_INFO } from '../../utils/constants';
 
 
 const UserFormContainer = (props) => {
@@ -39,7 +40,7 @@ const UserFormContainer = (props) => {
     toggleUserFormDrawer(!userFormDrawerStatus)
   }
  const submitOtp = ()=>{
-   localStorage.setItem('CustomerInfo', JSON.stringify(formik.values))
+   localStorage.setItem(CUSTOMER_INFO, JSON.stringify(formik.values))
    setscreen('mobile')
  }
  const [screen, setscreen] = useState('mobile')

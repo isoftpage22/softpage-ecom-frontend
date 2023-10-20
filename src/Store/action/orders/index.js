@@ -8,7 +8,7 @@ import {
   import { getToken } from "../../../utils/token";
   
   export const createOrder = (_payload, resolve, reject) => {
-    const url = `${consturl.BASE_URL}order`;
+    const url = `${consturl.BASE_URL}order/payment`;
     const payload = {
         action: CREATE_ORDER,
         method: constdata.POST,

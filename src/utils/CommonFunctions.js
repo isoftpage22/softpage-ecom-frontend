@@ -1,4 +1,4 @@
-import { LOCAL_STORAGE_CUSTOMER_ADDRESS } from "./constants";
+import { CUSTOMER_INFO, LOCAL_STORAGE_CUSTOMER_ADDRESS } from "./constants";
 
 const usedValues = [];
 
@@ -59,7 +59,16 @@ export const getAdrresFromLocal = ()=>{
    
  }
 
- export const createOrderBodyParams = (productList,addToCart,usersAddress,totalCartBill,usersDetailingForOrder,storeDetail)=>{
+ export const getUserInFromLocal = ()=>{
+  let dataItem =  localStorage.getItem(CUSTOMER_INFO)
+  if(dataItem){
+     return JSON.parse(dataItem)
+  }
+  else{
+   return []
+  } }
+
+ export const createOrderBodyParams = (productList,addToCart,usersAddress,totalCartBill,usersDetailingForOrder,storeDetail,customerInfo)=>{
    let body = {
     industryId:storeDetail.industryId,
     ecommerceId:storeDetail.ecommerceId,
@@ -85,7 +94,11 @@ export const getAdrresFromLocal = ()=>{
     discountType:totalCartBill.discountType,
     discountRate:totalCartBill.discountRate,
     specialInstructions:usersDetailingForOrder?.specialInstructions??"Nothing",
-    orderedProducts:addToCart.products
+    orderedProducts:addToCart.products,
+    email:'',
+    phone:customerInfo?.whatsAppNumber,
+    countryCode:customerInfo?.countryCode??91
+
    
    }
 
