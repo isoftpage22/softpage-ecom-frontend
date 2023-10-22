@@ -12,9 +12,11 @@ import TopAddressBarContainer from '../../Container/TopAddressBarContainer/TopAd
 
 
 const Home = (props) => {
-  const {getProductsList,productList,addToCart,addToCartProduct,deleteToCartProduct,toggleUserFormDrawer,userFormDrawerStatus,usersAddress} =props
+  const {getProductsList,productList,addToCart,addToCartProduct,deleteToCartProduct,toggleUserFormDrawer,userFormDrawerStatus,usersAddress,emptyOrderPaymentStatuses} =props
    useEffect(() => {
      getProductsList('',onSuccess,onFailure)
+     emptyOrderPaymentStatuses()
+
    }, [])
    const [toggleDrawer, setToggleDrawer] = useState(false)
 const onSuccess = (res)=>{

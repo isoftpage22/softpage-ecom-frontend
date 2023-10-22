@@ -6,6 +6,8 @@ import {getProductsList } from '../../Store/action/products';
 import {addToCartProduct,deleteToCartProduct } from '../../Store/action/shoppingCart';
 import {toggleUserFormDrawer } from '../../Store/action/modalsNDrawers';
 import { setLoader } from '../../Store/action/loader';
+import { emptyOrderPaymentStatuses } from '../../Store/action/orders';
+
 // import { openLocation } from '../../Store/action/location';
 // import { downloadAppLink } from '../../Store/action/downloadApp';
 // import { showToastMessage, resetToastMessage } from '../../Store/action/loader';
@@ -29,7 +31,8 @@ function mapDispatchToProps(dispatch) {
         addToCartProduct,
         deleteToCartProduct,
         toggleUserFormDrawer,
-        setLoader
+        setLoader,
+        emptyOrderPaymentStatuses
         
     }, dispatch);
 }
