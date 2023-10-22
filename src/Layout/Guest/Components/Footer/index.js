@@ -6,7 +6,9 @@ import { bindActionCreators } from "redux";
 
 // import { openLocation } from '../../Store/action/location';
 // import { downloadAppLink } from '../../Store/action/downloadApp';
- import { createOrder} from '../../../../Store/action/orders';
+ import { createOrder,verifyPayment,emptyOrderPaymentStatuses} from '../../../../Store/action/orders';
+ import { emptyCartProduct} from '../../../../Store/action/shoppingCart';
+
 
 function mapStateToProps(state, props) {
     return {
@@ -16,7 +18,11 @@ function mapStateToProps(state, props) {
 
 function mapDispatchToProps(dispatch) {
     return bindActionCreators({
-        createOrder    
+        createOrder  ,
+        verifyPayment ,
+        emptyCartProduct,
+        emptyOrderPaymentStatuses
+         
     }, dispatch);
 }
 

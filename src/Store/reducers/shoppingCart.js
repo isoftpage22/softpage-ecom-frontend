@@ -10,7 +10,8 @@ import {
   SET_COUPONS,
   GENERATE_OTP,
   VALIDATE_OTP,
-  GET_UPCOMING_EVENTS
+  GET_UPCOMING_EVENTS,
+  EMPTY_CART_PRODUCT_SUCCESS
 } from "../actionTypes";
 
 
@@ -91,6 +92,12 @@ const shoppingCart = (state = INITIAL_STATE, action) => {
             addToCart: _addToCart,
           };
         }
+      case EMPTY_CART_PRODUCT_SUCCESS :{
+        return {
+          ...state,
+          addToCart: INITIAL_STATE.addToCart,
+        };
+      }
         default:
           return state
       

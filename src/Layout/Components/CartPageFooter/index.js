@@ -5,7 +5,7 @@ import { bindActionCreators } from "redux";
 import {getProductsList } from '../../../Store/action/products';
 import {addToCartProduct,deleteToCartProduct } from '../../../Store/action/shoppingCart';
 import {setLoader } from '../../../Store/action/loader';
-import {createOrder } from '../../../Store/action/orders';
+import {createOrder,verifyPayment } from '../../../Store/action/orders';
 
 
 
@@ -31,7 +31,8 @@ function mapDispatchToProps(dispatch) {
         addToCartProduct,
         deleteToCartProduct,
         setLoader,
-        createOrder
+        createOrder,
+        verifyPayment
         
     }, dispatch);
 }

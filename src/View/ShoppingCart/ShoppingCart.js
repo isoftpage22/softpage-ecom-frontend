@@ -1,5 +1,5 @@
 import { Box } from '@chakra-ui/react'
-import React,{useEffect} from 'react'
+import React, { useEffect } from 'react'
 import ItemCardAtCheckout from '../../Container/ItemCardAtCheckout/ItemCardAtCheckout'
 import DetailedBill from './Components/DetailedBill'
 import DiscountCoupons from './Components/DiscountCoupons'
@@ -10,39 +10,47 @@ import TopBarWithBackButton from '../../Layout/Components/TopBarWithBackButton/T
 import Footer from '../../Layout/Guest/Components/Footer'
 import TopAddressBarContainer from '../../Container/TopAddressBarContainer/TopAddressBarContainer'
 const ShoppingCart = (props) => {
-  console.log("CheckpropsData",props)
-  const{addToCart,deleteToCartProduct,addToCartProduct,usersAddress,setLoader}=props
-  const{products}=addToCart
+  console.log("CheckpropsData", props)
+  const { addToCart, deleteToCartProduct, addToCartProduct, usersAddress, setLoader, history } = props
+  const { products } = addToCart
   const qty = props.addToCart && props.addToCart.products.length;
   let price = 0;
   let displayQty = 0;
-  props.addToCart && props.addToCart.products.map((product)=>{
-      price = Number(price) + Number(product.total_amount);
-      displayQty = Number(displayQty) + Number(product.quantity);
-      return price;
+  props.addToCart && props.addToCart.products.map((product) => {
+    price = Number(price) + Number(product.total_amount);
+    displayQty = Number(displayQty) + Number(product.quantity);
+    return price;
   });
-  const totalCartBill  = getDetailBill(addToCart)
+  const totalCartBill = getDetailBill(addToCart)
+
   useEffect(() => {
-    setLoader(false)
+    if (products.length<1){
+      history.replace('/') 
+    }
   }, [])
-  
+
   return (
     <>
-    {Object.keys(usersAddress).length>0 && <TopAddressBarContainer/>}
-    <TopBarWithBackButton/>
-    <Box bg="#f4f4f5" >
       {
-        addToCart.products.map((product,index)=>{
-          return <ItemCardAtCheckout quantity={product.quantity} addToCart={addToCart} product={product} addToCartProduct={addToCartProduct} deleteToCartProduct={deleteToCartProduct}/>
+        addToCart.products.length > 0 ?
+          <>
+            {Object.keys(usersAddress).length > 0 && <TopAddressBarContainer />}
+            <TopBarWithBackButton />
+            <Box bg="#f4f4f5" >
+              {
+                addToCart.products.map((product, index) => {
+                  return <ItemCardAtCheckout quantity={product.quantity} addToCart={addToCart} product={product} addToCartProduct={addToCartProduct} deleteToCartProduct={deleteToCartProduct} />
 
-        })
-      }
-     <SpecialInstructions/>
-     <MoneyTip/>
-     <DiscountCoupons/>
-     <DetailedBill qty={qty} totalCartBill={totalCartBill} />
-     </Box>
-    <Footer {...props} usersAddress={usersAddress} isShoppingCart={true} totalCartBill={totalCartBill}/>
+                })
+              }
+              <SpecialInstructions />
+              <MoneyTip />
+              <DiscountCoupons />
+              <DetailedBill qty={qty} totalCartBill={totalCartBill} />
+            </Box>
+            <Footer {...props} usersAddress={usersAddress} isShoppingCart={true} totalCartBill={totalCartBill} />
+          </>
+          : null}
     </>
   )
 }

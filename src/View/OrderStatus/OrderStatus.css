@@ -1,0 +1,38 @@
+
+
+.animation-container {
+  /* width: 100%;
+  height: 100%; */
+}
+.failed{
+  color: rgb(164, 40, 40) !important;
+  font-weight: bolder;
+  font-size: 30px !important;
+}
+.text-animation {
+  /* position: absolute; */
+  /* top: 50%;
+  left: 50%; */
+  transform: translate(0%, 100%);
+  animation: inward-text 1s ease-in-out forwards;
+  opacity: 0;
+}
+
+.animated-text {
+  font-size: 22px;
+  color: black;
+  font-weight: bold;
+  text-align: center;
+  font-family: 'Montserrat';
+}
+
+@keyframes inward-text {
+  0% {
+    opacity: 0;
+    transform: translate(0%, 100%);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(0%, 100%);
+  }
+}

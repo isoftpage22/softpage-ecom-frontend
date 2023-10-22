@@ -7,14 +7,22 @@ import Razorpay from 'razorpay';
 import axios from 'axios';
 
 const CartPageFooter = (props) => {
-    const {createOrder,totalCartBill,productList,addToCart}=props
+    const {history, createOrder,verifyPayment,totalCartBill,productList,addToCart,emptyCartProduct}=props
     const [orderId, setOrderId] = useState('');
     const [customerInfo, setcustomerInfo] = useState(getUserInFromLocal())
     let storeDetail ={ecommerceId:1,industryId:1}
     let usersDetailingForOrder= ""
     const { qty, price,usersAddress } = props
     const bodyParams = createOrderBodyParams(productList,addToCart,usersAddress,totalCartBill,usersDetailingForOrder,storeDetail,customerInfo)
+  const onVerifySuces = (res)=>{
+        emptyCartProduct()
+        
+        history.replace('/order-status')
+  }
+  const onVerifyFail = (err)=>{
+    history.replace('/order-status')
 
+}
     const onSuccess = (res)=>{
         const data =res.data
         setOrderId(data.orderId);
@@ -48,13 +56,13 @@ const CartPageFooter = (props) => {
 
                 // }
                 try {
-                    const verifyUrl= "http://apis.softpage.in/order/payment-verify"
+                    const verifyUrl= `http://apis.softpage.in/order/payment-verify`
                     // const verifyUrl= "http://localhost:3000/order/payment-verify"
-                  
-                    const response = await axios.post(verifyUrl, responses);
+                    
+                     verifyPayment(responses,onVerifySuces,onVerifyFail)
                     
                     // Handle a successful response
-                    console.log('Response data:', response.data);
+                    console.log('Response data:', responses);
                   } catch (error) {
                     if (error.response) {
                       // The request was made, and the server responded with a non-2xx status code
@@ -93,7 +101,7 @@ const CartPageFooter = (props) => {
     return (
 
         <Fragment>
-            {console.log(customerInfo,"windowData")}
+            {console.log(customerInfo,"windowData",props)}
             {Object.keys(usersAddress).length>0 ? <Flex bg="#444" color="white" justifyContent="center" height="60px" position="fixed" width="100%" bottom="0px" >
                 <Flex px="10px" py="7px" color="white" justifyContent="space-between" alignItems="flex-end" w="100%" h="100%" >
                     <Text alignSelf="center" fontWeight="extrabold" color="white">Total - ₹{price}</Text>

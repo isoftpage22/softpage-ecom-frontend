@@ -5,7 +5,7 @@ import {
 
 
 const INITIAL_STATE = {
-  isloading: true,  
+  isloading: false,  
 };
 const loader = (state = INITIAL_STATE, action) => {
   switch (action.type) {
