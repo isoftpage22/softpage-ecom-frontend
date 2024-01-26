@@ -6,7 +6,7 @@ import Dashboard from "../Layout/Dashboard/Dashboard";
 
 const routes = [
   {
-    path: "/",
+    path: "*",
     component: Dashboard,
     routes: [
       {
@@ -14,30 +14,46 @@ const routes = [
         exact: true,
         component: lazy(() => import("../View/Home")),
         isPrivate: false,
+        isAuth: true,
+
+      },
+      {
+        path: "/home/:id",
+        component: lazy(() => import("../View/Home")),
+        isPrivate: false,
+        isAuth: true,
+
       },
       {
         path: "/cart",
-        exact: true,
         component: lazy(() => import("../View/ShoppingCart")),
         isPrivate: false,
+        isAuth: false,
+
       },
       {
         path: "/addresses",
         exact: true,
         component: lazy(() => import("../View/Address/AddressListing")),
         isPrivate: false,
+        isAuth: false,
+
       },
       {
         path: "/create-address",
         exact: true,
         component: lazy(() => import("../View/Address/CreateAddress")),
         isPrivate: false,
+        isAuth: false,
+
       },
       {
         path: "/edit-address/:id",
         exact: true,
         component: lazy(() => import("../View/Address/CreateAddress")),
         isPrivate: false,
+        isAuth: false,
+
       },
       {
         path: "/coupons",
@@ -48,6 +64,8 @@ const routes = [
             exact: true,
             component: lazy(() => import("../View/ListOfCoupons/ListOfCoupons")),
             isPrivate: false,
+            isAuth: false,
+
           },
           {
             component: () => <Redirect to="/" />,

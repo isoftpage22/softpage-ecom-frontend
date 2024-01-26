@@ -15,6 +15,7 @@ const CartPageFooter = (props) => {
     const bodyParams = createOrderBodyParams(productList,addToCart,usersAddress,totalCartBill,usersDetailingForOrder,storeDetail)
 
     const onSuccess = (res)=>{
+        debugger
         const data =res.data
         setOrderId(data.orderId);
         // const options = {
@@ -49,11 +50,14 @@ const CartPageFooter = (props) => {
                 "color": "#3399cc"
             }
         };
+        debugger
         const razorpay = new Razorpay(options);
+        debugger
         razorpay.open();
       }
     
     const onFail = (err)=>{
+         debugger
         console.log(err,"checkResErr")
 
     }

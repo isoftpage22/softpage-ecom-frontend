@@ -7,10 +7,10 @@ import * as consturl from "../../../utils/url";
 import { getToken } from "../../../utils/token";
 
 export const getProductsList = (_payload, resolve, reject) => {
-  const url = `${consturl.BASE_URL}industries/currentUserIndustry/${_payload?.industryId??1}/${_payload?.industryTypeId??4}`;
+  const url = `${consturl.BASE_URL}industries/currentUserIndustry`;
   const payload = {
       action: GET_PRODUCT_LIST,
-      method: constdata.GET,
+      method: constdata.POST,
       apiConfig: {
           headers: {
               'Content-Type':'application/json',
@@ -24,6 +24,7 @@ export const getProductsList = (_payload, resolve, reject) => {
           }
       },
       url: url,
+      data: _payload,
       resolve,
       reject
   };

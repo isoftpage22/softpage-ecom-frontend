@@ -14,7 +14,8 @@ import TopAddressBarContainer from '../../Container/TopAddressBarContainer/TopAd
 const Home = (props) => {
   const {getProductsList,productList,addToCart,addToCartProduct,deleteToCartProduct,toggleUserFormDrawer,userFormDrawerStatus,usersAddress} =props
    useEffect(() => {
-     getProductsList()
+    const getUserInfo = JSON.parse(localStorage.getItem('micrositeSlugsprop'))
+     getProductsList(getUserInfo)
    }, [])
    const [toggleDrawer, setToggleDrawer] = useState(false)
 

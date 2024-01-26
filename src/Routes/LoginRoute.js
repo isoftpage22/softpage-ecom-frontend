@@ -2,15 +2,17 @@ import React from 'react';
 import { Redirect, Route } from 'react-router-dom';
 // import {getToken} from '../utils/token';
 const LoginRoute = ({ component: Component,trackPage, fbPixelPageView,...rest }) => {
-  const userToken = 2;
+  // const userToken = 2;
   return (
       <Route {...rest} render={props => {
+        console.log(props,"checkPropsin")
+
         return (
-          (!userToken ?
+          // (!userToken ?
               <Component {...props} />
-              :
-              <Redirect to={{ pathname: '/', state: { from: props.location } }} />
-          )
+          //     :
+          //     <Redirect to={{ pathname: '/', state: { from: props.location } }} />
+          // )
         )
       }
     }/>

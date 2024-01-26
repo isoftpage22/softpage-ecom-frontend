@@ -24,6 +24,7 @@ import Loader from './Components/Loader';
 import "./App.css";
 import "./index.css";
 import ItemCardAtCheckout from "./Container/ItemCardAtCheckout/ItemCardAtCheckout";
+import OopsComponent from "./View/OopsComponent";
 // import SignupModal from "./Components/Modal/SignupModal/SignupModal";
 // import ReactGA from 'react-ga';
 // import ReactPixel from 'react-facebook-pixel';
@@ -37,15 +38,43 @@ const resolvePrivateRoutes = (routes) => {
     return routes.map((route) => {
       if (route.isPrivate) {
         route.render = (props) => (
-          <PrivateRoute component={route.component} {...props} />
+           <>
+  <PrivateRoute component={route.component} {...props} />
+          </>
         );
       }
       if (route.isAuth) {
-        route.render = (props) => (
-          <LoginRoute   component={route.component} {...props} />
-        );
+        route.render = (props) => {
+          console.log(props,"propsApp")
+         const {match} = props
+         let decodedParams = null;
+         let getMicrositeSlugsprop = null
+          if(match.params.id){
+            debugger
+            decodedParams = atob(match.params.id)
+           let  parsedDecodedParams = JSON.parse(decodedParams)
+            console.log(parsedDecodedParams,"parsedDecodedParams")
+            localStorage.setItem('micrositeSlugsprop',decodedParams)
+             getMicrositeSlugsprop =  JSON.parse(localStorage.getItem('micrositeSlugsprop'))
+
+          }
+         return (
+           
+           <>
+            {
+             getMicrositeSlugsprop && Object.keys(getMicrositeSlugsprop).length>0 ?<LoginRoute   component={route.component} {...props} />
+              :
+              <>
+               <OopsComponent/>
+              </>
+            }
+
+           </>
+        )};
       }
       if (route.routes) {
+        console.log("route2",route)
+
         resolvePrivateRoutes(route.routes);
       }
       
@@ -55,11 +84,11 @@ const resolvePrivateRoutes = (routes) => {
   }
 };
 function App(props) {
-  const { } = props;
   return (
     <>
      <Loader/>
     <Router history={history} basename={process.env.PUBLIC_URL}>
+        {console.log(props,"checkProps")}
       {renderRoutes(resolvePrivateRoutes(routes))}
     </Router>
     </>
