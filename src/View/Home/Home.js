@@ -12,13 +12,31 @@ import TopAddressBarContainer from '../../Container/TopAddressBarContainer/TopAd
 
 
 const Home = (props) => {
-  const {getProductsList,productList,addToCart,addToCartProduct,deleteToCartProduct,toggleUserFormDrawer,userFormDrawerStatus,usersAddress} =props
+  const {getProductsList,productList,addToCart,addToCartProduct,deleteToCartProduct,toggleUserFormDrawer,userFormDrawerStatus,usersAddress,emptyOrderPaymentStatuses} =props
    useEffect(() => {
+    console.log(props,"propsApp")
+    const {match} = props
+    let decodedParams = null;
+    let getMicrositeSlugsprop = null
+     if(match.params.id){
+       // debugger
+       decodedParams = atob(match.params.id)
+      let  parsedDecodedParams = JSON.parse(decodedParams)
+       console.log(parsedDecodedParams,"parsedDecodedParams")
+       localStorage.setItem('micrositeSlugsprop',decodedParams)
+        getMicrositeSlugsprop =  JSON.parse(localStorage.getItem('micrositeSlugsprop'))
+
+     }
     const getUserInfo = JSON.parse(localStorage.getItem('micrositeSlugsprop'))
-     getProductsList(getUserInfo)
+     getProductsList(getUserInfo,onSuccess,onFailure)
+     emptyOrderPaymentStatuses()
+
    }, [])
    const [toggleDrawer, setToggleDrawer] = useState(false)
-
+const onSuccess = (res)=>{
+}
+const onFailure = (err)=>{
+}
   return (
    <>
         <UserFormContainer />

@@ -18,9 +18,11 @@ const Footer = (props) => {
         displayQty = Number(displayQty) + Number(product.quantity);
         return price;
     });
-   
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
     return (
         <Fragment>
+            {console.log(props,"checkPropsFooter")}
             <Flex bg="white" justifyContent="center" alignItems="center" flexDirection="column">
                 <Image mt="10px" mb="32px" w="48px" h="50px" src="https://cdn.dotpe.in/logo/504/mcd1.jpg"/>
                 <Text mb="10px">Terms & conditions</Text>
@@ -32,11 +34,11 @@ const Footer = (props) => {
               
             <Text textColor="#7e7e7e" fontSize="14px" fontWeight="400"   mb="20px" mt="10px">Platform Powered by</Text>
                 <Box border="3px solid white" p="10px" mb="30px">
-                 <Text textColor="white"  fontSize="25px">FASTIE</Text>
+                 <Text textColor="white"  fontSize="25px">SOFTPAGE</Text>
                  </Box>
                 <Text textColor="#d1d1d1" mb="14px" >About Us</Text>
                 <Text textColor="#d1d1d1" mb="40px">Refund & Cancellation</Text>
-                <Text textColor="#9ea6b9" mb="5px">© 2021 Fastie</Text>
+                <Text textColor="#9ea6b9" mb="5px">© {currentYear} Fastie</Text>
 
             </Flex>
             { qty > 0 && !isShoppingCart? <FooterCartDetail {...props} qty={qty} price={price} /> :

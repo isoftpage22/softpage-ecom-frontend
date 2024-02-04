@@ -4,6 +4,8 @@ import shoppingCart from "./shoppingCart";
 import modalsNDrawers from "./modalsNDrawers";
 import address from "./address";
 import loader from "./loader";
+import orders from "./orders";
+
 
 
 
@@ -13,7 +15,8 @@ const rootReducer = combineReducers({
   shoppingCart,
   modalsNDrawers,
   address,
-  loader
+  loader,
+  orders
 });
 
 export default rootReducer;

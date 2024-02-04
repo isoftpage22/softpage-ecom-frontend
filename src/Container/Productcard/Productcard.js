@@ -1,7 +1,7 @@
 import { Box, Flex, Spacer, Text, useDisclosure, Button, Collapse, Image } from '@chakra-ui/react'
 import React from 'react'
 import Card from '../../Components/Card/Card'
-
+import scueesImg from '../../Assets/Animations/successfully-done.gif'
 const ProductCard = (props) => {
   const {product,addToCartProduct,addToCart,quantity,deleteToCartProduct}=props
   const { isOpen, onToggle } = useDisclosure()
@@ -41,6 +41,15 @@ const ProductCard = (props) => {
             borderRadius="5px"
             backgroundColor="#e4e1e1"
           />
+           {/* <Image
+            alignSelf="center"
+            src={scueesImg}
+            objectFit="cover"
+            width="110px"
+            height="75px"
+            borderRadius="5px"
+            backgroundColor="#e4e1e1"
+          /> */}
          {quantity ==0 ? 
          
          

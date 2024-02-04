@@ -32,6 +32,12 @@ const routes = [
 
       },
       {
+        path: "/order-status",
+        exact: true,
+        component: lazy(() => import("../View/OrderStatus")),
+        isPrivate: false,
+      },
+      {
         path: "/addresses",
         exact: true,
         component: lazy(() => import("../View/Address/AddressListing")),

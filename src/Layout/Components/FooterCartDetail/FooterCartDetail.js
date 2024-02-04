@@ -1,6 +1,7 @@
 import { Box, Text, Flex } from '@chakra-ui/react';
 import React, { Fragment } from 'react';
 import { Link } from 'react-router-dom';
+import { CUSTOMER_INFO } from '../../../utils/constants';
 // import { Button as NeumorphButton, Fab } from 'ui-neumorphism'
 const FooterCartDetail = (props) => {
     const { qty, price,history,toggleUserFormDrawer,userFormDrawerStatus } = props
@@ -8,7 +9,7 @@ const FooterCartDetail = (props) => {
     // );
     const handleViewCartButton = (e)=>{
         e.preventDefault()        
-        if(localStorage.getItem('CustomerInfo')){
+        if(localStorage.getItem(CUSTOMER_INFO)){
             return history.push('/cart')
         }
         else{
