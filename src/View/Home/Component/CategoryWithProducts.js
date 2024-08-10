@@ -1,17 +1,22 @@
 import { Box,Text } from '@chakra-ui/layout'
-import React from 'react'
+import React,{useEffect, useState} from 'react'
 import ProductCard from '../../../Container/Productcard/Productcard'
 
 const CategoryWithProducts = (props) => {
   const {productList,addToCart,addToCartProduct,deleteToCartProduct} =props
+  const [productsWithCategories, setProductsWithCategories] = useState(productList?.categories??[])
   // const{products}=productList
-const productsWithCategories = productList?.categories??[]
-
+  useEffect(() => {
+     {console.log("productList tender time")}
+    setProductsWithCategories(productList?.categories??[])
+  }, [productList])
+  
   return (
     <>
-    {console.log(productList,"productList")}
+    {console.log(productList,"productList",productsWithCategories)}
     <Box bg="white" mb="10px">
       {
+       productsWithCategories.length >0 ? 
         productsWithCategories.map((prodCateg)=>{
           return <>
           { prodCateg.products.length>0 && <Text fontSize="24px" p="32px 21px 32px 6%">{prodCateg.categoryName}</Text> }
@@ -40,7 +45,10 @@ const productsWithCategories = productList?.categories??[]
              }
           </>
         })
-        
+        :
+         <>
+          <Text textAlign={"center"}>No Products available</Text>
+         </> 
       }
      
     </Box>

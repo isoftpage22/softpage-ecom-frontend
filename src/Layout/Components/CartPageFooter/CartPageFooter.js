@@ -1,7 +1,7 @@
 import { Box, Text, Flex } from '@chakra-ui/react';
 import React, { Fragment,useState } from 'react';
 import { Link } from 'react-router-dom';
-import { createOrderBodyParams, getUserInFromLocal } from '../../../utils/CommonFunctions';
+import { createOrderBodyParams, getStoreInfoFromLocal, getUserInFromLocal } from '../../../utils/CommonFunctions';
 // import { Button as NeumorphButton, Fab } from 'ui-neumorphism'
 import Razorpay from 'razorpay';
 import axios from 'axios';
@@ -10,7 +10,9 @@ const CartPageFooter = (props) => {
     const {history, createOrder,verifyPayment,totalCartBill,productList,addToCart,emptyCartProduct}=props
     const [orderId, setOrderId] = useState('');
     const [customerInfo, setcustomerInfo] = useState(getUserInFromLocal())
-    let storeDetail ={ecommerceId:1,industryId:1}
+    const [storeInfo, setStoreInfo] = useState(getStoreInfoFromLocal())
+
+    let storeDetail = storeInfo
     let usersDetailingForOrder= ""
     const { qty, price,usersAddress } = props
     const bodyParams = createOrderBodyParams(productList,addToCart,usersAddress,totalCartBill,usersDetailingForOrder,storeDetail,customerInfo)

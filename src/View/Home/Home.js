@@ -9,12 +9,41 @@ import CommonTopBar from '../../Layout/Components/CommonTopBar/CommonTopBar'
 import Footer from '../../Layout/Guest/Components/Footer'
 import UserFormContainer from '../../Container/UserFormContainer'
 import TopAddressBarContainer from '../../Container/TopAddressBarContainer/TopAddressBarContainer'
+import { STORE_INFO } from '../../utils/constants'
+import { getStoreInfoFromLocal } from '../../utils/CommonFunctions'
+import { Alert, AlertIcon } from '@chakra-ui/react'
 
 
 const Home = (props) => {
-  const {getProductsList,productList,addToCart,addToCartProduct,deleteToCartProduct,toggleUserFormDrawer,userFormDrawerStatus,usersAddress,emptyOrderPaymentStatuses} =props
+  const {getProductsList,productList,addToCart,addToCartProduct,deleteToCartProduct,toggleUserFormDrawer,userFormDrawerStatus,usersAddress,emptyOrderPaymentStatuses,location} =props
    useEffect(() => {
-     getProductsList('',onSuccess,onFailure)
+     
+     console.log("checkProps",location.search)
+     const url = location.search;
+     const regex = /[?&]encodedParams=([^&]+)/;
+     const match = url.match(regex);
+     const encodedParams = match ? match[1] : null;
+     const decodedParms = encodedParams?atob(encodedParams):null
+      if(decodedParms){
+        localStorage.setItem(STORE_INFO,decodedParms)
+
+      }
+
+     const parseParams = decodedParms?JSON.parse(decodedParms):null
+
+     console.log("parseParams",parseParams)
+
+     let body = parseParams
+      if(getStoreInfoFromLocal()){
+        body = getStoreInfoFromLocal()
+        getProductsList(body,onSuccess,onFailure)
+
+      }
+      else{
+         console.log("Kahi yaha toh ni araa")
+         alert("SOmething wrong with you")  
+        }
+
      emptyOrderPaymentStatuses()
 
    }, [])

@@ -1,4 +1,4 @@
-import { CUSTOMER_INFO, LOCAL_STORAGE_CUSTOMER_ADDRESS } from "./constants";
+import { CUSTOMER_INFO, LOCAL_STORAGE_CUSTOMER_ADDRESS, STORE_INFO } from "./constants";
 
 const usedValues = [];
 
@@ -67,6 +67,14 @@ export const getAdrresFromLocal = ()=>{
   else{
    return []
   } }
+  export const getStoreInfoFromLocal = ()=>{
+    let dataItem =  localStorage.getItem(STORE_INFO)
+    if(dataItem){
+       return JSON.parse(dataItem)
+    }
+    else{
+     return []
+    } }
 
  export const createOrderBodyParams = (productList,addToCart,usersAddress,totalCartBill,usersDetailingForOrder,storeDetail,customerInfo)=>{
    let body = {
