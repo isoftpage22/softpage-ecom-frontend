@@ -5,9 +5,12 @@ const PrivateRoutes = ({ component: Component, trackPage, fbPixelPageView,...res
   const userToken = getToken()
   return (
       <Route {...rest} render={props => {
+        console.log(props,"checkPropsin")
         return (
           (userToken ?
+                <>
               <Component {...props} />
+              </>
               :
               <Redirect to={{ pathname: '/', state: { from: props.location } }} />
           )

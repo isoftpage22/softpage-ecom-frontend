@@ -34,7 +34,7 @@ const Footer = (props) => {
               
             <Text textColor="#7e7e7e" fontSize="14px" fontWeight="400"   mb="20px" mt="10px">Platform Powered by</Text>
                 <Box border="3px solid white" p="10px" mb="30px">
-                 <Text textColor="white"  fontSize="25px">FASTIE</Text>
+                 <Text textColor="white"  fontSize="25px">SOFTPAGE</Text>
                  </Box>
                 <Text textColor="#d1d1d1" mb="14px" >About Us</Text>
                 <Text textColor="#d1d1d1" mb="40px">Refund & Cancellation</Text>

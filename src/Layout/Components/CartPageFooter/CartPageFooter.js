@@ -26,6 +26,7 @@ const CartPageFooter = (props) => {
 
 }
     const onSuccess = (res)=>{
+        debugger
         const data =res.data
         setOrderId(data.orderId);
         // const options = {
@@ -97,6 +98,7 @@ const CartPageFooter = (props) => {
       }
     
     const onFail = (err)=>{
+         debugger
         console.log(err,"checkResErr")
 
     }
