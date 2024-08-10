@@ -43,7 +43,7 @@ const ViewOffersDrawer = ({toggleDrawer,setToggleDrawer}) => {
         py="5px"
         px="8px"
         borderBottomWidth="1px">
-          <DrawerHeaderCustom text={"Offers"}>
+          <DrawerHeaderCustom text={"Offers"} method={setToggleDrawer}>
              
             </DrawerHeaderCustom>
         </DrawerHeader>
