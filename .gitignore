@@ -29,8 +29,8 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # env files — keep .env.example and .env.production in git (public NEXT_PUBLIC_*)
-.env
-.env*.local
+# .env
+# .env*.local
 
 # vercel
 .vercel
