@@ -1,8 +1,9 @@
 import { BaseQueryFn } from "@reduxjs/toolkit/query/react";
 import { getGuestSessionId } from "@/lib/cart/session";
 import { extractErrorMessages } from "@/lib/api/userFacingError";
+import { apiOrigin } from "@/lib/api/origin";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+const API_BASE_URL = apiOrigin();
 // GraphQL is served under the backend's global API prefix (useGlobalPrefix:
 // true + setGlobalPrefix('api/v1')), so the endpoint is /api/v1/graphql.
 const GRAPHQL_ENDPOINT = `${API_BASE_URL}/api/v1/graphql`;

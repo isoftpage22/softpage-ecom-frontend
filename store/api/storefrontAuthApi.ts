@@ -1,4 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { apiOrigin } from "@/lib/api/origin";
 import type {
   SignupInfoResult,
   AuthResult,
@@ -8,7 +9,7 @@ import type {
   AddressInput,
 } from "@/types/storefront-auth.types";
 
-const API_ORIGIN = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+const API_ORIGIN = apiOrigin();
 const BASE_URL = `${API_ORIGIN}/api/v1`;
 
 type Envelope<T> = { data: T } | T;

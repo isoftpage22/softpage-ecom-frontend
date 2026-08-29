@@ -1,8 +1,9 @@
 import { headers } from "next/headers";
 import { cache } from "react";
 import type { TenantInfo } from "./TenantContext";
+import { apiOrigin } from "@/lib/api/origin";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+const API_BASE_URL = apiOrigin();
 
 async function fetchTenant(url: string): Promise<TenantInfo | null> {
   try {

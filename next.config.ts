@@ -1,7 +1,10 @@
+import path from "path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: "standalone",
+  // Vercel traces the app itself. `standalone` is for Docker / Cloud Run.
+  ...(process.env.VERCEL ? {} : { output: "standalone" as const }),
+  outputFileTracingRoot: path.join(__dirname),
   typescript: {
     ignoreBuildErrors: true,
   },

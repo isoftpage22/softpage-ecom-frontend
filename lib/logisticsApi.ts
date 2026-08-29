@@ -1,3 +1,5 @@
+import { apiOrigin } from "@/lib/api/origin";
+
 export type ServiceabilityQuote = {
   serviceable: boolean;
   reason: "ok" | "out_of_zone" | "not_serviceable" | "in_zone_unchecked";
@@ -25,7 +27,7 @@ export type DeliveryAreaZone = {
   pincodes?: string[] | null;
 };
 
-const API_ORIGIN = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+const API_ORIGIN = apiOrigin();
 
 function unwrap<T>(body: unknown): T | null {
   if (!body || typeof body !== "object") return null;

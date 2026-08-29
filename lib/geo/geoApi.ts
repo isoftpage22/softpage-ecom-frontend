@@ -1,3 +1,5 @@
+import { apiOrigin } from "@/lib/api/origin";
+
 export type GeoAddress = {
   lat: number;
   lng: number;
@@ -8,7 +10,7 @@ export type GeoAddress = {
   country: string;
 };
 
-const API_ORIGIN = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+const API_ORIGIN = apiOrigin();
 const SEARCH_TTL_MS = 5 * 60 * 1000;
 const searchCache = new Map<string, { at: number; hits: GeoAddress[] }>();
 
