@@ -1,4 +1,4 @@
-import { Box } from '@chakra-ui/layout';
+import { Box } from '@chakra-ui/react';
 import React, { Suspense } from 'react'
 import { renderRoutes } from "react-router-config";
 import BackButtonHeader from '../../Components/BackButtonHeader/BackButtonHeader'

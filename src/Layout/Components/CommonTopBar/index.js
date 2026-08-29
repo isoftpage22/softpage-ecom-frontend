@@ -7,8 +7,7 @@ import { bindActionCreators } from "redux";
 
 function mapStateToProps(state, props) {
   return {
-    needGuestCartSync: state.login.needGuestCartSync,
-    addToCart: state.product.addToCart && state.product.addToCart
+    addToCart: state.shoppingCart.addToCart,
   };
 }
 

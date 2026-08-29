@@ -23,7 +23,7 @@
   color: black;
   font-weight: bold;
   text-align: center;
-  font-family: 'Montserrat';
+  font-family: var(--font-montserrat), Montserrat, sans-serif;
 }
 
 @keyframes inward-text {

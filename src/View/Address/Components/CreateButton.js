@@ -1,7 +1,7 @@
 import React,{Fragment} from 'react'
 import { Box,Button,Flex,Text,Icon } from '@chakra-ui/react'
 import { MdAddCircle } from "react-icons/md";
-import { Link } from 'react-router-dom';
+import { Link } from '../../../lib/nav';
 
 const CreateButton = (props) => {
   return (

@@ -24,7 +24,7 @@ const SearchBarDrawer = ({ toggleDrawer, setToggleDrawer }) => {
     <>
       <DrawerComp
         placement={'top'}
-        bg="black"
+        bg="var(--brand-secondary, #111111)"
         height="15vh"
         borderTopRightRadius='0px'
         borderTopLeftRadius="0px"

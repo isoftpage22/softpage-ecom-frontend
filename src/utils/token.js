@@ -1,6 +1,7 @@
 import Cookies from "js-cookie";
 // import { MIN_CART_VALUE, EXPRESS_DELIVERY_CHARGE } from "./constants";
 export const getToken = () => {
+  if (typeof document === "undefined") return "";
   let allcookies = document.cookie.split(";");
   let token = "";
   for (let i = 0; i < allcookies.length; i++) {

@@ -1,33 +1,18 @@
 import React, { useState } from 'react'
-import { Box, Button, Menu, MenuItem, HStack, Flex, Grid, Spacer, Text, IconButton, useDisclosure, Image, Divider } from '@chakra-ui/react'
-import { ArrowBackIcon, AddIcon, WarningIcon, SearchIcon } from '@chakra-ui/icons'
-import { useHistory } from 'react-router'
+import { Box, Flex, Spacer, Text, IconButton } from '@chakra-ui/react'
+import { ArrowBackIcon } from '@chakra-ui/icons'
+import { useHistory } from '../../../lib/nav'
 import SearchBarDrawer from '../../../Container/SearchBarDrawer/SearchBarDrawer'
+import { ProfileMenu } from '../../../Components/ProfileMenu/ProfileMenu'
 
-const TopBarWithBackButton = ({ addToCart, getProductListOnSearch, urlParamObject,headerText="Cart" }) => {
+const TopBarWithBackButton = ({ addToCart = null, getProductListOnSearch = null, urlParamObject = null, headerText="Cart" }) => {
     const [toggleDrawer, setToggleDrawer] = useState(false)
-    const { isOpen, onOpen, onClose } = useDisclosure()
     const history = useHistory()
-    const restaurant2 = "Noida Sector 16"
 
-    const fontSize = (length) => {
-        if (length > 70) {
-            return "17px"
-        }
-        if (length > 30 && length < 70) {
-            return "20px"
-        }
-        if (length <= 10) {
-            return "40px"
-        }
-        if (length > 10 && length < 30) {
-            return "30px"
-        }
-    }
     return (
         <>
-            <Flex bg="black" p="10px" h="80px" justify="space-around" alignItems="flex-">
-                <Box textAlign="center" wordBreak="break-all" boxSizing="border-box" as="p" fontSize={fontSize(headerText)} fontWeight="700" alignSelf="center">
+            <Flex bg="var(--brand-secondary, #111111)" px="8px" h="56px" alignItems="center">
+                <Box textAlign="left" boxSizing="border-box" fontWeight="700" alignSelf="center">
                     <Flex >
                         <IconButton
                             size="md"
@@ -49,7 +34,7 @@ const TopBarWithBackButton = ({ addToCart, getProductListOnSearch, urlParamObjec
                                 textAlign="left"
                                 fontSize="19px"
                                 ml="5px"
-                                extTransform="capitalize">{headerText}</Text>
+                                textTransform="capitalize">{headerText}</Text>
                             {/* <Text
                                 color="#777171"
                                 lineHeight="15px"
@@ -74,7 +59,8 @@ const TopBarWithBackButton = ({ addToCart, getProductListOnSearch, urlParamObjec
                         />}
                     />
                 </Box> */}
-                <Box alignSelf="center" >
+                <Box alignSelf="center">
+                    <ProfileMenu />
                 </Box>
             </Flex>
             {/* <Divider/> */}

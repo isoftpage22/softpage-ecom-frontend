@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { bindActionCreators } from "redux";
 // import { getBannerList } from '../../Store/action/banner';
 import {getProductsList } from '../../../Store/action/products';
-import {addToCartProduct,deleteToCartProduct } from '../../../Store/action/shoppingCart';
+import {addToCartProduct,deleteToCartProduct, emptyCartProduct } from '../../../Store/action/shoppingCart';
 import {setLoader } from '../../../Store/action/loader';
 import {createOrder,verifyPayment } from '../../../Store/action/orders';
 
@@ -20,6 +20,8 @@ function mapStateToProps(state, props) {
         addToCart:state.shoppingCart.addToCart,
         detailedBill:state.shoppingCart.detailedBill,
         usersAddress:state.address.address,
+        tip: state.shoppingCart.tip,
+        specialInstructions: state.shoppingCart.specialInstructions,
 
 
     };
@@ -32,7 +34,8 @@ function mapDispatchToProps(dispatch) {
         deleteToCartProduct,
         setLoader,
         createOrder,
-        verifyPayment
+        verifyPayment,
+        emptyCartProduct
         
     }, dispatch);
 }

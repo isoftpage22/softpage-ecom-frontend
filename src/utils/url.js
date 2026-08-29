@@ -1,5 +1,4 @@
-// export const BASE_URL = process.env.REACT_APP_BASE_URL;
- export const BASE_URL='https://apis.softpage.in/'
-// export const BASE_URL='http://localhost:3003/'
+const origin = (process.env.NEXT_PUBLIC_API_URL || "https://apis.softpage.in").replace(/\/$/, "");
+export const BASE_URL = `${origin}/`;
 
 export const PRODUCT = "product";

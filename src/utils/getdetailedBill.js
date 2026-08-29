@@ -1,4 +1,4 @@
-export const getDetailBill = (_addToCart,discType='percentage',discountVal=18,tip=0)=>{
+export const getDetailBill = (_addToCart,discType='percentage',discountVal=18,tip=0,deliveryFee=0)=>{
 
     let discountRate = discountVal
     let discountType = discType
@@ -17,7 +17,8 @@ export const getDetailBill = (_addToCart,discType='percentage',discountVal=18,ti
     },0)
     let priceAfterDiscount = Math.ceil(totalAmount - getDiscount(discountType, discountRate, totalAmount))
     let taxAmount = getDiscount('percentage', 18, priceAfterDiscount)
-    let totalFinalPriceAmount =  priceAfterDiscount + taxAmount + tip
+    const shipping = Math.max(0, Number(deliveryFee) || 0)
+    let totalFinalPriceAmount =  priceAfterDiscount + taxAmount + tip + shipping
     
      return{
         qty: _addToCart.products.length,
@@ -30,6 +31,7 @@ export const getDetailBill = (_addToCart,discType='percentage',discountVal=18,ti
         CGST:Math.round(taxAmount/2),
         SGST:Math.round(taxAmount/2),
         tip:tip,
+        deliveryFee: shipping,
         totalFinalPriceAmount : totalFinalPriceAmount
      }
   

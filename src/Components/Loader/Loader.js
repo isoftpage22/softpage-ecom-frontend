@@ -2,16 +2,14 @@ import React from 'react';
 import './loader-styles.css'
 import { Text } from '@chakra-ui/react';
 const Loader = ({ isloading }) => {
+    if (!isloading) return null;
     return (
-        <div className="loader" style={{ display: isloading ? "block" : "none" }}>
+        <div className="loader" style={{ display: "block" }}>
             <div className="loader-container">
-             
-            <div class="spinner mb-2">
+            <div className="spinner mb-2">
             </div>
-            <Text color={"white"}>Loading... Please wait</Text>
-
+            <Text as="span" color={"white"}>Loading... Please wait</Text>
             </div>
-
         </div>
     );
 }

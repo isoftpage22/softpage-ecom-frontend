@@ -28,7 +28,7 @@ export  const Text = {
   // Two variants: outline and solid
   variants: {
     outline: {
-      fontFamily : "Montserrat",
+      fontFamily : "var(--font-montserrat), Montserrat, sans-serif",
       fontStyle:'normal',
       fontWeight:'normal',
       fontSize:'14px',
@@ -39,7 +39,7 @@ export  const Text = {
     },
     solid: {
      color: "#131212",
-    fontFamily : "Montserrat",
+    fontFamily : "var(--font-montserrat), Montserrat, sans-serif",
      fontWeight:'bolder',
      fontStyle:'normal',
      fontSize:'16px',
@@ -47,7 +47,7 @@ export  const Text = {
      
     },
     landingNav: {
-      fontFamily: "Work Sans",
+      fontFamily: "var(--font-work-sans), 'Work Sans', sans-serif",
       fontStyle: "normal",
       fontWeight: "normal",
       fontSize: "30px",
@@ -56,7 +56,7 @@ export  const Text = {
      },
      landingHeader: {
       color: "#131212",
-      fontFamily : "Montserrat",
+      fontFamily : "var(--font-montserrat), Montserrat, sans-serif",
       fontWeight:'bolder',
       fontStyle:'normal',
       fontSize:'16px',
@@ -64,7 +64,7 @@ export  const Text = {
      },
     solidCart: {
      color: "#131212",
-     fontFamily : "Montserrat",
+     fontFamily : "var(--font-montserrat), Montserrat, sans-serif",
      fontWeight:'400',
      fontStyle:'normal',
      fontSize:'16px',
@@ -72,7 +72,7 @@ export  const Text = {
      
     },
     solidCartTip: {
-    fontFamily : "Work Sans",
+    fontFamily : "var(--font-work-sans), 'Work Sans', sans-serif",
      fontWeight:'bold',
      fontStyle:'normal',
      fontSize:'16px',
@@ -87,7 +87,7 @@ export  const Text = {
      
     },
     mutedCart: {
-    fontFamily : "Work Sans",
+    fontFamily : "var(--font-work-sans), 'Work Sans', sans-serif",
     fontStyle:'normal',
     fontWeight:'400',
     fontSize:'14px',

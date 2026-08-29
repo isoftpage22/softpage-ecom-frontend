@@ -11,7 +11,6 @@ import {toggleUserFormDrawer } from '../../Store/action/modalsNDrawers';
 // import { showToastMessage, resetToastMessage } from '../../Store/action/loader';
 
 function mapStateToProps(state, props) {
-    console.log(state,"state")
     return {
         productList:state.products.productList,
         addToCart:state.shoppingCart.addToCart,

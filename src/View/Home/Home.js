@@ -1,78 +1,61 @@
-import React,{useEffect,useState} from 'react'
-import ItemCardAtCheckout from '../../Container/ItemCardAtCheckout/ItemCardAtCheckout'
+import React, { useEffect, useMemo, useState } from 'react'
 import CategoryWithProducts from './Component/CategoryWithProducts'
 import CurrentOffers from './Component/CurrentOffers'
 import ProductPromotions from './Component/ProductPromotions'
 import ToggleSwitch from './Component/ToggleSwitch'
-import { Box } from '@chakra-ui/layout';
+import CategoryMenuFab from './Component/CategoryMenuFab'
 import CommonTopBar from '../../Layout/Components/CommonTopBar/CommonTopBar'
 import Footer from '../../Layout/Guest/Components/Footer'
-import UserFormContainer from '../../Container/UserFormContainer'
 import TopAddressBarContainer from '../../Container/TopAddressBarContainer/TopAddressBarContainer'
-import { STORE_INFO } from '../../utils/constants'
-import { getStoreInfoFromLocal } from '../../utils/CommonFunctions'
-import { Alert, AlertIcon } from '@chakra-ui/react'
-
+import { useMenuCatalog } from '../../hooks/useMenuCatalog'
+import { getTableSession, isDineInSession, tableSessionLabel } from '@/lib/restaurant/table-session'
+import { Box, Text } from '@chakra-ui/react'
+import { filterVegOnlyCatalog } from '../../../lib/catalog/options'
 
 const Home = (props) => {
-  const {getProductsList,productList,addToCart,addToCartProduct,deleteToCartProduct,toggleUserFormDrawer,userFormDrawerStatus,usersAddress,emptyOrderPaymentStatuses,location} =props
-   useEffect(() => {
-     
-     console.log("checkProps",location.search)
-     const url = location.search;
-     const regex = /[?&]encodedParams=([^&]+)/;
-     const match = url.match(regex);
-     const encodedParams = match ? match[1] : null;
-     const decodedParms = encodedParams?atob(encodedParams):null
-      if(decodedParms){
-        localStorage.setItem(STORE_INFO,decodedParms)
+  const { productList, addToCart, addToCartProduct, deleteToCartProduct, toggleUserFormDrawer, usersAddress, emptyOrderPaymentStatuses, hideChrome } = props
+  useMenuCatalog()
+  const [vegOnly, setVegOnly] = useState(false)
 
-      }
+  useEffect(() => {
+    emptyOrderPaymentStatuses()
+  }, [emptyOrderPaymentStatuses])
 
-     const parseParams = decodedParms?JSON.parse(decodedParms):null
+  const [tableSession, setTableSessionState] = useState(null)
+  useEffect(() => {
+    setTableSessionState(getTableSession())
+  }, [])
+  const dineIn = isDineInSession(tableSession)
+  const tableLabel = tableSessionLabel(tableSession)
+  const visibleProductList = useMemo(
+    () => filterVegOnlyCatalog(productList, vegOnly),
+    [productList, vegOnly]
+  )
 
-     console.log("parseParams",parseParams)
-
-     let body = parseParams
-      if(getStoreInfoFromLocal()){
-        body = getStoreInfoFromLocal()
-        getProductsList(body,onSuccess,onFailure)
-
-      }
-      else{
-         console.log("Kahi yaha toh ni araa")
-         alert("SOmething wrong with you")  
-        }
-
-     emptyOrderPaymentStatuses()
-
-   }, [])
-   const [toggleDrawer, setToggleDrawer] = useState(false)
-const onSuccess = (res)=>{
-}
-const onFailure = (err)=>{
-}
   return (
-   <>
-        <UserFormContainer toggleUserFormDrawer={toggleUserFormDrawer}/>
-        {console.log(usersAddress,"usersAddress",props)}
-  {Object.keys(usersAddress).length>0 && <TopAddressBarContainer/>}
-   <CommonTopBar/>
-   <ProductPromotions/>
-   <CurrentOffers/>
-   {/* <Box onClick={()=>toggleUserFormDrawer(true)}>
-     <h1>Click Here</h1>
-   </Box> */}
-   <ToggleSwitch/>
-    <CategoryWithProducts 
-     productList={productList} 
-     addToCart={addToCart}
-     addToCartProduct={addToCartProduct}
-     deleteToCartProduct={deleteToCartProduct}
-     />
-     <Footer {...props}/>
-
-   </>
+    <>
+      {dineIn && tableLabel ? (
+        <Box bg="var(--brand-secondary, #111)" color="white" px="16px" py="8px">
+          <Text fontSize="13px" fontWeight="600">{tableLabel}</Text>
+        </Box>
+      ) : null}
+      {!dineIn && Object.keys(usersAddress || {}).length > 0 && <TopAddressBarContainer />}
+      {!hideChrome && <CommonTopBar />}
+      {!hideChrome && <ProductPromotions />}
+      {!hideChrome && <CurrentOffers />}
+      <ToggleSwitch vegOnly={vegOnly} onVegOnlyChange={setVegOnly} />
+      <CategoryWithProducts
+        productList={visibleProductList}
+        addToCart={addToCart}
+        addToCartProduct={addToCartProduct}
+        deleteToCartProduct={deleteToCartProduct}
+      />
+      {!hideChrome && <Footer {...props} />}
+      <CategoryMenuFab
+        productList={visibleProductList}
+        cartItemCount={addToCart?.products?.length || 0}
+      />
+    </>
   )
 }
 

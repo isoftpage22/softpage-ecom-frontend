@@ -1,18 +1,21 @@
-import { Switch, Box,FormControl,FormLabel } from '@chakra-ui/react'
+import { Switch, Box, FormControl, FormLabel } from '@chakra-ui/react'
 import React from 'react'
 
-const ToggleSwitch = () => {
+const ToggleSwitch = ({ vegOnly, onVegOnlyChange }) => {
   return (
-    <>
-      <Box p="16px" mt="5px">
-        <FormControl display="flex" alignItems="center">
-          <FormLabel htmlFor="email-alerts" mb="0">
-           Veg Only
-          </FormLabel>
-          <Switch id="email-alerts" colorScheme="green" />
-        </FormControl>
-      </Box>
-    </>
+    <Box px="6%" pt="8px" pb="0">
+      <FormControl display="flex" alignItems="center">
+        <FormLabel htmlFor="veg-only" mb="0">
+          Veg Only
+        </FormLabel>
+        <Switch
+          id="veg-only"
+          colorScheme="green"
+          isChecked={!!vegOnly}
+          onChange={(event) => onVegOnlyChange?.(event.target.checked)}
+        />
+      </FormControl>
+    </Box>
   )
 }
 
