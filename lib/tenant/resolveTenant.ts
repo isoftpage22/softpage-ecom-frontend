@@ -16,6 +16,30 @@ async function fetchTenant(url: string): Promise<TenantInfo | null> {
   }
 }
 
+/** Vercel / workers.dev hosts are not tenant stores — skip by-host for these. */
+const PLATFORM_HOST = /(^|\.)vercel\.app$|(^|\.)workers\.dev$/i;
+
+/**
+ * Public restaurant host. Cloudflare must send `x-softpage-host` because Vercel
+ * overwrites `x-forwarded-host` / `host` with `*.vercel.app` when the Worker
+ * rewrites Host so Vercel will accept the request.
+ */
+function requestPublicHost(headersList: Headers): string {
+  const candidates = [
+    headersList.get("x-softpage-host"),
+    headersList.get("x-original-host"),
+    headersList.get("x-forwarded-host"),
+    headersList.get("host"),
+  ];
+  for (const raw of candidates) {
+    if (!raw) continue;
+    const host = raw.split(",")[0].trim().split(":")[0].toLowerCase();
+    if (!host || PLATFORM_HOST.test(host)) continue;
+    return host;
+  }
+  return "";
+}
+
 /**
  * Server-only tenant resolver. Production hosts such as
  * `asian-box-restaurant.softpage.in` map via `GET /api/v1/public/store/by-host`.
@@ -24,8 +48,7 @@ async function fetchTenant(url: string): Promise<TenantInfo | null> {
  */
 export const resolveTenant = cache(async (): Promise<TenantInfo | null> => {
   const headersList = await headers();
-  const host =
-    headersList.get("x-forwarded-host") || headersList.get("host") || "";
+  const host = requestPublicHost(headersList);
 
   if (host) {
     const byHost = await fetchTenant(
