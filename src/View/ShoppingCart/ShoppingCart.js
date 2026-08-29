@@ -1,6 +1,6 @@
 import { Box, Text } from '@chakra-ui/react'
 import React, { useEffect, useState } from 'react'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import ItemCardAtCheckout from '../../Container/ItemCardAtCheckout/ItemCardAtCheckout'
 import DetailedBill from './Components/DetailedBill'
 import DiscountCoupons from './Components/DiscountCoupons'
@@ -12,6 +12,7 @@ import Footer from '../../Layout/Guest/Components/Footer'
 import TopAddressBarContainer from '../../Container/TopAddressBarContainer/TopAddressBarContainer'
 import { useHistory } from '../../lib/nav'
 import { useSearchParams } from 'next/navigation'
+import { setActiveOrder } from '../../Store/action/shoppingCart'
 import { getTableSession, isDineInSession, tableSessionLabel } from '@/lib/restaurant/table-session'
 import { isProductOutOfStock, isVariantOutOfStock } from '../../../lib/catalog/options'
 import { useStoreSlug } from '@/lib/tenant/TenantContext'
@@ -58,12 +59,29 @@ const ShoppingCart = (props) => {
     return isProductOutOfStock(line?.product) || isVariantOutOfStock(selectedVariant, line?.product)
   })
   const extraFooterSpace = checkoutError || hasUnavailableLine
+  const dispatch = useDispatch()
+  const activeOrder = useSelector((state) => state.shoppingCart.activeOrder)
 
   useEffect(() => {
-    if (products.length<1){
-      history.replace('/') 
+    if (paymentCancelled) dispatch(setActiveOrder(null))
+  }, [paymentCancelled, dispatch])
+
+  useEffect(() => {
+    if ((products || []).length > 0) return
+    if (paymentCancelled) {
+      history.replace('/')
+      return
     }
-  }, [])
+    if (activeOrder?.orderId) {
+      history.replace(
+        activeOrder.phase === 'processing'
+          ? `/order-status/${activeOrder.orderId}`
+          : `/orders/${activeOrder.orderId}`,
+      )
+      return
+    }
+    history.replace('/')
+  }, [products, activeOrder, history, paymentCancelled])
 
   return (
     <>

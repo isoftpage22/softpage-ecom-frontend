@@ -7,6 +7,7 @@ import {
   buildFontHref,
 } from "@/lib/theme/brandPalette";
 import { PersistStoreInfo } from "@/src/hooks/PersistStoreInfo";
+import { PersistMenuCart } from "@/src/hooks/PersistMenuCart";
 import { StoreClosedScreen } from "@/components/StoreClosedScreen";
 import { MenuAuthChrome } from "@/components/MenuAuthChrome";
 
@@ -59,6 +60,7 @@ export default async function MenuLayout({
       ) : null}
       <TenantProvider tenant={tenant}>
       <PersistStoreInfo />
+      <PersistMenuCart />
       <MenuAuthChrome />
       {isStoreOpen ? children : <StoreClosedScreen />}
       </TenantProvider>

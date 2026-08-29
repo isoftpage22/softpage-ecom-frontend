@@ -9,7 +9,7 @@ import {
   isDineInSession,
   tableSessionLabel,
 } from "@/lib/restaurant/table-session";
-import { emptyCartProduct, setCartCheckoutError } from "../../../Store/action/shoppingCart";
+import { emptyCartProduct, setCartCheckoutError, setActiveOrder } from "../../../Store/action/shoppingCart";
 import { toggleUserFormDrawer } from "../../../Store/action/modalsNDrawers";
 import { hasStorefrontToken, setPostAuthRedirect } from "@/lib/auth/persistAuth";
 import { placeMenuOrder } from "@/lib/checkout/placeMenuOrder";
@@ -108,6 +108,16 @@ const CartPageFooter = (props) => {
       });
 
       if (result.paymentRequired && result.paymentPageUrl) {
+        const pendingId = result.order?.id;
+        if (pendingId) {
+          dispatch(
+            setActiveOrder({
+              orderId: pendingId,
+              orderNumber: result.order?.orderNumber,
+              phase: "processing",
+            }),
+          );
+        }
         window.location.assign(result.paymentPageUrl);
         return;
       }
@@ -133,10 +143,22 @@ const CartPageFooter = (props) => {
               razorpayPaymentId: response.razorpay_payment_id,
               razorpaySignature: response.razorpay_signature,
             }).unwrap();
-            history.replace(orderId ? `/order-status/${orderId}?paid=1` : "/order-status?paid=1");
+            dispatch(emptyCartProduct());
+            dispatch(setCartCheckoutError(null));
+            if (orderId) {
+              dispatch(
+                setActiveOrder({
+                  orderId,
+                  orderNumber: result.order?.orderNumber,
+                  phase: "completed",
+                }),
+              );
+            }
+            history.replace(orderId ? `/orders/${orderId}` : "/orders");
           },
           onDismiss: () => {
             setPlacing(false);
+            dispatch(setActiveOrder(null));
             dispatch(
               setCartCheckoutError({
                 title: "Payment cancelled",
@@ -176,9 +198,17 @@ const CartPageFooter = (props) => {
 
       dispatch(emptyCartProduct());
       dispatch(setCartCheckoutError(null));
-
       const orderId = result.order?.id;
-      history.replace(orderId ? `/order-status/${orderId}?paid=1` : "/order-status?paid=1");
+      if (orderId) {
+        dispatch(
+          setActiveOrder({
+            orderId,
+            orderNumber: result.order?.orderNumber,
+            phase: "completed",
+          }),
+        );
+      }
+      history.replace(orderId ? `/orders/${orderId}` : "/orders");
     } catch (err) {
       dispatch(setCartCheckoutError(formatCheckoutError(err, "Could not place order")));
     } finally {

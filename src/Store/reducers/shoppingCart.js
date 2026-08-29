@@ -6,11 +6,14 @@ import {
   SET_CART_TIP,
   SET_CART_NOTES,
   SET_CART_CHECKOUT_ERROR,
+  HYDRATE_CART,
+  SET_ACTIVE_ORDER,
 } from "../actionTypes";
 import { cartLineKey, catalogUnitPrice } from "../../../lib/catalog/options";
 import { lineMatchesItemNames } from "../../../lib/api/userFacingError";
+import { loadMenuCart } from "@/lib/cart/persistCart";
 
-const INITIAL_STATE = {
+const EMPTY_CART = {
   addToCart: {
     products: [],
   },
@@ -18,7 +21,22 @@ const INITIAL_STATE = {
   tip: 0,
   specialInstructions: "",
   checkoutError: null,
+  activeOrder: null,
 };
+
+function stateFromStorage() {
+  const stored = loadMenuCart();
+  if (!stored) return EMPTY_CART;
+  return {
+    ...EMPTY_CART,
+    addToCart: { products: stored.products || [] },
+    tip: stored.tip || 0,
+    specialInstructions: stored.specialInstructions || "",
+    activeOrder: stored.activeOrder || null,
+  };
+}
+
+const INITIAL_STATE = stateFromStorage();
 
 function roundMoney(value) {
   return Math.round(parseFloat(value) || 0);
@@ -26,6 +44,22 @@ function roundMoney(value) {
 
 const shoppingCart = (state = INITIAL_STATE, action) => {
   switch (action.type) {
+    case HYDRATE_CART: {
+      const payload = action.payload || {};
+      return {
+        ...state,
+        addToCart: { products: Array.isArray(payload.products) ? payload.products : [] },
+        tip: Number(payload.tip) || 0,
+        specialInstructions: payload.specialInstructions || "",
+        checkoutError: null,
+        activeOrder: payload.activeOrder || null,
+      };
+    }
+    case SET_ACTIVE_ORDER:
+      return {
+        ...state,
+        activeOrder: action.payload || null,
+      };
     case ADD_PRODUCT_TO_CART: {
       const productInfo = action.payload || {};
       const _addToCart = _.cloneDeep(state.addToCart);
@@ -92,6 +126,7 @@ const shoppingCart = (state = INITIAL_STATE, action) => {
       return {
         ...state,
         addToCart: _addToCart,
+        activeOrder: null,
       };
     }
     case DELETE_PRODUCT_TO_CART: {
@@ -133,7 +168,7 @@ const shoppingCart = (state = INITIAL_STATE, action) => {
     case EMPTY_CART_PRODUCT_SUCCESS: {
       return {
         ...state,
-        addToCart: INITIAL_STATE.addToCart,
+        addToCart: { products: [] },
         tip: 0,
         specialInstructions: "",
         checkoutError: null,

@@ -5,6 +5,8 @@ import {
   SET_CART_TIP,
   SET_CART_NOTES,
   SET_CART_CHECKOUT_ERROR,
+  HYDRATE_CART,
+  SET_ACTIVE_ORDER,
 } from "../../actionTypes";
 
 export const addToCartProduct = (_payload) => {
@@ -24,4 +26,10 @@ export const setCartNotes = (_payload) => {
 };
 export const setCartCheckoutError = (_payload) => {
   return { type: SET_CART_CHECKOUT_ERROR, payload: _payload || null };
+};
+export const hydrateCart = (_payload) => {
+  return { type: HYDRATE_CART, payload: _payload || null };
+};
+export const setActiveOrder = (_payload) => {
+  return { type: SET_ACTIVE_ORDER, payload: _payload || null };
 };

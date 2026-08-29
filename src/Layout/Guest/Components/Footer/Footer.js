@@ -1,11 +1,13 @@
 import { Flex, Text, Box } from '@chakra-ui/react';
 import React, { Fragment } from 'react';
+import { useSelector } from 'react-redux';
 import FooterCartDetail from '../../../Components/FooterCartDetail';
 import CartPageFooter from '../../../Components/CartPageFooter/CartPageFooter';
 import { useStoreConfig } from '@/lib/tenant/TenantContext';
 import { Link } from '../../../../lib/nav';
 import { StoreLogo } from '@/components/StoreLogo';
 import { CHROME_ACCENT, CHROME_BAR_BG, CHROME_SURFACE, CHROME_TEXT } from '@/lib/menu/storeChrome';
+import { showsOrderBar } from '@/lib/cart/persistCart';
 
 const SOCIAL_KEYS = ['instagram', 'facebook', 'twitter', 'youtube', 'linkedin', 'whatsapp', 'telegram'];
 
@@ -41,11 +43,16 @@ const Footer = (props) => {
         .filter((key) => config.social?.[key])
         .map((key) => ({ name: key.charAt(0).toUpperCase() + key.slice(1), href: config.social[key] }))
 
+    const activeOrder = useSelector((state) => state.shoppingCart.activeOrder)
+    const stickyOrder = showsOrderBar(activeOrder)
+
     const cartBar = qty > 0 && !isShoppingCart
         ? <FooterCartDetail {...props} qty={qty} price={price} />
         : qty > 0
             ? <CartPageFooter qty={qty} {...props} price={price} />
-            : null
+            : !isShoppingCart && stickyOrder
+                ? <FooterCartDetail {...props} qty={0} price={0} />
+                : null
 
     if (hideVisual) {
         return <Fragment>{cartBar}</Fragment>

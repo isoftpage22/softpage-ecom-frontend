@@ -7,7 +7,7 @@ const API_BASE_URL = apiOrigin();
 
 async function fetchTenant(url: string): Promise<TenantInfo | null> {
   try {
-    const res = await fetch(url, { next: { revalidate: 60 } });
+    const res = await fetch(url, { next: { revalidate: 0 } });
     if (!res.ok) return null;
     const json = await res.json();
     return (json?.data as TenantInfo) ?? null;

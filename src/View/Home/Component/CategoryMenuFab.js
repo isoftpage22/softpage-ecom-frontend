@@ -1,6 +1,8 @@
 import { Box, Flex, Text, Drawer, DrawerOverlay, DrawerContent, DrawerBody } from '@chakra-ui/react'
 import { CloseIcon } from '@chakra-ui/icons'
 import React, { useMemo, useState } from 'react'
+import { useSelector } from 'react-redux'
+import { showsOrderBar } from '@/lib/cart/persistCart'
 
 export function categoryAnchorId(name) {
   return `menu-cat-${String(name || '')
@@ -11,6 +13,8 @@ export function categoryAnchorId(name) {
 
 const CategoryMenuFab = ({ productList, cartItemCount = 0 }) => {
   const [open, setOpen] = useState(false)
+  const activeOrder = useSelector((state) => state.shoppingCart.activeOrder)
+  const liftForBar = cartItemCount > 0 || showsOrderBar(activeOrder)
   const categories = useMemo(
     () =>
       (productList?.categories || []).filter(
@@ -38,7 +42,7 @@ const CategoryMenuFab = ({ productList, cartItemCount = 0 }) => {
         onClick={() => setOpen((value) => !value)}
         position="fixed"
         right="16px"
-        bottom={cartItemCount > 0 ? '80px' : '24px'}
+        bottom={liftForBar ? '80px' : '24px'}
         zIndex={1100}
         direction="column"
         align="center"

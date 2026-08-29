@@ -6,7 +6,6 @@ import ToggleSwitch from './Component/ToggleSwitch'
 import CategoryMenuFab from './Component/CategoryMenuFab'
 import CommonTopBar from '../../Layout/Components/CommonTopBar/CommonTopBar'
 import Footer from '../../Layout/Guest/Components/Footer'
-import TopAddressBarContainer from '../../Container/TopAddressBarContainer/TopAddressBarContainer'
 import { useMenuCatalog } from '../../hooks/useMenuCatalog'
 import { getTableSession, isDineInSession, tableSessionLabel } from '@/lib/restaurant/table-session'
 import { Box, Text } from '@chakra-ui/react'
@@ -39,7 +38,6 @@ const Home = (props) => {
           <Text fontSize="13px" fontWeight="600">{tableLabel}</Text>
         </Box>
       ) : null}
-      {!dineIn && Object.keys(usersAddress || {}).length > 0 && <TopAddressBarContainer />}
       {!hideChrome && <CommonTopBar />}
       {!hideChrome && <ProductPromotions />}
       {!hideChrome && <CurrentOffers />}

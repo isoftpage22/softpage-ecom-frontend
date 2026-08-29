@@ -6,7 +6,7 @@ import './OrderStatus.css'
 import { useHistory } from '../../lib/nav'
 import { useParams, useSearchParams } from 'next/navigation'
 import { useDispatch } from 'react-redux'
-import { emptyCartProduct } from '../../Store/action/shoppingCart'
+import { emptyCartProduct, setActiveOrder } from '../../Store/action/shoppingCart'
 import TopBarWithBackButton from '../../Layout/Components/TopBarWithBackButton/TopBarWithBackButton'
 import { useBusinessId } from '@/lib/tenant/TenantContext'
 import { useGetOrderByIdQuery, useGetOrderTrackingQuery } from '@/store/api/ordersApi'
@@ -62,18 +62,40 @@ const OrderStatus = (props) => {
   }, [awaitingPayment])
 
   useEffect(() => {
-    if (confirmedPlacement) {
-      dispatch(emptyCartProduct())
-    }
-  }, [confirmedPlacement, dispatch])
+    if (!confirmedPlacement || !orderId) return
+    dispatch(emptyCartProduct())
+    dispatch(
+      setActiveOrder({
+        orderId,
+        orderNumber: order?.orderNumber,
+        phase: 'completed',
+      }),
+    )
+    history.replace(`/orders/${orderId}`)
+  }, [confirmedPlacement, dispatch, history, orderId, order?.orderNumber])
 
   useEffect(() => {
     if (!cancelled && !timedOut) return undefined
+    dispatch(setActiveOrder(null))
     const timer = setTimeout(() => {
       history.replace('/cart')
     }, 4000)
     return () => clearTimeout(timer)
-  }, [cancelled, timedOut, history])
+  }, [cancelled, timedOut, history, dispatch])
+
+  if (confirmedPlacement && orderId) {
+    return (
+      <>
+        <TopBarWithBackButton headerText="Order placed" />
+        <Flex direction="column" align="center" justify="center" minH="60vh" px={6} textAlign="center">
+          <Text fontWeight="700" fontSize="xl">Order completed</Text>
+          <Text mt={2} fontSize="sm" color="gray.600">
+            Opening your order details…
+          </Text>
+        </Flex>
+      </>
+    )
+  }
 
   if (awaitingPayment) {
     return (

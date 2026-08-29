@@ -18,7 +18,7 @@ import {
 } from "@chakra-ui/react";
 import { FaUserCircle } from "react-icons/fa";
 import { useHistory } from "@/src/lib/nav";
-import { clearStorefrontAuth, hasStorefrontToken } from "@/lib/auth/persistAuth";
+import { clearStorefrontAuth, hasStorefrontToken, STOREFRONT_AUTH_CHANGED } from "@/lib/auth/persistAuth";
 import { useLogoutMutation, useListAddressesQuery } from "@/store/api/storefrontAuthApi";
 import { getUserInFromLocal, getAdrresFromLocal } from "@/src/utils/CommonFunctions";
 import { customerAddressToLocal } from "@/lib/checkout/addressMapping";
@@ -54,7 +54,11 @@ export function ProfileMenu() {
     };
     sync();
     window.addEventListener("storage", sync);
-    return () => window.removeEventListener("storage", sync);
+    window.addEventListener(STOREFRONT_AUTH_CHANGED, sync);
+    return () => {
+      window.removeEventListener("storage", sync);
+      window.removeEventListener(STOREFRONT_AUTH_CHANGED, sync);
+    };
   }, [open]);
 
   const addresses =
@@ -76,6 +80,8 @@ export function ProfileMenu() {
     }
     clearStorefrontAuth();
     setLoggedIn(false);
+    setName("");
+    setPhone("");
     setOpen(false);
     window.setTimeout(() => history.push("/"), 280);
   };

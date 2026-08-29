@@ -31,6 +31,15 @@ export interface StorefrontContact {
   emails?: { primary: string | null; secondary: string | null; support: string | null };
 }
 
+export interface StorefrontAddress {
+  line1: string | null;
+  line2: string | null;
+  city: string | null;
+  state: string | null;
+  zip: string | null;
+  formatted: string | null;
+}
+
 export interface StorefrontPage {
   key: string;
   slug: string;
@@ -83,6 +92,7 @@ export interface StorefrontConfig {
   theme: StorefrontTheme;
   social: StorefrontSocial;
   contact: StorefrontContact;
+  address?: StorefrontAddress | null;
   pages: StorefrontPage[];
   isStoreOpen: boolean;
   /** Config-driven theme layer (resolved by the backend public store service). */
@@ -102,6 +112,8 @@ export interface TenantInfo {
   businessId: number;
   businessAppId?: number | null;
   name: string;
+  /** Outlet address line from by-host, same level as `name`. */
+  address?: string | null;
   subdomain: string;
   customDomain: string | null;
   themeId: string;
@@ -230,6 +242,7 @@ const DEFAULT_CONFIG: StorefrontConfig = {
     phones: { primary: null, secondary: null, support: null },
     emails: { primary: null, secondary: null, support: null },
   },
+  address: null,
   pages: [],
   isStoreOpen: true,
   themeConfig: null,
@@ -247,6 +260,23 @@ const DEFAULT_CONFIG: StorefrontConfig = {
 export function useStoreConfig(): StorefrontConfig {
   const tenant = useContext(TenantContext);
   return tenant?.config ?? DEFAULT_CONFIG;
+}
+
+/** One-line store / outlet address for the menu header. */
+export function storeAddressLabel(
+  address?: StorefrontAddress | string | null,
+  maxLen = 42,
+): string {
+  if (!address) return "";
+  const line =
+    typeof address === "string"
+      ? address.trim()
+      : (address.formatted && address.formatted.trim()) ||
+        [address.line1, address.line2, address.city, address.state, address.zip]
+          .filter(Boolean)
+          .join(", ");
+  if (!line) return "";
+  return line.length > maxLen ? `${line.slice(0, maxLen)}…` : line;
 }
 
 /** Resolved config-driven page layout for the current tenant (may be empty). */
