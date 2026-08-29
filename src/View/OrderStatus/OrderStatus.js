@@ -71,8 +71,8 @@ const OrderStatus = (props) => {
         phase: 'completed',
       }),
     )
-    history.replace(`/orders/${orderId}`)
-  }, [confirmedPlacement, dispatch, history, orderId, order?.orderNumber])
+    history.replace(`/orders/${orderId}${paidHint ? '?paid=1' : ''}`)
+  }, [confirmedPlacement, dispatch, history, orderId, order?.orderNumber, paidHint])
 
   useEffect(() => {
     if (!cancelled && !timedOut) return undefined
@@ -86,7 +86,7 @@ const OrderStatus = (props) => {
   if (confirmedPlacement && orderId) {
     return (
       <>
-        <TopBarWithBackButton headerText="Order placed" />
+        <TopBarWithBackButton headerText="Order placed" backTo="/" />
         <Flex direction="column" align="center" justify="center" minH="60vh" px={6} textAlign="center">
           <Text fontWeight="700" fontSize="xl">Order completed</Text>
           <Text mt={2} fontSize="sm" color="gray.600">
@@ -100,7 +100,7 @@ const OrderStatus = (props) => {
   if (awaitingPayment) {
     return (
       <>
-        <TopBarWithBackButton headerText="Confirming payment" />
+        <TopBarWithBackButton headerText="Confirming payment" backTo="/" />
         <Flex direction="column" align="center" justify="center" minH="60vh" px={6} textAlign="center">
           <Text fontWeight="700" fontSize="xl">Confirming payment…</Text>
           <Text mt={2} fontSize="sm" color="gray.600">
@@ -114,7 +114,7 @@ const OrderStatus = (props) => {
   if (showOrderPanel) {
   return (
     <>
-      <TopBarWithBackButton headerText={confirmedPlacement ? 'Order placed' : 'Order'} />
+      <TopBarWithBackButton headerText={confirmedPlacement ? 'Order placed' : 'Order'} backTo="/" />
       <Box px={3} py={4} pb={10}>
         {confirmedPlacement ? (
           <Flex direction="column" align="center" mb={4}>
@@ -150,6 +150,7 @@ const OrderStatus = (props) => {
             pickup={tracking?.pickup}
             drop={tracking?.drop}
             live={tracking?.live}
+            fallbackMessage={tracking?.message || 'Looking for a rider…'}
           />
         ) : null}
 

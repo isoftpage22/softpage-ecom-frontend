@@ -5,7 +5,7 @@ import { useHistory } from '../../../lib/nav'
 import SearchBarDrawer from '../../../Container/SearchBarDrawer/SearchBarDrawer'
 import { ProfileMenu } from '../../../Components/ProfileMenu/ProfileMenu'
 
-const TopBarWithBackButton = ({ addToCart = null, getProductListOnSearch = null, urlParamObject = null, headerText="Cart" }) => {
+const TopBarWithBackButton = ({ addToCart = null, getProductListOnSearch = null, urlParamObject = null, headerText="Cart", backTo = null }) => {
     const [toggleDrawer, setToggleDrawer] = useState(false)
     const history = useHistory()
 
@@ -19,7 +19,7 @@ const TopBarWithBackButton = ({ addToCart = null, getProductListOnSearch = null,
                             color="white"
                             variant="ghost"
                             style={{ border: "none" }}
-                            onClick={() => history.goBack()}
+                            onClick={() => (backTo ? history.replace(backTo) : history.goBack())}
                             colorScheme="transparent"
                             icon={
                                 <ArrowBackIcon style={{ border: "none" }} boxSize="1.5em" />

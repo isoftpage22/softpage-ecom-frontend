@@ -86,8 +86,19 @@ export type UserFacingError = {
   title: string;
   message: string;
   itemNames: string[];
-  kind: "stock" | "unavailable" | "generic";
+  kind: "stock" | "unavailable" | "wallet" | "generic";
 };
+
+const WALLET_CUSTOMER_MESSAGE =
+  "This store cannot accept the order right now. Please try again later.";
+
+export function isWalletInsufficientError(err: unknown, joined = ""): boolean {
+  const haystack = `${joined} ${JSON.stringify(err ?? "")}`.toUpperCase();
+  return (
+    haystack.includes("WALLET_INSUFFICIENT") ||
+    haystack.includes("CANNOT ACCEPT THE ORDER RIGHT NOW")
+  );
+}
 
 export function itemNamesFromMessages(messages: string[]): string[] {
   const names = new Set<string>();
@@ -119,6 +130,14 @@ export function formatCheckoutError(
 ): UserFacingError {
   const messages = extractErrorMessages(err);
   const joined = messages.join(". ") || fallback;
+  if (isWalletInsufficientError(err, joined)) {
+    return {
+      title: "Store unavailable",
+      message: WALLET_CUSTOMER_MESSAGE,
+      itemNames: [],
+      kind: "wallet",
+    };
+  }
   const itemNames = itemNamesFromMessages(messages);
   const stockish = /insufficient stock/i.test(joined);
   const unavailable = /no longer available/i.test(joined);

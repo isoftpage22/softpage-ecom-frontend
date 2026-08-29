@@ -102,8 +102,8 @@ const ShoppingCart = (props) => {
             {!dineIn && hasAddress && (
               <TopAddressBarContainer etaLabel={formatEtaMinutes(quote?.etaMinutes ?? quote?.winner?.etaMinutes)} />
             )}
-            <TopBarWithBackButton />
-            <Box bg="#f4f4f5" pb={extraFooterSpace ? "150px" : "80px"} >
+            <TopBarWithBackButton backTo={paymentCancelled ? "/" : undefined} />
+            <Box bg="#f4f4f5" pb={extraFooterSpace ? "calc(220px + env(safe-area-inset-bottom, 0px))" : "calc(140px + env(safe-area-inset-bottom, 0px))"} >
               {
                 addToCart.products.map((product, index) => {
                   return <ItemCardAtCheckout key={product.lineKey || product.product_id || index} quantity={product.quantity} addToCart={addToCart} product={product} addToCartProduct={addToCartProduct} deleteToCartProduct={deleteToCartProduct} />
@@ -121,7 +121,7 @@ const ShoppingCart = (props) => {
                 quote={quote}
               />
             </Box>
-            <Footer {...props} usersAddress={usersAddress} isShoppingCart={true} totalCartBill={totalCartBill} />
+            <Footer {...props} usersAddress={usersAddress} isShoppingCart={true} totalCartBill={totalCartBill} hideVisual />
           </>
           : null}
     </>

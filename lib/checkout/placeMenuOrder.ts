@@ -216,6 +216,8 @@ async function runPlaceMenuOrder(
       .unwrap();
   }
 
+  const dineIn = isDineInSession(opts.tableSession);
+  const takeaway = opts.tableSession?.orderType === "takeaway";
   const notes = buildCheckoutNotes(opts.tableSession, opts.specialInstructions);
   const tip = Math.max(0, Number(opts.tip) || 0);
 
@@ -227,8 +229,16 @@ async function runPlaceMenuOrder(
       paymentMethod: payLater ? "cod" : "razorpay",
       notes,
       tableId: opts.tableSession?.tableId,
-      channel: opts.tableSession?.channel,
-      orderType: opts.tableSession?.orderType,
+      channel: dineIn
+        ? opts.tableSession?.channel
+        : takeaway
+          ? opts.tableSession?.channel
+          : "delivery",
+      orderType: dineIn
+        ? opts.tableSession?.orderType
+        : takeaway
+          ? "takeaway"
+          : "delivery",
       reservationId: opts.tableSession?.matchedReservationId,
       resourceId: opts.tableSession?.resourceId,
       tip: tip > 0 ? tip : undefined,

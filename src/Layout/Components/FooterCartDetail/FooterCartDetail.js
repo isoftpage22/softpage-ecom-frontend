@@ -1,50 +1,57 @@
-import { Box, Text, Flex } from '@chakra-ui/react';
-import React, { Fragment } from 'react';
-import { useSelector } from 'react-redux';
-import { useHistory } from '../../../lib/nav';
-import { showsOrderBar } from '@/lib/cart/persistCart';
+import React, { Fragment } from "react";
+import { useSelector } from "react-redux";
+import { useHistory } from "../../../lib/nav";
+import { showsOrderBar } from "@/lib/cart/persistCart";
+import StickyActionBar from "../StickyActionBar/StickyActionBar";
 
 const FooterCartDetail = (props) => {
-    const history = useHistory()
-    const { qty, price } = props
-    const activeOrder = useSelector((state) => state.shoppingCart.activeOrder)
-    const orderBar = showsOrderBar(activeOrder) && !(qty > 0 && activeOrder?.phase === 'completed')
+  const history = useHistory();
+  const { qty, price } = props;
+  const activeOrder = useSelector((state) => state.shoppingCart.activeOrder);
+  const orderBar = showsOrderBar(activeOrder) && !(qty > 0 && activeOrder?.phase === "completed");
+  const itemCount = Number(qty) || 0;
+  const itemLabel = `${itemCount} item${itemCount === 1 ? "" : "s"}`;
 
-    const handleViewCartButton = (e) => {
-        e.preventDefault()
-        if (orderBar && activeOrder?.orderId) {
-            if (activeOrder.phase === 'processing') {
-                history.push(`/order-status/${activeOrder.orderId}`)
-                return
-            }
-            history.push(`/orders/${activeOrder.orderId}`)
-            return
-        }
-        history.push('/cart')
+  const handleViewCartButton = () => {
+    if (orderBar && activeOrder?.orderId) {
+      if (activeOrder.phase === "processing") {
+        history.push(`/order-status/${activeOrder.orderId}`);
+        return;
+      }
+      history.push(`/orders/${activeOrder.orderId}`);
+      return;
     }
+    history.push("/cart");
+  };
 
-    const leftLabel = orderBar
-        ? (activeOrder.phase === 'processing'
-            ? (activeOrder.orderNumber ? `Order #${activeOrder.orderNumber}` : 'Order processing')
-            : (activeOrder.orderNumber ? `Order #${activeOrder.orderNumber}` : 'Order completed'))
-        : `${qty} Item | ₹${price}`
-    const rightLabel = orderBar
-        ? (activeOrder.phase === 'processing' ? 'TRACK ORDER' : 'ORDER COMPLETED')
-        : 'VIEW CART'
+  const leftTitle = orderBar
+    ? activeOrder.orderNumber
+      ? `Order #${activeOrder.orderNumber}`
+      : activeOrder.phase === "processing"
+        ? "Order processing"
+        : "Order completed"
+    : itemLabel;
+  const leftSubtitle = orderBar
+    ? activeOrder.phase === "processing"
+      ? "We’re confirming your payment"
+      : "View your order"
+    : `₹${price}`;
+  const actionLabel = orderBar
+    ? activeOrder.phase === "processing"
+      ? "Track order"
+      : "View order"
+    : "View cart";
 
-    return (
-        <Fragment>
-            <Flex onClick={handleViewCartButton} cursor="pointer" bg="#444" color="white" justifyContent="center" height="60px" position="fixed" width="100%" bottom="0px" zIndex={20} >
-                    <Flex px="10px" py="7px" color="white" justifyContent="space-between" alignItems="flex-end" w="100%" h="100%" >
-                        <Text alignSelf="center" fontWeight="extrabold" color="white">{leftLabel}</Text>
-                        <Box  size='small' color='white' style={{ fontSize: '12px' }}>
-                            <Text fontSize="11px" color="white">{rightLabel}</Text> &nbsp;
-                        </Box>
-                    </Flex>
-                </Flex>
-        </Fragment>
-    );
-}
-
+  return (
+    <Fragment>
+      <StickyActionBar
+        leftTitle={leftTitle}
+        leftSubtitle={leftSubtitle}
+        actionLabel={actionLabel}
+        onClick={handleViewCartButton}
+      />
+    </Fragment>
+  );
+};
 
 export default FooterCartDetail;

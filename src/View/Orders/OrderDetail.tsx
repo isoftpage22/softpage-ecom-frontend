@@ -10,7 +10,7 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { useDispatch } from "react-redux";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import TopBarWithBackButton from "@/src/Layout/Components/TopBarWithBackButton/TopBarWithBackButton";
 import { ShipmentTrackingMap } from "@/src/Components/OrderTracking/ShipmentTrackingMap";
 import { useHistory } from "@/src/lib/nav";
@@ -122,16 +122,24 @@ function lineExtras(line: OrderLine): string {
 }
 
 function deliveryCopy(tracking?: OrderTracking | null): string | null {
-  if (!tracking) return "Delivery not started yet.";
+  if (!tracking) return "Looking for a rider.";
+  const status = String(tracking.status || "").toLowerCase();
+  if (status === "cancelled" || status === "failed") {
+    return tracking.message || "Delivery was cancelled.";
+  }
   const msg = String(tracking.message || "");
   if (/not been booked/i.test(msg) || /shipping has not/i.test(msg)) {
-    return "Delivery not started yet.";
+    return "Looking for a rider.";
+  }
+  if (!tracking.current && !tracking.pickup && !tracking.drop) {
+    return tracking.message || "Looking for a rider.";
   }
   return tracking.message || null;
 }
 
 export default function OrderDetail() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const history = useHistory();
   const dispatch = useDispatch();
   const toast = useToast();
@@ -140,6 +148,8 @@ export default function OrderDetail() {
   const orderId = typeof params?.orderId === "string" ? params.orderId : "";
   const [paying, setPaying] = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
+
+  const paidReturn = searchParams?.get?.("paid") === "1";
 
   const { data: order, isFetching, error } = useGetOrderByIdQuery(
     { businessId, orderId },
@@ -191,7 +201,7 @@ export default function OrderDetail() {
       }).unwrap();
 
       if (result.paymentPageUrl) {
-        window.location.assign(result.paymentPageUrl);
+        window.location.replace(result.paymentPageUrl);
         return;
       }
 
@@ -270,7 +280,7 @@ export default function OrderDetail() {
 
   return (
     <>
-      <TopBarWithBackButton headerText="Order" />
+      <TopBarWithBackButton headerText="Order" backTo={paidReturn ? "/" : undefined} />
       <Box p={4} bg="#f4f4f5" minH="100vh" pb="120px">
         {!orderId ? (
           <Text color="gray.600">Missing order.</Text>
@@ -432,8 +442,9 @@ export default function OrderDetail() {
                   pickup={tracking?.pickup}
                   drop={tracking?.drop}
                   live={tracking?.live}
+                  fallbackMessage={deliveryNote || "Looking for a rider…"}
                 />
-                {deliveryNote ? (
+                {deliveryNote && (tracking?.current || tracking?.pickup || tracking?.drop) ? (
                   <Text fontSize="sm" color="gray.600" mt={3}>
                     {deliveryNote}
                   </Text>

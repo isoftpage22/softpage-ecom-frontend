@@ -76,7 +76,7 @@ const Footer = (props) => {
                     )
                 ))}
             </Flex>
-            <Flex minH="28vh" bg={CHROME_BAR_BG} justifyContent="center" alignItems="center" flexDirection="column" px="16px" py="24px">
+            <Flex minH="28vh" bg={CHROME_BAR_BG} justifyContent="center" alignItems="center" flexDirection="column" px="16px" py="24px" pb={cartBar ? "calc(140px + env(safe-area-inset-bottom, 0px))" : "24px"}>
                 <Text textColor="whiteAlpha.700" fontSize="14px" fontWeight="400" mb="20px" mt="10px">Platform Powered by</Text>
                 <Box border="3px solid" borderColor={CHROME_ACCENT} p="10px" mb="30px">
                     <Text textColor="white" fontSize="25px">SOFTPAGE</Text>

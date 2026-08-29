@@ -55,9 +55,20 @@ export function isCancelledOrder(status?: string | null): boolean {
   return normalizeStatus(status) === "cancelled";
 }
 
-export function isDeliveryOrder(order?: { orderType?: string | null; channel?: string | null } | null): boolean {
-  return (
-    normalizeStatus(order?.orderType) === "delivery" ||
-    normalizeStatus(order?.channel) === "delivery"
-  );
+export function isDeliveryOrder(order?: {
+  orderType?: string | null;
+  channel?: string | null;
+  shippingCost?: number | null;
+  shippingAddress?: { addressLine1?: string | null; postalCode?: string | null } | null;
+} | null): boolean {
+  if (!order) return false;
+  const orderType = normalizeStatus(order.orderType);
+  const channel = normalizeStatus(order.channel);
+  if (orderType === "dine_in" || orderType === "takeaway" || channel === "qr_table") {
+    return false;
+  }
+  if (orderType === "delivery" || channel === "delivery") return true;
+  const line = String(order.shippingAddress?.addressLine1 || "").trim();
+  const pin = String(order.shippingAddress?.postalCode || "").trim();
+  return Boolean(line || pin) || Number(order.shippingCost) > 0;
 }

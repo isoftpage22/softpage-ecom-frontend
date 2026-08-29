@@ -1,5 +1,6 @@
-import { Box, Text, Flex } from "@chakra-ui/react";
+import { Box, Text } from "@chakra-ui/react";
 import React, { Fragment, useMemo, useState } from "react";
+import { flushSync } from "react-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from "../../../lib/nav";
 import { getUserInFromLocal } from "../../../utils/CommonFunctions";
@@ -11,6 +12,7 @@ import {
 } from "@/lib/restaurant/table-session";
 import { emptyCartProduct, setCartCheckoutError, setActiveOrder } from "../../../Store/action/shoppingCart";
 import { toggleUserFormDrawer } from "../../../Store/action/modalsNDrawers";
+import { setLoader } from "../../../Store/action/loader";
 import { hasStorefrontToken, setPostAuthRedirect } from "@/lib/auth/persistAuth";
 import { placeMenuOrder } from "@/lib/checkout/placeMenuOrder";
 import { useLazyGetCartQuery, useAddToCartMutation, useClearCartMutation, useSetShippingAddressMutation, useSetShippingRateMutation } from "@/store/api/cartApi";
@@ -18,6 +20,7 @@ import { useLazyGetShippingRatesQuery, useInitiateCheckoutMutation, useConfirmPa
 import { catalogStockError, formatCheckoutError } from "@/lib/api/userFacingError";
 import { isProductOutOfStock, isVariantOutOfStock } from "@/lib/catalog/options";
 import { openRazorpayCheckout } from "@/lib/payments/loadRazorpay";
+import StickyActionBar from "../StickyActionBar/StickyActionBar";
 
 const CartPageFooter = (props) => {
   const history = useHistory();
@@ -83,7 +86,10 @@ const CartPageFooter = (props) => {
   const placeOrder = async () => {
     if (placing || stockBlocking) return;
     dispatch(setCartCheckoutError(null));
-    setPlacing(true);
+    flushSync(() => {
+      setPlacing(true);
+      dispatch(setLoader({ isloading: true, message: "Placing your order…" }));
+    });
     let releasePlacing = true;
     try {
       const customer = getUserInFromLocal();
@@ -118,13 +124,15 @@ const CartPageFooter = (props) => {
             }),
           );
         }
-        window.location.assign(result.paymentPageUrl);
+        window.location.replace(result.paymentPageUrl);
+        releasePlacing = false;
         return;
       }
 
       if (result.paymentRequired && result.razorpayOrderId && result.razorpayKeyId) {
         const orderId = result.order?.id;
         const customerLocal = Array.isArray(customer) ? {} : customer;
+        dispatch(setLoader(false));
         await openRazorpayCheckout({
           key: result.razorpayKeyId,
           amount: Number(result.order?.total || 0) * 100,
@@ -158,6 +166,7 @@ const CartPageFooter = (props) => {
           },
           onDismiss: () => {
             setPlacing(false);
+            dispatch(setLoader(false));
             dispatch(setActiveOrder(null));
             dispatch(
               setCartCheckoutError({
@@ -170,6 +179,7 @@ const CartPageFooter = (props) => {
           },
           onFailed: (message) => {
             setPlacing(false);
+            dispatch(setLoader(false));
             dispatch(
               setCartCheckoutError({
                 title: "Payment failed",
@@ -212,7 +222,10 @@ const CartPageFooter = (props) => {
     } catch (err) {
       dispatch(setCartCheckoutError(formatCheckoutError(err, "Could not place order")));
     } finally {
-      if (releasePlacing) setPlacing(false);
+      if (releasePlacing) {
+        setPlacing(false);
+        dispatch(setLoader(false));
+      }
     }
   };
 
@@ -229,74 +242,46 @@ const CartPageFooter = (props) => {
     }
     if (!canPlace) goToAddresses();
   };
-  const label = dineIn
-    ? placing
-      ? "Placing…"
-      : "Place Order"
-    : hasAddress
-      ? placing
-        ? "Placing…"
-        : "Place Order"
-      : "ADD ADDRESS & PAY";
+  const actionLabel = placing
+    ? "Placing…"
+    : dineIn || hasAddress
+      ? "Place order"
+      : "Add address";
+  const tableLabel = dineIn ? tableSessionLabel(tableSession) : null;
+  const totalLabel = `₹${totalCartBill?.totalFinalPriceAmount ?? price}`;
 
   return (
     <Fragment>
       {displayError ? (
         <Box
           position="fixed"
-          bottom="60px"
-          left="0"
-          width="100%"
+          bottom="calc(120px + env(safe-area-inset-bottom, 0px))"
+          left="16px"
+          right="16px"
           zIndex={20}
           bg="#FFF5F5"
-          borderTop="1px solid #FEB2B2"
+          border="1px solid #FEB2B2"
+          borderRadius="14px"
           px="16px"
-          py="10px"
+          py="12px"
+          boxShadow="0 8px 20px rgba(0,0,0,0.08)"
         >
           <Text fontSize="13px" fontWeight="700" color="#9B2C2C" letterSpacing="0" textTransform="none">
             {displayError.title}
           </Text>
-          <Text fontSize="13px" lineHeight="18px" color="#742A2A" mt="2px" letterSpacing="0" textTransform="none">
+          <Text fontSize="13px" lineHeight="18px" color="#742A2A" mt="4px" letterSpacing="0" textTransform="none">
             {displayError.message}
           </Text>
         </Box>
       ) : null}
-      {dineIn && tableSessionLabel(tableSession) ? (
-        <Flex bg="#111" color="white" justifyContent="center" px="10px" py="4px">
-          <Text fontSize="11px">{tableSessionLabel(tableSession)}</Text>
-        </Flex>
-      ) : null}
-      <Flex
+      <StickyActionBar
+        leftTitle={totalLabel}
+        leftSubtitle={tableLabel || (hasAddress ? "Incl. taxes & delivery" : "Add an address to continue")}
+        actionLabel={actionLabel}
         onClick={onFooterClick}
-        cursor={placing ? "wait" : canPlaceOrder || !canPlace || !hasStorefrontToken() ? "pointer" : "not-allowed"}
-        opacity={canPlace && stockBlocking ? 0.55 : 1}
-        bg="#444"
-        color="white"
-        justifyContent="center"
-        height="60px"
-        position="fixed"
-        width="100%"
-        bottom="0px"
-      >
-        <Flex
-          px="10px"
-          py="7px"
-          color="white"
-          justifyContent="space-between"
-          alignItems="flex-end"
-          w="100%"
-          h="100%"
-        >
-          <Text alignSelf="center" fontWeight="extrabold" color="white">
-            Total - ₹{totalCartBill?.totalFinalPriceAmount ?? price}
-          </Text>
-          <Box size="small" color="white" style={{ fontSize: "12px" }}>
-            <Text fontSize="11px" color="white">
-              {label}
-            </Text>
-          </Box>
-        </Flex>
-      </Flex>
+        disabled={stockBlocking}
+        busy={placing}
+      />
     </Fragment>
   );
 };

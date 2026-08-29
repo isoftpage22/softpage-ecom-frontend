@@ -5,22 +5,28 @@ import {
 
 
 const INITIAL_STATE = {
-  isloading: false,  
+  isloading: false,
+  message: "Loading... Please wait",
 };
+
 const loader = (state = INITIAL_STATE, action) => {
   switch (action.type) {
-
-    case LOADER_STATUS:
-      let addressPayload = action.payload
+    case LOADER_STATUS: {
+      const payload = action.payload;
+      if (typeof payload === "boolean") {
+        return {
+          isloading: payload,
+          message: payload ? state.message : INITIAL_STATE.message,
+        };
+      }
       return {
-        isloading: addressPayload,
+        isloading: Boolean(payload?.isloading),
+        message: payload?.message || INITIAL_STATE.message,
       };
-        default:
-          return state
-      
-     }
-     
-
-}
+    }
+    default:
+      return state;
+  }
+};
 
 export default loader;

@@ -17,7 +17,8 @@ function mapStateToProps(state, props) {
         detailedBill:state.shoppingCart.detailedBill,
         userFormDrawerStatus:state.modalsNDrawers.userFormDrawerStatus,
         usersAddress:state.address.address,
-        isloading:state.loader.isloading
+        isloading:state.loader.isloading,
+        message: state.loader.message,
 
 
 

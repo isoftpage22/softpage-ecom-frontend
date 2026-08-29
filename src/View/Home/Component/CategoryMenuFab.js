@@ -42,7 +42,7 @@ const CategoryMenuFab = ({ productList, cartItemCount = 0 }) => {
         onClick={() => setOpen((value) => !value)}
         position="fixed"
         right="16px"
-        bottom={liftForBar ? '80px' : '24px'}
+        bottom={liftForBar ? "calc(112px + env(safe-area-inset-bottom, 0px))" : "24px"}
         zIndex={1100}
         direction="column"
         align="center"

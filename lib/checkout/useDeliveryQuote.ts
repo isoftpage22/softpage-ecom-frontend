@@ -23,7 +23,7 @@ export function deliveryFeeFromQuote(quote: ServiceabilityQuote | null): number 
   if (quote.freeShippingApplied) return 0;
   const amount = quote.shippingCharge ?? quote.winner?.amount;
   if (amount == null || !Number.isFinite(Number(amount))) return null;
-  return Math.max(0, Math.round(Number(amount)));
+  return Math.max(0, Math.round(Number(amount) * 100) / 100);
 }
 
 export function useDeliveryQuote(opts: {
