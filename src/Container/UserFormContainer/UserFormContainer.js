@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef } from "react";
 import { DrawerBody, DrawerHeader, Text } from "@chakra-ui/react";
 import DrawerComp from "../../Components/DrawerComp/DrawerComp";
 import DrawerHeaderCustom from "../../Components/DrawerComp/DrawerHeaderCustom";
@@ -7,6 +7,8 @@ import * as Yup from "yup";
 import ContactFields from "./ContactFields";
 import OtpFields from "./OtpFields";
 import { useBusinessId } from "@/lib/tenant/TenantContext";
+import { CHROME_BAR_BG } from "@/lib/menu/storeChrome";
+import { normalizeIndianMobile } from "@/src/utils/phone";
 import {
   useSignupInfoMutation,
   useSendOtpMutation,
@@ -25,11 +27,13 @@ const UserFormContainer = (props) => {
   const { userFormDrawerStatus, toggleUserFormDrawer } = props;
   const businessId = useBusinessId();
   const history = useHistory();
+  const nameRef = useRef(null);
+  const phoneRef = useRef(null);
 
-  const [screen, setscreen] = useState("mobile");
-  const [formError, setFormError] = useState("");
-  const [signupInfoResult, setSignupInfoResult] = useState(null);
-  const [busy, setBusy] = useState(false);
+  const [screen, setscreen] = React.useState("mobile");
+  const [formError, setFormError] = React.useState("");
+  const [signupInfoResult, setSignupInfoResult] = React.useState(null);
+  const [busy, setBusy] = React.useState(false);
 
   const closeAuthDrawer = () => {
     consumePostAuthRedirect();
@@ -45,21 +49,12 @@ const UserFormContainer = (props) => {
   const [register] = useStorefrontRegisterMutation();
 
   const validateSchema = Yup.object().shape({
-    customerName: Yup.string().required("Name required *"),
+    customerName: Yup.string().trim().required("Name required *"),
     whatsAppNumber: Yup.string()
       .matches(/^\d{10}$/, "WhatsApp number must be exactly 10 digits")
       .required("WhatsApp number is required *"),
   });
-  const validateDigits = (values) => {
-    const digitRegex = /^\d+$/;
-    const errors = {};
 
-    if (!digitRegex.test(values.whatsAppNumber) || values.whatsAppNumber.length > 10) {
-      errors.whatsAppNumber = "WhatsApp number must be a maximum of 10 digits.";
-    }
-
-    return errors;
-  };
   const formik = useFormik({
     initialValues: {
       customerName: "",
@@ -68,20 +63,35 @@ const UserFormContainer = (props) => {
     validationSchema: validateSchema,
     validateOnChange: true,
     validateOnBlur: true,
-    validate: validateDigits,
     onSubmit: async (values) => {
+      const customerName = (
+        values.customerName ||
+        nameRef.current?.value ||
+        ""
+      ).trim();
+      const whatsAppNumber = normalizeIndianMobile(
+        values.whatsAppNumber || phoneRef.current?.value,
+      );
+      if (customerName !== values.customerName || whatsAppNumber !== values.whatsAppNumber) {
+        formik.setValues({ customerName, whatsAppNumber }, true);
+      }
+      if (!customerName || whatsAppNumber.length !== 10) {
+        formik.setTouched({ customerName: true, whatsAppNumber: true }, true);
+        return;
+      }
       setFormError("");
       setBusy(true);
       try {
         const result = await signupInfo({
-          identifier: values.whatsAppNumber,
+          identifier: whatsAppNumber,
           countryCode: "+91",
           businessId,
+          fullName: customerName,
         }).unwrap();
         setSignupInfoResult(result);
         if (!result?.otpSent) {
           const sent = await sendOtp({
-            identifier: values.whatsAppNumber,
+            identifier: whatsAppNumber,
             countryCode: "+91",
             businessId,
           }).unwrap();
@@ -99,13 +109,6 @@ const UserFormContainer = (props) => {
     },
   });
 
-  const handleDigitsChange = (event, lengthOfChar) => {
-    const inputValue = event.target.value;
-    if (inputValue.length <= lengthOfChar) {
-      formik.handleChange(event);
-    }
-  };
-
   const finishAuth = (result) => {
     persistStorefrontAuth(result, formik.values);
     setscreen("mobile");
@@ -118,8 +121,8 @@ const UserFormContainer = (props) => {
   const submitOtp = async (otp) => {
     setFormError("");
     setBusy(true);
-    const identifier = formik.values.whatsAppNumber;
-    const fullName = formik.values.customerName;
+    const identifier = normalizeIndianMobile(formik.values.whatsAppNumber);
+    const fullName = formik.values.customerName.trim();
     const isNew =
       signupInfoResult?.isNewCustomer ||
       signupInfoResult?.hasProfileForStore === false;
@@ -141,6 +144,7 @@ const UserFormContainer = (props) => {
           countryCode: "+91",
           businessId,
           otp,
+          fullName,
         }).unwrap();
         finishAuth(result);
       } catch (err) {
@@ -168,7 +172,7 @@ const UserFormContainer = (props) => {
     setFormError("");
     try {
       const sent = await sendOtp({
-        identifier: formik.values.whatsAppNumber,
+        identifier: normalizeIndianMobile(formik.values.whatsAppNumber),
         countryCode: "+91",
         businessId,
       }).unwrap();
@@ -184,7 +188,7 @@ const UserFormContainer = (props) => {
     <>
       <DrawerComp
         placement={"bottom"}
-        bg="black"
+        bg="white"
         height="55vh"
         borderTopRightRadius="30px"
         borderTopLeftRadius="30px"
@@ -192,14 +196,13 @@ const UserFormContainer = (props) => {
         toggleDrawer={userFormDrawerStatus}
       >
         <DrawerHeader
-          backgroundImage="url('https://cdn.dotpe.in/cfe/image/img-promo-banner-bg.png')"
-          backgroundRepeat="no-repeat"
-          backgroundSize="cover"
+          bg={CHROME_BAR_BG}
+          color="white"
           borderTopRightRadius="30px"
           borderTopLeftRadius="30px"
           py="5px"
           px="8px"
-          borderBottomWidth="1px"
+          borderBottomWidth="0"
         >
           {screen == "otp" ? (
             <DrawerHeaderCustom
@@ -216,7 +219,7 @@ const UserFormContainer = (props) => {
             />
           )}
         </DrawerHeader>
-        <DrawerBody>
+        <DrawerBody bg="white" color="#111111">
           {formError ? (
             <Text color="red.500" fontSize="sm" mb={2}>
               {formError}
@@ -234,7 +237,8 @@ const UserFormContainer = (props) => {
             <ContactFields
               setscreen={setscreen}
               formik={formik}
-              handleDigitsChange={handleDigitsChange}
+              nameRef={nameRef}
+              phoneRef={phoneRef}
               busy={busy}
             />
           )}

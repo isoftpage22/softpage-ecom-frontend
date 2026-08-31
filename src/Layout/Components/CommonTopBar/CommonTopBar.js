@@ -1,9 +1,17 @@
 import React, { useEffect, useState } from 'react'
-import { Box, Flex, Spacer, Text, IconButton, Icon } from '@chakra-ui/react'
-import { SearchIcon } from '@chakra-ui/icons'
-import { HiLocationMarker } from 'react-icons/hi'
+import {
+  Box,
+  Flex,
+  Spacer,
+  Text,
+  Input,
+  InputGroup,
+  InputLeftElement,
+  InputRightElement,
+  IconButton,
+} from '@chakra-ui/react'
+import { CloseIcon, SearchIcon } from '@chakra-ui/icons'
 import { useHistory } from '../../../lib/nav'
-import SearchBarDrawer from '../../../Container/SearchBarDrawer/SearchBarDrawer'
 import TopAddressBarContainer from '../../../Container/TopAddressBarContainer/TopAddressBarContainer'
 import { storeAddressLabel, useStoreConfig, useTenant } from '@/lib/tenant/TenantContext'
 import { getTableSession, isDineInSession, tableSessionLabel } from '@/lib/restaurant/table-session'
@@ -11,8 +19,8 @@ import { StoreLogo } from '@/components/StoreLogo'
 import { CHROME_BAR_BG } from '@/lib/menu/storeChrome'
 import { ProfileMenu } from '../../../Components/ProfileMenu/ProfileMenu'
 
-const CommonTopBar = ({ addToCart, getProductListOnSearch, urlParamObject }) => {
-  const [toggleDrawer, setToggleDrawer] = useState(false)
+const CommonTopBar = ({ searchQuery, onSearchChange }) => {
+  const [internalQuery, setInternalQuery] = useState('')
   const [subtitle, setSubtitle] = useState('')
   const [dineIn, setDineIn] = useState(false)
   const history = useHistory()
@@ -20,6 +28,8 @@ const CommonTopBar = ({ addToCart, getProductListOnSearch, urlParamObject }) => 
   const config = useStoreConfig()
   const restaurant = config.name || tenant?.name || 'Menu'
   const storeLine = storeAddressLabel(tenant?.address || config.address)
+  const query = searchQuery ?? internalQuery
+  const setQuery = onSearchChange ?? setInternalQuery
 
   useEffect(() => {
     const session = getTableSession()
@@ -55,7 +65,6 @@ const CommonTopBar = ({ addToCart, getProductListOnSearch, urlParamObject }) => 
               </Text>
               {storeLine ? (
                 <Flex align="center" minW={0} gap="4px" mt="2px">
-                  {/* <Icon as={HiLocationMarker} boxSize="14px" color="white" flexShrink={0} /> */}
                   <Text
                     fontSize="12px"
                     color="white"
@@ -83,23 +92,42 @@ const CommonTopBar = ({ addToCart, getProductListOnSearch, urlParamObject }) => 
             </Flex>
           </Flex>
           <Spacer />
-          <Box alignSelf="center" mr="6px" flexShrink={0}>
-            <IconButton
-              size="md"
-              color="white"
-              variant="ghost"
-              onClick={() => setToggleDrawer(true)}
-              colorScheme="transparent"
-              aria-label="Search database"
-              icon={<SearchIcon boxSize="1.5em" />}
-            />
-          </Box>
           <Box alignSelf="center" flexShrink={0}>
             <ProfileMenu />
           </Box>
         </Flex>
       </Box>
-      <SearchBarDrawer toggleDrawer={toggleDrawer} setToggleDrawer={setToggleDrawer} />
+      <Box bg="white" px="12px" py="10px" borderBottom="1px solid" borderColor="gray.100">
+        <InputGroup>
+          <InputLeftElement pointerEvents="none" h="42px">
+            <SearchIcon color="#6B7280" />
+          </InputLeftElement>
+          <Input
+            h="42px"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search dishes..."
+            aria-label="Search dishes"
+            bg="white"
+            color="#111827"
+            borderColor="gray.200"
+            style={{ color: '#111827', WebkitTextFillColor: '#111827' }}
+            _placeholder={{ color: '#6B7280', opacity: 1 }}
+            _focus={{ borderColor: 'gray.400', boxShadow: 'none' }}
+          />
+          {query ? (
+            <InputRightElement h="42px">
+              <IconButton
+                size="xs"
+                variant="ghost"
+                aria-label="Clear search"
+                icon={<CloseIcon boxSize="10px" />}
+                onClick={() => setQuery('')}
+              />
+            </InputRightElement>
+          ) : null}
+        </InputGroup>
+      </Box>
     </>
   )
 }

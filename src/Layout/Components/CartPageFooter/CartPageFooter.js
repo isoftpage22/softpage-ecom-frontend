@@ -15,8 +15,8 @@ import { toggleUserFormDrawer } from "../../../Store/action/modalsNDrawers";
 import { setLoader } from "../../../Store/action/loader";
 import { hasStorefrontToken, setPostAuthRedirect } from "@/lib/auth/persistAuth";
 import { placeMenuOrder } from "@/lib/checkout/placeMenuOrder";
-import { useLazyGetCartQuery, useAddToCartMutation, useClearCartMutation, useSetShippingAddressMutation, useSetShippingRateMutation } from "@/store/api/cartApi";
-import { useLazyGetShippingRatesQuery, useInitiateCheckoutMutation, useConfirmPaymentMutation } from "@/store/api/ordersApi";
+import { useReplaceCartLinesMutation } from "@/store/api/cartApi";
+import { useInitiateCheckoutMutation, useConfirmPaymentMutation } from "@/store/api/ordersApi";
 import { catalogStockError, formatCheckoutError } from "@/lib/api/userFacingError";
 import { isProductOutOfStock, isVariantOutOfStock } from "@/lib/catalog/options";
 import { openRazorpayCheckout } from "@/lib/payments/loadRazorpay";
@@ -55,12 +55,7 @@ const CartPageFooter = (props) => {
 
   const displayError = checkoutError || catalogStockError(catalogBlockedNames);
 
-  const [getCart] = useLazyGetCartQuery();
-  const [addToCartMut] = useAddToCartMutation();
-  const [clearCart] = useClearCartMutation();
-  const [setShippingAddress] = useSetShippingAddressMutation();
-  const [setShippingRate] = useSetShippingRateMutation();
-  const [getShippingRates] = useLazyGetShippingRatesQuery();
+  const [replaceCartLines] = useReplaceCartLinesMutation();
   const [initiateCheckout] = useInitiateCheckoutMutation();
   const [confirmPayment] = useConfirmPaymentMutation();
 
@@ -102,28 +97,19 @@ const CartPageFooter = (props) => {
         customer: Array.isArray(customer) ? {} : customer,
         tip: tip || totalCartBill?.tip || 0,
         specialInstructions: specialInstructions || "",
-        storeSlug: tenant?.subdomain,
-        orderValue: totalCartBill?.totalAmount,
-        getCart,
-        addToCart: addToCartMut,
-        clearCart,
-        setShippingAddress,
-        setShippingRate,
-        getShippingRates,
+        replaceCartLines,
         initiateCheckout,
       });
 
       if (result.paymentRequired && result.paymentPageUrl) {
-        const pendingId = result.order?.id;
-        if (pendingId) {
-          dispatch(
-            setActiveOrder({
-              orderId: pendingId,
-              orderNumber: result.order?.orderNumber,
-              phase: "processing",
-            }),
-          );
-        }
+        dispatch(
+          setActiveOrder({
+            orderId: result.order?.id || null,
+            checkoutSessionId: result.checkoutSessionId || null,
+            orderNumber: result.order?.orderNumber,
+            phase: "processing",
+          }),
+        );
         window.location.replace(result.paymentPageUrl);
         releasePlacing = false;
         return;
@@ -148,6 +134,7 @@ const CartPageFooter = (props) => {
             await confirmPayment({
               businessId,
               orderId,
+              checkoutSessionId: result.checkoutSessionId,
               razorpayPaymentId: response.razorpay_payment_id,
               razorpaySignature: response.razorpay_signature,
             }).unwrap();

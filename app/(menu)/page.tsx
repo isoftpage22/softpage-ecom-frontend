@@ -1,27 +1,14 @@
-"use client";
-
-import Home from "@/src/View/Home";
-import { ClientOnly } from "@/components/ClientOnly";
-import CommonTopBar from "@/src/Layout/Components/CommonTopBar/CommonTopBar";
-import ProductPromotions from "@/src/View/Home/Component/ProductPromotions";
-import CurrentOffers from "@/src/View/Home/Component/CurrentOffers";
-import Footer from "@/src/Layout/Guest/Components/Footer";
+import { resolveTenant } from "@/lib/tenant/resolveTenant";
+import { fetchMenuCatalog } from "@/lib/catalog/fetchMenuCatalog";
+import { MenuHomeClient } from "./MenuHomeClient";
 
 /**
- * Header, banners, offers, and footer sit outside ClientOnly so store name,
- * logo, campaign images, and themed chrome are in the first HTML. Catalog
- * stays client-only to avoid Chakra/Redux hydration mismatches.
+ * Server Component: catalog is in the first HTML. Header/banners still render
+ * on the client so Chakra chrome hydrates, but product rows are not gated
+ * behind ClientOnly.
  */
-export default function MenuHomePage() {
-  return (
-    <>
-      <CommonTopBar />
-      <ProductPromotions />
-      <CurrentOffers />
-      <ClientOnly>
-        <Home hideChrome />
-      </ClientOnly>
-      <Footer />
-    </>
-  );
+export default async function MenuHomePage() {
+  const tenant = await resolveTenant();
+  const initialCatalog = await fetchMenuCatalog(tenant?.businessId);
+  return <MenuHomeClient initialCatalog={initialCatalog} />;
 }

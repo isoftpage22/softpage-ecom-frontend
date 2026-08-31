@@ -3,6 +3,7 @@
   --foreground: #171717;
   --brand-background: #ffffff;
   --brand-text: #171717;
+  --brand-on-surface: #171717;
   --font-body: var(--font-montserrat), Montserrat, -apple-system, BlinkMacSystemFont,
     "Segoe UI", sans-serif;
   --font-heading: var(--font-montserrat), Montserrat, sans-serif;
@@ -22,7 +23,7 @@ html,
 body {
   margin: 0;
   background: var(--brand-background, var(--background));
-  color: var(--brand-text, var(--foreground));
+  color: var(--brand-on-surface, var(--brand-text, var(--foreground)));
   font-family: var(--font-montserrat), Montserrat, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -35,6 +36,33 @@ h1, h2, h3, h4, h5, h6 {
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
+}
+
+input,
+textarea,
+select {
+  color: var(--brand-on-surface, #1a1a1a);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #718096;
+  opacity: 1;
+}
+
+@keyframes onAutoFillStart {
+  from {
+    opacity: 0.99;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+input:-webkit-autofill,
+textarea:-webkit-autofill {
+  -webkit-text-fill-color: var(--brand-on-surface, #1a1a1a);
+  animation-name: onAutoFillStart;
 }
 
 .leaflet-container {

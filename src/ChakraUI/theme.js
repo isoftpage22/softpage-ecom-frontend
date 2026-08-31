@@ -10,6 +10,31 @@ const MENU_SANS = 'var(--font-body, var(--font-montserrat)), Montserrat, sans-se
 const MENU_HEADING = 'var(--font-heading, var(--font-body, var(--font-montserrat))), Montserrat, sans-serif'
 const MENU_WORK = "var(--font-work-sans), 'Work Sans', sans-serif"
 
+const fieldInk = {
+  color: "var(--brand-on-surface, #1A1A1A)",
+  _placeholder: { color: "gray.400", opacity: 1 },
+}
+
+const Input = {
+  baseStyle: {
+    field: fieldInk,
+  },
+}
+
+const Textarea = {
+  baseStyle: fieldInk,
+}
+
+const FormLabel = {
+  baseStyle: {
+    color: "var(--brand-on-surface, #1A1A1A)",
+  },
+}
+
+const PinInput = {
+  baseStyle: fieldInk,
+}
+
 const overrides = {
   fonts: {
     heading: MENU_HEADING,
@@ -35,6 +60,10 @@ const overrides = {
     global: {
       body: {
         fontFamily: MENU_SANS,
+        color: "var(--brand-on-surface, var(--brand-text, #171717))",
+      },
+      "input, textarea, select": {
+        color: "var(--brand-on-surface, #1A1A1A)",
       },
     },
   },
@@ -42,6 +71,10 @@ const overrides = {
     MenuCard,
     Button,
     Text,
+    Input,
+    Textarea,
+    FormLabel,
+    PinInput,
   },
 }
 

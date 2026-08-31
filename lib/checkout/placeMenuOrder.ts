@@ -1,7 +1,7 @@
 import type { Address, AddToCartInput } from "@/types/cart.types";
 import type { CheckoutResult } from "@/types/order.types";
 import { getGuestSessionId } from "@/lib/cart/session";
-import { fetchShippingQuote } from "@/lib/logisticsApi";
+import { LIVE_SHIPPING_RATE_ID } from "@/lib/logisticsApi";
 import { localAddressToCheckout, type LocalMenuAddress } from "@/lib/checkout/addressMapping";
 import {
   buildCheckoutNotes,
@@ -61,40 +61,14 @@ export async function placeMenuOrder(opts: {
   customer?: { customerName?: string; whatsAppNumber?: string };
   tip?: number;
   specialInstructions?: string;
-  storeSlug?: string | null;
-  orderValue?: number;
-  getCart: MutateFn<
-    { businessId: number; businessAppId: number; sessionId?: string },
-    { id: string; items?: { id: string }[] } | null
-  >;
-  addToCart: MutateFn<
+  replaceCartLines: MutateFn<
     {
       businessId: number;
       businessAppId: number;
       sessionId?: string;
-      input: AddToCartInput;
+      input: { lines: AddToCartInput[]; shippingAddress?: Address };
     },
     { id: string }
-  >;
-  clearCart: MutateFn<{ businessId: number; cartId: string }, unknown>;
-  setShippingAddress: MutateFn<
-    { businessId: number; cartId: string; shippingAddress: Address; sameAsBilling?: boolean },
-    unknown
-  >;
-  setShippingRate: MutateFn<
-    { businessId: number; cartId: string; shippingRateId: string },
-    unknown
-  >;
-  getShippingRates: MutateFn<
-    {
-      businessId: number;
-      postalCode?: string;
-      country?: string;
-      orderValue?: number;
-      lat?: number;
-      lng?: number;
-    },
-    { id: string }[] | null
   >;
   initiateCheckout: MutateFn<
     {
@@ -125,116 +99,60 @@ export async function placeMenuOrder(opts: {
 async function runPlaceMenuOrder(
   opts: Parameters<typeof placeMenuOrder>[0],
 ): Promise<CheckoutResult> {
+  if (!opts.products?.length) {
+    throw new Error("Cart is empty");
+  }
+
   const sessionId = getGuestSessionId();
   const isDineIn = isDineInSession(opts.tableSession);
+  const takeaway = opts.tableSession?.orderType === "takeaway";
   const payLater = isDineIn && opts.tableSession?.paymentTiming === "on_close";
+  const needsDelivery = !isDineIn && !takeaway;
 
-  let cart = await opts
-    .getCart({
-      businessId: opts.businessId,
-      businessAppId: opts.businessAppId,
-      sessionId,
-    })
-    .unwrap()
-    .catch(() => null);
-
-  if (cart?.id && (cart.items?.length || 0) > 0) {
-    await opts.clearCart({ businessId: opts.businessId, cartId: cart.id }).unwrap();
-  }
-
-  let cartId = cart?.id;
-  for (const line of opts.products) {
-    const added = await opts
-      .addToCart({
-        businessId: opts.businessId,
-        businessAppId: opts.businessAppId,
-        sessionId,
-        input: lineToAddToCartInput(line),
-      })
-      .unwrap();
-    cartId = added.id;
-  }
-
-  if (!cartId) {
-    throw new Error("Could not create cart");
-  }
-
-  let shippingRateId: string | undefined;
-  if (!isDineIn) {
-    const shippingAddress = localAddressToCheckout(
+  let shippingAddress: Address | undefined;
+  if (needsDelivery) {
+    shippingAddress = localAddressToCheckout(
       (opts.usersAddress || {}) as LocalMenuAddress,
       opts.customer,
     );
     if (!shippingAddress.addressLine1 || !shippingAddress.postalCode) {
       throw new Error("Please add a delivery address");
     }
-
-    if (opts.storeSlug) {
-      const quote = await fetchShippingQuote({
-        store: opts.storeSlug,
-        pincode: shippingAddress.postalCode,
-        lat: shippingAddress.latitude,
-        lng: shippingAddress.longitude,
-        orderValue: opts.orderValue,
-      });
-      if (quote && quote.serviceable === false) {
-        throw new Error("This address is not in the delivery area");
-      }
-    }
-
-    await opts
-      .setShippingAddress({
-        businessId: opts.businessId,
-        cartId,
-        shippingAddress,
-        sameAsBilling: true,
-      })
-      .unwrap();
-
-    const rates = await opts
-      .getShippingRates({
-        businessId: opts.businessId,
-        postalCode: shippingAddress.postalCode,
-        country: shippingAddress.country,
-        orderValue: opts.orderValue,
-        lat: shippingAddress.latitude,
-        lng: shippingAddress.longitude,
-      })
-      .unwrap()
-      .catch(() => []);
-
-    if (!rates?.length) {
-      throw new Error("Delivery is not available for this address");
-    }
-    shippingRateId = rates[0].id;
-    await opts
-      .setShippingRate({
-        businessId: opts.businessId,
-        cartId,
-        shippingRateId,
-      })
-      .unwrap();
   }
 
-  const dineIn = isDineInSession(opts.tableSession);
-  const takeaway = opts.tableSession?.orderType === "takeaway";
+  const cart = await opts
+    .replaceCartLines({
+      businessId: opts.businessId,
+      businessAppId: opts.businessAppId,
+      sessionId,
+      input: {
+        lines: opts.products.map(lineToAddToCartInput),
+        ...(shippingAddress ? { shippingAddress } : {}),
+      },
+    })
+    .unwrap();
+
+  if (!cart?.id) {
+    throw new Error("Could not create cart");
+  }
+
   const notes = buildCheckoutNotes(opts.tableSession, opts.specialInstructions);
   const tip = Math.max(0, Number(opts.tip) || 0);
 
   return await opts
     .initiateCheckout({
       businessId: opts.businessId,
-      cartId,
-      shippingRateId,
+      cartId: cart.id,
+      shippingRateId: needsDelivery ? LIVE_SHIPPING_RATE_ID : undefined,
       paymentMethod: payLater ? "cod" : "razorpay",
       notes,
       tableId: opts.tableSession?.tableId,
-      channel: dineIn
+      channel: isDineIn
         ? opts.tableSession?.channel
         : takeaway
           ? opts.tableSession?.channel
           : "delivery",
-      orderType: dineIn
+      orderType: isDineIn
         ? opts.tableSession?.orderType
         : takeaway
           ? "takeaway"

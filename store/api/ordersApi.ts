@@ -2,6 +2,7 @@ import { createApi } from "@reduxjs/toolkit/query/react";
 import { graphqlBaseQuery, gql } from "@/lib/api/graphqlBaseQuery";
 import type {
   CheckoutResult,
+  CheckoutSessionStatus,
   Order,
   OrderTracking,
   OrdersResponse,
@@ -213,6 +214,9 @@ export const ordersApi = createApi({
               order {
                 ...MenuCheckoutOrder
               }
+              checkoutSessionId
+              amount
+              currency
               razorpayOrderId
               razorpayKeyId
               paymentRequired
@@ -255,6 +259,9 @@ export const ordersApi = createApi({
               order {
                 ...MenuOrderDetail
               }
+              checkoutSessionId
+              amount
+              currency
               razorpayOrderId
               razorpayKeyId
               paymentRequired
@@ -277,9 +284,21 @@ export const ordersApi = createApi({
 
     confirmPayment: builder.mutation<
       Order,
-      { businessId: number; orderId: string; razorpayPaymentId: string; razorpaySignature: string }
+      {
+        businessId: number;
+        orderId?: string;
+        checkoutSessionId?: string;
+        razorpayPaymentId: string;
+        razorpaySignature: string;
+      }
     >({
-      query: ({ businessId, orderId, razorpayPaymentId, razorpaySignature }) => ({
+      query: ({
+        businessId,
+        orderId,
+        checkoutSessionId,
+        razorpayPaymentId,
+        razorpaySignature,
+      }) => ({
         document: gql`
           ${MENU_CHECKOUT_ORDER_FIELDS}
           mutation ConfirmMenuPayment($businessId: Int!, $input: ConfirmPaymentInput!) {
@@ -290,16 +309,75 @@ export const ordersApi = createApi({
         `,
         variables: {
           businessId,
-          input: { orderId, razorpayPaymentId, razorpaySignature },
+          input: {
+            ...(orderId ? { orderId } : {}),
+            ...(checkoutSessionId ? { checkoutSessionId } : {}),
+            razorpayPaymentId,
+            razorpaySignature,
+          },
         },
       }),
       transformResponse: (response: { ecommerceConfirmPayment: Order }) =>
         response.ecommerceConfirmPayment,
       invalidatesTags: (result, error, { orderId }) => [
-        { type: "Order", id: orderId },
+        ...(orderId ? [{ type: "Order" as const, id: orderId }] : []),
         "Orders",
         "Cart",
       ],
+    }),
+
+    checkoutSessionStatus: builder.query<
+      CheckoutSessionStatus,
+      { businessId: number; checkoutSessionId: string }
+    >({
+      query: ({ businessId, checkoutSessionId }) => ({
+        document: gql`
+          query MenuCheckoutSessionStatus($businessId: Int!, $checkoutSessionId: String!) {
+            ecommerceCheckoutSessionStatus(
+              businessId: $businessId
+              checkoutSessionId: $checkoutSessionId
+            ) {
+              id
+              status
+              orderId
+              orderNumber
+              amount
+              currency
+              expiresAt
+            }
+          }
+        `,
+        variables: { businessId, checkoutSessionId },
+      }),
+      transformResponse: (response: {
+        ecommerceCheckoutSessionStatus: CheckoutSessionStatus;
+      }) => response.ecommerceCheckoutSessionStatus,
+    }),
+
+    abandonCheckoutSession: builder.mutation<
+      boolean,
+      { businessId: number; checkoutSessionId: string; reason?: string }
+    >({
+      query: ({ businessId, checkoutSessionId, reason }) => ({
+        document: gql`
+          mutation MenuAbandonCheckoutSession(
+            $businessId: Int!
+            $checkoutSessionId: String!
+            $reason: String
+          ) {
+            ecommerceAbandonCheckoutSession(
+              businessId: $businessId
+              checkoutSessionId: $checkoutSessionId
+              reason: $reason
+            )
+          }
+        `,
+        variables: { businessId, checkoutSessionId, reason },
+      }),
+      transformResponse: (response: {
+        ecommerceAbandonCheckoutSession: boolean;
+      }) => response.ecommerceAbandonCheckoutSession,
+      invalidatesTags: ["Cart"],
     }),
 
     getOrders: builder.query<
@@ -380,6 +458,8 @@ export const {
   useInitiateCheckoutMutation,
   useResumePaymentMutation,
   useConfirmPaymentMutation,
+  useCheckoutSessionStatusQuery,
+  useAbandonCheckoutSessionMutation,
   useGetOrdersQuery,
   useGetOrderByIdQuery,
   useGetOrderTrackingQuery,

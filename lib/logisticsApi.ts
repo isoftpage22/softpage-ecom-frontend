@@ -1,5 +1,8 @@
 import { apiOrigin } from "@/lib/api/origin";
 
+/** Synthetic rate id. Checkout re-quotes live; a client amount is never trusted. */
+export const LIVE_SHIPPING_RATE_ID = "platform-orchestrated";
+
 export type ServiceabilityQuote = {
   serviceable: boolean;
   reason: "ok" | "out_of_zone" | "not_serviceable" | "in_zone_unchecked";

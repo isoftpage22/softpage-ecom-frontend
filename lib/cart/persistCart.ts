@@ -3,7 +3,8 @@ export const MENU_CART_KEY = "MENU_CART";
 export type ActiveOrderPhase = "processing" | "completed";
 
 export type ActiveOrder = {
-  orderId: string;
+  orderId?: string | null;
+  checkoutSessionId?: string | null;
   orderNumber?: string | null;
   phase: ActiveOrderPhase;
 };
@@ -36,12 +37,15 @@ export function loadMenuCart(): PersistedMenuCart | null {
     const parsed = JSON.parse(raw) as PersistedMenuCart;
     if (!parsed || !Array.isArray(parsed.products)) return null;
     const phase = parsed.activeOrder?.phase;
+    const orderId = parsed.activeOrder?.orderId;
+    const checkoutSessionId = parsed.activeOrder?.checkoutSessionId;
     const activeOrder =
-      parsed.activeOrder?.orderId &&
+      (orderId || checkoutSessionId) &&
       (phase === "processing" || phase === "completed")
         ? {
-            orderId: String(parsed.activeOrder.orderId),
-            orderNumber: parsed.activeOrder.orderNumber || null,
+            orderId: orderId ? String(orderId) : null,
+            checkoutSessionId: checkoutSessionId ? String(checkoutSessionId) : null,
+            orderNumber: parsed.activeOrder?.orderNumber || null,
             phase,
           }
         : null;
@@ -68,7 +72,20 @@ export function saveMenuCart(cart: PersistedMenuCart): void {
 
 export function showsOrderBar(activeOrder?: ActiveOrder | null): boolean {
   return (
-    Boolean(activeOrder?.orderId) &&
+    Boolean(activeOrder?.orderId || activeOrder?.checkoutSessionId) &&
     (activeOrder?.phase === "processing" || activeOrder?.phase === "completed")
   );
+}
+
+export function activeOrderHref(activeOrder?: ActiveOrder | null): string | null {
+  if (!activeOrder) return null;
+  if (activeOrder.orderId) {
+    return activeOrder.phase === "processing"
+      ? `/order-status/${activeOrder.orderId}`
+      : `/orders/${activeOrder.orderId}`;
+  }
+  if (activeOrder.checkoutSessionId) {
+    return `/payment-return?session=${activeOrder.checkoutSessionId}`;
+  }
+  return null;
 }

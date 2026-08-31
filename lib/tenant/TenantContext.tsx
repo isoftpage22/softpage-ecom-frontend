@@ -38,6 +38,8 @@ export interface StorefrontAddress {
   state: string | null;
   zip: string | null;
   formatted: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 export interface StorefrontPage {
@@ -95,6 +97,8 @@ export interface StorefrontConfig {
   address?: StorefrontAddress | null;
   pages: StorefrontPage[];
   isStoreOpen: boolean;
+  businessHours?: import("@/lib/store/operationalHours").BusinessHours | null;
+  timezone?: string | null;
   /** Config-driven theme layer (resolved by the backend public store service). */
   themeConfig?: ThemeGlobalConfig | null;
   layout?: ThemePages;
@@ -245,6 +249,8 @@ const DEFAULT_CONFIG: StorefrontConfig = {
   address: null,
   pages: [],
   isStoreOpen: true,
+  businessHours: null,
+  timezone: "Asia/Kolkata",
   themeConfig: null,
   layout: {},
   payment: { provider: "razorpay", enabled: true, mode: "platform", keyId: null, codEnabled: true },

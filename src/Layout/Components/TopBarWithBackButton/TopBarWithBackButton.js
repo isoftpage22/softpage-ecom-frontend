@@ -5,9 +5,33 @@ import { useHistory } from '../../../lib/nav'
 import SearchBarDrawer from '../../../Container/SearchBarDrawer/SearchBarDrawer'
 import { ProfileMenu } from '../../../Components/ProfileMenu/ProfileMenu'
 
+/**
+ * @param {{
+ *   addToCart?: any,
+ *   getProductListOnSearch?: any,
+ *   urlParamObject?: any,
+ *   headerText?: string,
+ *   backTo?: string | null,
+ * }} props
+ */
 const TopBarWithBackButton = ({ addToCart = null, getProductListOnSearch = null, urlParamObject = null, headerText="Cart", backTo = null }) => {
     const [toggleDrawer, setToggleDrawer] = useState(false)
     const history = useHistory()
+
+    const handleBack = () => {
+        if (backTo) {
+            history.replace(backTo)
+            return
+        }
+        if (typeof window !== 'undefined') {
+            const idx = window.history.state?.idx
+            if (typeof idx === 'number' && idx > 0) {
+                history.goBack()
+                return
+            }
+        }
+        history.replace('/')
+    }
 
     return (
         <>
@@ -19,22 +43,22 @@ const TopBarWithBackButton = ({ addToCart = null, getProductListOnSearch = null,
                             color="white"
                             variant="ghost"
                             style={{ border: "none" }}
-                            onClick={() => (backTo ? history.replace(backTo) : history.goBack())}
+                            aria-label="Go back"
+                            onClick={handleBack}
                             colorScheme="transparent"
                             icon={
                                 <ArrowBackIcon style={{ border: "none" }} boxSize="1.5em" />
-
-
                             } />
 
                         <Flex direction="column" justifyContent="center" >
                             <Text
                                 color="white"
-                                lineHeight="14px"
+                                lineHeight="22px"
                                 textAlign="left"
-                                fontSize="19px"
+                                fontSize="17px"
                                 ml="5px"
-                                textTransform="capitalize">{headerText}</Text>
+                                fontWeight="700"
+                                noOfLines={1}>{headerText}</Text>
                             {/* <Text
                                 color="#777171"
                                 lineHeight="15px"

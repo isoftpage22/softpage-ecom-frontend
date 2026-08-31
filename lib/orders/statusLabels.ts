@@ -41,6 +41,30 @@ export function orderStatusLabel(value?: string | null): string {
   return ORDER_STATUS_LABELS[key] || (value ? String(value) : "Order");
 }
 
+export function kitchenStatusLabel(value?: string | null): string {
+  const key = normalizeStatus(value);
+  if (key === "prepared") return "Kitchen ready";
+  if (key === "preparing") return "Kitchen preparing";
+  if (key === "pending") return "Waiting for kitchen";
+  return "Kitchen";
+}
+
+export function orderLifecycleHeadline(order?: {
+  status?: string | null;
+  needsKitchen?: boolean | null;
+  kitchenStatus?: string | null;
+  deliveryStatus?: string | null;
+} | null): string {
+  if (!order) return "Order";
+  if (isCancelledOrder(order.status)) return "Cancelled";
+  if (normalizeStatus(order.status) === "completed") return "Completed";
+  if (order.needsKitchen && normalizeStatus(order.kitchenStatus) !== "prepared") {
+    return kitchenStatusLabel(order.kitchenStatus);
+  }
+  if (order.deliveryStatus) return deliveryStatusLabel(order.deliveryStatus);
+  return orderStatusLabel(order.status);
+}
+
 export function paymentStatusLabel(value?: string | null): string {
   const key = normalizeStatus(value);
   return PAYMENT_STATUS_LABELS[key] || (value ? String(value) : "Payment");

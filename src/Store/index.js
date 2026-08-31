@@ -15,6 +15,8 @@ import { qrApi } from "@/store/api/qrApi";
 import { storefrontAuthApi } from "@/store/api/storefrontAuthApi";
 import { cartApi } from "@/store/api/cartApi";
 import { ordersApi } from "@/store/api/ordersApi";
+import { promotionsApi } from "@/store/api/promotionsApi";
+import { reservationsApi } from "@/store/api/reservationsApi";
 
 const sagaMiddleware = createSagaMiddleware();
 
@@ -30,6 +32,8 @@ const rootReducer = combineReducers({
   [storefrontAuthApi.reducerPath]: storefrontAuthApi.reducer,
   [cartApi.reducerPath]: cartApi.reducer,
   [ordersApi.reducerPath]: ordersApi.reducer,
+  [promotionsApi.reducerPath]: promotionsApi.reducer,
+  [reservationsApi.reducerPath]: reservationsApi.reducer,
 });
 
 export const store = configureStore({
@@ -46,6 +50,8 @@ export const store = configureStore({
       storefrontAuthApi.middleware,
       cartApi.middleware,
       ordersApi.middleware,
+      promotionsApi.middleware,
+      reservationsApi.middleware,
     ),
   devTools: typeof window !== "undefined",
 });

@@ -39,6 +39,22 @@ function hexToHsl(hex: string): { h: number; s: number; l: number } | null {
   };
 }
 
+/**
+ * Ink color for cream/white page surfaces. Store `text` is often white for the
+ * dark header; using it on inputs and body copy makes typed text disappear.
+ */
+export function onSurfaceColor(background?: string | null, text?: string | null): string {
+  const bg = background ? hexToHsl(background) : null;
+  const ink = text ? hexToHsl(text) : null;
+  const bgIsLight = !bg || bg.l >= 55;
+  if (bgIsLight) {
+    if (ink && ink.l < 50) return text as string;
+    return "#1A1A1A";
+  }
+  if (ink && ink.l >= 50) return text as string;
+  return "#FFFFFF";
+}
+
 // Tailwind-style lightness ramp. 500 is anchored to the brand color's own
 // lightness so the primary hex renders exactly as provided.
 const LIGHTNESS_RAMP: Record<number, number | null> = {
@@ -85,6 +101,7 @@ export function buildThemeCss(theme: StorefrontTheme): string {
   if (theme.secondary) lines.push(`--brand-secondary: ${theme.secondary};`);
   if (theme.background) lines.push(`--brand-background: ${theme.background};`);
   if (theme.text) lines.push(`--brand-text: ${theme.text};`);
+  lines.push(`--brand-on-surface: ${onSurfaceColor(theme.background, theme.text)};`);
 
   if (lines.length === 0) return "";
   return `:root{${lines.join("")}}`;
@@ -108,6 +125,9 @@ function globalConfigVarLines(global: ThemeGlobalConfig): string[] {
   if (colors.secondary) lines.push(`--brand-secondary: ${colors.secondary};`);
   if (colors.background) lines.push(`--brand-background: ${colors.background};`);
   if (colors.text) lines.push(`--brand-text: ${colors.text};`);
+  if (colors.background || colors.text) {
+    lines.push(`--brand-on-surface: ${onSurfaceColor(colors.background, colors.text)};`);
+  }
   if (colors.muted) lines.push(`--brand-muted: ${colors.muted};`);
   if (colors.border) lines.push(`--brand-border: ${colors.border};`);
 

@@ -1,12 +1,9 @@
-"use client";
-
+import { resolveTenant } from "@/lib/tenant/resolveTenant";
+import { fetchMenuCatalog } from "@/lib/catalog/fetchMenuCatalog";
 import Home from "@/src/View/Home";
-import { ClientOnly } from "@/components/ClientOnly";
 
-export default function HomeByIdPage() {
-  return (
-    <ClientOnly>
-      <Home />
-    </ClientOnly>
-  );
+export default async function HomeByIdPage() {
+  const tenant = await resolveTenant();
+  const initialCatalog = await fetchMenuCatalog(tenant?.businessId);
+  return <Home initialCatalog={initialCatalog} />;
 }

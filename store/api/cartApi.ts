@@ -24,6 +24,12 @@ const CART_FIELDS = gql`
     selectedShippingRateId
     total
     currency
+    appliedCoupon {
+      code
+      name
+      type
+      discountAmount
+    }
     notes
   }
 `;
@@ -130,6 +136,72 @@ export const cartApi = createApi({
         response.ecommerceSetShippingRate,
       invalidatesTags: ["Cart"],
     }),
+
+    replaceCartLines: builder.mutation<
+      Cart,
+      {
+        businessId: number;
+        businessAppId: number;
+        sessionId?: string;
+        input: { lines: AddToCartInput[]; shippingAddress?: Address };
+      }
+    >({
+      query: ({ businessId, businessAppId, sessionId, input }) => ({
+        document: gql`
+          ${CART_FIELDS}
+          mutation ReplaceCartLines(
+            $businessId: Int!
+            $businessAppId: Int!
+            $sessionId: String
+            $input: ReplaceCartLinesInput!
+          ) {
+            ecommerceReplaceCartLines(
+              businessId: $businessId
+              businessAppId: $businessAppId
+              sessionId: $sessionId
+              input: $input
+            ) {
+              ...MenuCartFields
+            }
+          }
+        `,
+        variables: { businessId, businessAppId, sessionId, input },
+      }),
+      transformResponse: (response: { ecommerceReplaceCartLines: Cart }) =>
+        response.ecommerceReplaceCartLines,
+    }),
+
+    applyCoupon: builder.mutation<Cart, { businessId: number; cartId: string; couponCode: string }>({
+      query: ({ businessId, cartId, couponCode }) => ({
+        document: gql`
+          ${CART_FIELDS}
+          mutation ApplyCoupon($businessId: Int!, $cartId: String!, $input: ApplyCouponInput!) {
+            ecommerceApplyCoupon(businessId: $businessId, cartId: $cartId, input: $input) {
+              ...MenuCartFields
+            }
+          }
+        `,
+        variables: { businessId, cartId, input: { couponCode } },
+      }),
+      transformResponse: (response: { ecommerceApplyCoupon: Cart }) => response.ecommerceApplyCoupon,
+      invalidatesTags: ["Cart"],
+    }),
+
+    removeCoupon: builder.mutation<Cart, { businessId: number; cartId: string }>({
+      query: ({ businessId, cartId }) => ({
+        document: gql`
+          ${CART_FIELDS}
+          mutation RemoveCoupon($businessId: Int!, $cartId: String!) {
+            ecommerceRemoveCoupon(businessId: $businessId, cartId: $cartId) {
+              ...MenuCartFields
+            }
+          }
+        `,
+        variables: { businessId, cartId },
+      }),
+      transformResponse: (response: { ecommerceRemoveCoupon: Cart }) => response.ecommerceRemoveCoupon,
+      invalidatesTags: ["Cart"],
+    }),
   }),
 });
 
@@ -140,4 +212,7 @@ export const {
   useClearCartMutation,
   useSetShippingAddressMutation,
   useSetShippingRateMutation,
+  useReplaceCartLinesMutation,
+  useApplyCouponMutation,
+  useRemoveCouponMutation,
 } = cartApi;

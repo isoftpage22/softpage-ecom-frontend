@@ -13,6 +13,13 @@ const nextConfig: NextConfig = {
   },
   compress: true,
   poweredByHeader: false,
+  // Next 16.3 reads this without a default; omitting it throws
+  // "Cannot read properties of undefined (reading 'validationLevel')".
+  experimental: {
+    instantInsights: {
+      validationLevel: "manual-warning",
+    },
+  },
   async redirects() {
     return [
       {

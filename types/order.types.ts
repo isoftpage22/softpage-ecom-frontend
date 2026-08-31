@@ -53,6 +53,9 @@ export interface Order {
   shippingAddress?: Address;
   billingAddress?: Address;
   notes?: string;
+  kitchenStatus?: string;
+  deliveryStatus?: string;
+  needsKitchen?: boolean;
   confirmedAt?: string;
   completedAt?: string;
   cancelledAt?: string;
@@ -78,11 +81,32 @@ export interface ShippingRate {
 }
 
 export interface CheckoutResult {
-  order: Order;
+  /**
+   * Null while payment is outstanding: the order is created when money is
+   * captured, so a failed payment leaves nothing to cancel and the cart stays
+   * editable. Present for COD / pay-at-table / zero-total checkouts.
+   */
+  order: Order | null;
+  /** Pass back to `confirmPayment` once Razorpay succeeds. */
+  checkoutSessionId?: string;
+  amount: number;
+  currency: string;
   razorpayOrderId?: string;
   razorpayKeyId?: string;
   paymentRequired: boolean;
   paymentPageUrl?: string;
+}
+
+export type CheckoutSessionState = "pending" | "paid" | "failed" | "expired";
+
+export interface CheckoutSessionStatus {
+  id: string;
+  status: CheckoutSessionState;
+  orderId?: string | null;
+  orderNumber?: string | null;
+  amount: number;
+  currency: string;
+  expiresAt?: string | null;
 }
 
 export interface OrderTrackingPoint {

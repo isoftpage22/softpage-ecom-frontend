@@ -56,6 +56,12 @@ export interface Cart {
   selectedShippingRateId?: string | null;
   total: number;
   currency: string;
+  appliedCoupon?: {
+    code: string;
+    name?: string;
+    type?: string;
+    discountAmount?: number;
+  } | null;
   shippingAddress?: Address;
   notes?: string;
 }

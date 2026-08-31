@@ -108,6 +108,9 @@ export default function ProfileView() {
         <Button mt={3} w="100%" variant="outline" textTransform="none" onClick={() => history.push("/orders")}>
           Orders
         </Button>
+        <Button mt={3} w="100%" variant="outline" textTransform="none" onClick={() => history.push("/bookings")}>
+          Bookings
+        </Button>
         {loggedIn ? (
           <Button mt={3} w="100%" textTransform="none" onClick={onLogout}>
             Log out

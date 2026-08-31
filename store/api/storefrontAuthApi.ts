@@ -37,7 +37,7 @@ export const storefrontAuthApi = createApi({
   endpoints: (builder) => ({
     signupInfo: builder.mutation<
       SignupInfoResult,
-      { identifier: string; countryCode?: string; businessId: number }
+      { identifier: string; countryCode?: string; businessId: number; fullName?: string }
     >({
       query: (body) => ({ url: "/storefront/auth/signup-info", method: "POST", body }),
       transformResponse: unwrap,
@@ -59,6 +59,7 @@ export const storefrontAuthApi = createApi({
         countryCode?: string;
         otp?: string;
         password?: string;
+        fullName?: string;
       }
     >({
       query: (body) => ({ url: "/storefront/auth/login", method: "POST", body }),

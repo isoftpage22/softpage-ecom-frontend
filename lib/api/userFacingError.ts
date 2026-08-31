@@ -86,11 +86,17 @@ export type UserFacingError = {
   title: string;
   message: string;
   itemNames: string[];
-  kind: "stock" | "unavailable" | "wallet" | "generic";
+  kind: "stock" | "unavailable" | "wallet" | "closed" | "generic";
 };
 
 const WALLET_CUSTOMER_MESSAGE =
   "This store cannot accept the order right now. Please try again later.";
+const STORE_CLOSED_MESSAGE = "We are closed";
+
+export function isStoreClosedError(err: unknown, joined = ""): boolean {
+  const haystack = `${joined} ${JSON.stringify(err ?? "")}`.toUpperCase();
+  return haystack.includes("STORE_CLOSED") || haystack.includes("WE ARE CLOSED");
+}
 
 export function isWalletInsufficientError(err: unknown, joined = ""): boolean {
   const haystack = `${joined} ${JSON.stringify(err ?? "")}`.toUpperCase();
@@ -130,12 +136,30 @@ export function formatCheckoutError(
 ): UserFacingError {
   const messages = extractErrorMessages(err);
   const joined = messages.join(". ") || fallback;
+  if (isStoreClosedError(err, joined)) {
+    return {
+      title: "We are closed",
+      message: STORE_CLOSED_MESSAGE,
+      itemNames: [],
+      kind: "closed",
+    };
+  }
   if (isWalletInsufficientError(err, joined)) {
     return {
       title: "Store unavailable",
       message: WALLET_CUSTOMER_MESSAGE,
       itemNames: [],
       kind: "wallet",
+    };
+  }
+  if (
+    /already in progress|failed to acquire lock|tap place order again/i.test(joined)
+  ) {
+    return {
+      title: "Almost there",
+      message: "This is taking a moment. Tap Place order again.",
+      itemNames: [],
+      kind: "generic",
     };
   }
   const itemNames = itemNamesFromMessages(messages);

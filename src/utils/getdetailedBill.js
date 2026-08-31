@@ -1,3 +1,14 @@
+function roundPaise(value) {
+  return Math.round((Number(value) || 0) * 100) / 100;
+}
+
+/** Rupee label without binary float junk (`410.53000000000003`). */
+export function formatRupee(value) {
+  const amount = roundPaise(value);
+  if (Number.isInteger(amount)) return String(amount);
+  return amount.toFixed(2);
+}
+
 export const getDetailBill = (_addToCart,discType='percentage',discountVal=18,tip=0,deliveryFee=0)=>{
 
     let discountRate = discountVal

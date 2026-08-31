@@ -10,11 +10,15 @@ const DrawerComp = (props) => {
     borderTopLeftRadius,
     children,
     toggleDrawer,
+    bg,
+    color,
   } = props;
   return (
     <Drawer scrollBehavior="inside" placement={placement} onClose={onClose} isOpen={toggleDrawer}>
-      <DrawerOverlay />
+      <DrawerOverlay bg="blackAlpha.700" />
       <DrawerContent
+        bg={bg}
+        color={color}
         display="flex"
         flexDirection="column"
         overflow={height && height !== "auto" ? "hidden" : undefined}

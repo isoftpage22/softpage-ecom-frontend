@@ -8,8 +8,9 @@ import {
 } from "@/lib/theme/brandPalette";
 import { PersistStoreInfo } from "@/src/hooks/PersistStoreInfo";
 import { PersistMenuCart } from "@/src/hooks/PersistMenuCart";
-import { StoreClosedScreen } from "@/components/StoreClosedScreen";
+import { StoreAvailabilityGate } from "@/components/StoreAvailabilityGate";
 import { MenuAuthChrome } from "@/components/MenuAuthChrome";
+import { TenantThemeVars } from "@/components/TenantThemeVars";
 
 export async function generateMetadata(): Promise<Metadata> {
   const tenant = await resolveTenant();
@@ -48,21 +49,18 @@ export default async function MenuLayout({
       ? buildThemeCss(tenant.config.theme)
       : "";
   const fontHref = buildFontHref(tenant?.config?.themeConfig);
-  const isStoreOpen = tenant?.config?.isStoreOpen ?? tenant?.isStoreOpen ?? true;
 
   return (
     <>
       {fontHref ? (
-        <link rel="stylesheet" href={fontHref} />
+        <link rel="stylesheet" href={fontHref} precedence="default" />
       ) : null}
-      {themeCss ? (
-        <style dangerouslySetInnerHTML={{ __html: themeCss }} />
-      ) : null}
+      <TenantThemeVars css={themeCss} />
       <TenantProvider tenant={tenant}>
       <PersistStoreInfo />
       <PersistMenuCart />
       <MenuAuthChrome />
-      {isStoreOpen ? children : <StoreClosedScreen />}
+      <StoreAvailabilityGate>{children}</StoreAvailabilityGate>
       </TenantProvider>
     </>
   );

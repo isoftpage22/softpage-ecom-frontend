@@ -143,6 +143,19 @@ export function ProfileMenu() {
               >
                 Orders
               </Button>
+              <Button
+                variant="ghost"
+                justifyContent="flex-start"
+                borderRadius={0}
+                h="42px"
+                px={4}
+                fontWeight="500"
+                fontSize="15px"
+                textTransform="none"
+                onClick={() => go("/bookings")}
+              >
+                Bookings
+              </Button>
             </VStack>
 
             <Divider my={3} />

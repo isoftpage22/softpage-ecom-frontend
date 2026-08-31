@@ -38,12 +38,12 @@ const OtpFields = (props) => {
       <VStack spacing={4} align="center">
         <HStack mt={5} spacing={2} justifyContent={"center"}>
           <PinInput otp type="number" onChange={setOtp} value={otp} autoFocus>
-            <PinInputField autoComplete="one-time-code" h={46} w={42} />
-            <PinInputField h={46} w={42} />
-            <PinInputField h={46} w={42} />
-            <PinInputField h={46} w={42} />
-            <PinInputField h={46} w={42} />
-            <PinInputField h={46} w={42} />
+            <PinInputField autoComplete="one-time-code" h={46} w={42} color="gray.800" bg="white" />
+            <PinInputField h={46} w={42} color="gray.800" bg="white" />
+            <PinInputField h={46} w={42} color="gray.800" bg="white" />
+            <PinInputField h={46} w={42} color="gray.800" bg="white" />
+            <PinInputField h={46} w={42} color="gray.800" bg="white" />
+            <PinInputField h={46} w={42} color="gray.800" bg="white" />
           </PinInput>
         </HStack>
         <Flex justifyContent={"center"} alignItems="center" flexDir="column">
@@ -53,7 +53,7 @@ const OtpFields = (props) => {
                 <Text opacity={0.4} textAlign={"center"}>
                   I didn't receive code.
                 </Text>{" "}
-                <Text ml="2" color={"#8D33FF"} opacity={0.4}>
+                <Text ml="2" color="gray.400">
                   Resend Code
                 </Text>
               </>
@@ -66,7 +66,8 @@ const OtpFields = (props) => {
                     if (resendOtp) resendOtp();
                   }}
                   ml="2"
-                  color={"#8D33FF"}
+                  color="#111111"
+                  fontWeight="700"
                 >
                   Resend Code
                 </Text>
@@ -86,7 +87,6 @@ const OtpFields = (props) => {
           isLoading={busy}
           opacity={canSubmit ? 1 : 0.4}
           variant="solidFull"
-          bg="#f4c359"
           alignSelf="center"
           size="lg"
         >

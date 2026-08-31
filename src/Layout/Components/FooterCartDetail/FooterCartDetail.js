@@ -1,7 +1,7 @@
 import React, { Fragment } from "react";
 import { useSelector } from "react-redux";
 import { useHistory } from "../../../lib/nav";
-import { showsOrderBar } from "@/lib/cart/persistCart";
+import { activeOrderHref, showsOrderBar } from "@/lib/cart/persistCart";
 import StickyActionBar from "../StickyActionBar/StickyActionBar";
 
 const FooterCartDetail = (props) => {
@@ -13,12 +13,9 @@ const FooterCartDetail = (props) => {
   const itemLabel = `${itemCount} item${itemCount === 1 ? "" : "s"}`;
 
   const handleViewCartButton = () => {
-    if (orderBar && activeOrder?.orderId) {
-      if (activeOrder.phase === "processing") {
-        history.push(`/order-status/${activeOrder.orderId}`);
-        return;
-      }
-      history.push(`/orders/${activeOrder.orderId}`);
+    const href = orderBar ? activeOrderHref(activeOrder) : null;
+    if (href) {
+      history.push(href);
       return;
     }
     history.push("/cart");
