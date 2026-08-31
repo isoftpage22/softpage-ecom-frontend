@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useBusinessAppId, useBusinessId } from "@/lib/tenant/TenantContext";
 import { useGuestSessionId } from "@/lib/cart/session";
 import {
+  cartApi,
   useClearCartMutation,
   useGetCartQuery,
   useReplaceCartLinesMutation,
@@ -16,6 +17,7 @@ import { LIVE_SHIPPING_RATE_ID } from "@/lib/logisticsApi";
 import { getTableSession, isDineInSession } from "@/lib/restaurant/table-session";
 import { getUserInFromLocal } from "@/src/utils/CommonFunctions";
 import { useDebouncedValue } from "@/src/hooks/useDebouncedValue";
+import type { Cart } from "@/types/cart.types";
 
 type LocalLine = MenuCartProduct & {
   lineKey?: string;
@@ -45,6 +47,7 @@ function checkoutShippingAddress(usersAddress: LocalMenuAddress | Record<string,
  * and platform shipping follow +/-. Home/product pages stay local.
  */
 export function useSyncCartPage() {
+  const dispatch = useDispatch();
   const businessId = useBusinessId();
   const businessAppId = useBusinessAppId();
   const sessionId = useGuestSessionId();
@@ -80,41 +83,43 @@ export function useSyncCartPage() {
   const [setShippingRate, shippingState] = useSetShippingRateMutation();
   const [clearCart] = useClearCartMutation();
 
-  const localQty = products.reduce((sum, line) => sum + (Number(line.quantity) || 0), 0);
-  const localSubtotal = Math.round(
-    products.reduce((sum, line) => sum + (Number(line.total_amount) || 0), 0) * 100,
-  ) / 100;
-  const serverQty = Number(serverCart?.itemCount) || 0;
-  const serverSubtotal = Math.round((Number(serverCart?.subtotal) || 0) * 100) / 100;
-  const awaitingServer =
-    localQty > 0 &&
-    (!serverCart || serverQty !== localQty || serverSubtotal !== localSubtotal);
+  const writeCartCache = (cart: Cart | null | undefined) => {
+    if (!cart || !businessId || !businessAppId || !sessionId) return;
+    dispatch(
+      cartApi.util.updateQueryData(
+        "getCart",
+        { businessId, businessAppId, sessionId },
+        () => cart,
+      ),
+    );
+  };
 
   useEffect(() => {
-    if (!businessId || !businessAppId || !sessionId) return;
-    if (debouncedSignature === lastSynced.current) return;
+    if (!businessId || !businessAppId || !sessionId) {
+      setPending(false);
+      return;
+    }
+    if (debouncedSignature === lastSynced.current) {
+      setPending(false);
+      return;
+    }
 
     let cancelled = false;
 
     const run = async () => {
-      if (!products.length) {
-        if (serverCart?.id) {
-          try {
-            await clearCart({ businessId, cartId: serverCart.id }).unwrap();
-          } catch {
-            /* page is leaving */
-          }
-        }
-        if (!cancelled) {
-          lastSynced.current = debouncedSignature;
-          setPending(false);
-        }
-        return;
-      }
-
-      const shippingAddress = checkoutShippingAddress(usersAddress);
-
       try {
+        if (!products.length) {
+          if (serverCart?.id) {
+            try {
+              await clearCart({ businessId, cartId: serverCart.id }).unwrap();
+            } catch {
+              /* page is leaving */
+            }
+          }
+          return;
+        }
+
+        const shippingAddress = checkoutShippingAddress(usersAddress);
         const cart = await replaceCartLines({
           businessId,
           businessAppId,
@@ -124,23 +129,27 @@ export function useSyncCartPage() {
             ...(shippingAddress ? { shippingAddress } : {}),
           },
         }).unwrap();
+        writeCartCache(cart);
+
         if (shippingAddress && cart?.id) {
           try {
-            await setShippingRate({
+            const shipped = await setShippingRate({
               businessId,
               cartId: cart.id,
               shippingRateId: LIVE_SHIPPING_RATE_ID,
             }).unwrap();
+            writeCartCache(shipped);
           } catch {
             /* quote on the bill still shows the REST rate */
           }
         }
+      } catch {
+        /* retry on the next signature change */
+      } finally {
         if (!cancelled) {
           lastSynced.current = debouncedSignature;
           setPending(false);
         }
-      } catch {
-        /* retry on the next signature change */
       }
     };
 
@@ -148,24 +157,20 @@ export function useSyncCartPage() {
     return () => {
       cancelled = true;
     };
+    // Signature already encodes products + address; listing those objects
+    // here re-runs the effect and can leave `pending` stuck true.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     debouncedSignature,
     businessId,
     businessAppId,
     sessionId,
-    products,
-    usersAddress,
-    serverCart?.id,
     replaceCartLines,
     setShippingRate,
     clearCart,
   ]);
 
   return {
-    syncing:
-      pending ||
-      replaceState.isLoading ||
-      shippingState.isLoading ||
-      awaitingServer,
+    syncing: pending || replaceState.isLoading || shippingState.isLoading,
   };
 }
