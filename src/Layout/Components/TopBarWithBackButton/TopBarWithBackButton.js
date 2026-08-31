@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from 'react'
 import { Box, Flex, Spacer, Text, IconButton } from '@chakra-ui/react'
 import { ArrowBackIcon } from '@chakra-ui/icons'
