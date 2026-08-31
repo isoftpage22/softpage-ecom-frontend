@@ -19,6 +19,8 @@ import { useSelector } from 'react-redux'
 import { useGetAvailableCouponsQuery } from '@/store/api/promotionsApi'
 import { useApplyCouponMutation, useGetCartQuery, useReplaceCartLinesMutation } from '@/store/api/cartApi'
 import { lineToAddToCartInput } from '@/lib/checkout/placeMenuOrder'
+import { useSyncCartPage } from '@/lib/cart/useSyncCartPage'
+import { rtkErrorMessage } from '@/lib/auth/persistAuth'
 
 function discountParts(coupon) {
   if (!coupon) return { amount: '', unit: 'OFF' }
@@ -43,10 +45,12 @@ function formatValidUntil(value) {
   return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
-function CouponTicket({ coupon, applied, applying, onApply }) {
+function CouponTicket({ coupon, applied, applying, onApply, localHasItems }) {
   const { amount, unit } = discountParts(coupon)
   const until = formatValidUntil(coupon.validUntil)
-  const ineligible = !coupon.isApplicable && !applied
+  const staleEmptyServerCart =
+    coupon.ineligibilityReason === 'Coupon is not applicable to items in cart'
+  const ineligible = !coupon.isApplicable && !applied && !(staleEmptyServerCart && localHasItems)
   const meta = [
     coupon.minimumOrderAmount ? `Min order ₹${coupon.minimumOrderAmount}` : null,
     coupon.maximumDiscountAmount && coupon.type === 'percentage'
@@ -194,6 +198,7 @@ const ListOfCoupons = () => {
   const businessId = useBusinessId()
   const businessAppId = useBusinessAppId()
   const sessionId = useGuestSessionId()
+  useSyncCartPage()
   const { data: cart } = useGetCartQuery(
     { businessId, businessAppId, sessionId },
     { skip: !businessId || !businessAppId || !sessionId },
@@ -209,7 +214,11 @@ const ListOfCoupons = () => {
   const [manualCode, setManualCode] = useState('')
 
   const { data: coupons, isLoading } = useGetAvailableCouponsQuery(
-    { businessId, cartId: cart?.id },
+    {
+      businessId,
+      cartId: cart?.id,
+      cartKey: `${cart?.itemCount || 0}:${cart?.subtotal || 0}`,
+    },
     { skip: !businessId },
   )
   const [applyCoupon] = useApplyCouponMutation()
@@ -225,24 +234,21 @@ const ListOfCoupons = () => {
       setError('Add items to your cart first, then apply a coupon')
       return
     }
+    if (!businessId || !businessAppId || !sessionId) {
+      setError('Could not load your cart')
+      return
+    }
     setApplyingCode(nextCode)
     try {
-      let cartId = cart?.id
-      if (!cartId) {
-        if (!businessId || !businessAppId || !sessionId) {
-          setError('Could not load your cart')
-          return
-        }
-        const synced = await replaceCartLines({
-          businessId,
-          businessAppId,
-          sessionId,
-          input: {
-            lines: (localProducts || []).map((line) => lineToAddToCartInput(line)),
-          },
-        }).unwrap()
-        cartId = synced?.id
-      }
+      const synced = await replaceCartLines({
+        businessId,
+        businessAppId,
+        sessionId,
+        input: {
+          lines: (localProducts || []).map((line) => lineToAddToCartInput(line)),
+        },
+      }).unwrap()
+      const cartId = synced?.id || cart?.id
       if (!cartId) {
         setError('Could not load your cart')
         return
@@ -250,7 +256,7 @@ const ListOfCoupons = () => {
       await applyCoupon({ businessId, cartId, couponCode: nextCode }).unwrap()
       history.push('/cart')
     } catch (e) {
-      setError(e?.data?.message || e?.message || 'This coupon cannot be applied')
+      setError(rtkErrorMessage(e, 'This coupon cannot be applied'))
     } finally {
       setApplyingCode('')
     }
@@ -388,6 +394,7 @@ const ListOfCoupons = () => {
                 coupon={coupon}
                 applied={appliedCode === String(coupon.code).toUpperCase()}
                 applying={applyingCode === String(coupon.code).toUpperCase()}
+                localHasItems={localItemCount > 0}
                 onApply={handleApply}
               />
             ))}

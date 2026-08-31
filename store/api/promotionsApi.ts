@@ -35,7 +35,7 @@ export const promotionsApi = createApi({
   endpoints: (builder) => ({
     getAvailableCoupons: builder.query<
       AvailableCoupon[],
-      { businessId: number; cartId?: string }
+      { businessId: number; cartId?: string; cartKey?: string }
     >({
       query: ({ businessId, cartId }) => ({
         document: gql`
