@@ -111,7 +111,10 @@ export function AddressMapPicker({
       if (cancelled) return;
       setGoogleFailed(true);
       setMapsReady(false);
-      setError("Google Maps is blocked for this URL. Using OpenStreetMap instead.");
+      const origin = window.location.origin;
+      setError(
+        `Google Maps blocked ${origin} (RefererNotAllowedMapError). Add ${origin}/* to this API key’s Website restrictions, then reload.`,
+      );
     };
     loadGoogleMaps()
       .then((maps) => {

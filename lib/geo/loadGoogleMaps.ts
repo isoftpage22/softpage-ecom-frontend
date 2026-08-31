@@ -17,6 +17,11 @@ export function isGoogleMapsEnabled(): boolean {
   return (flag === "true" || flag === "1") && Boolean(getGoogleMapsApiKey());
 }
 
+/**
+ * `loading=async` only bootstraps `importLibrary`. `google.maps.Map` is missing
+ * until that call finishes — polling for Map was racing the loader and falling
+ * back to Leaflet.
+ */
 export function loadGoogleMaps(): Promise<any> {
   if (typeof window === "undefined") return Promise.resolve(null);
   if (!isGoogleMapsEnabled()) return Promise.resolve(null);
@@ -39,45 +44,57 @@ export function loadGoogleMaps(): Promise<any> {
       reject(err);
     };
 
-    window.__softpageMapsReady = () => finish(window.google?.maps);
-
-    const waitForMaps = (script?: HTMLScriptElement | null) => {
-      if (window.google?.maps?.Map) {
-        finish(window.google.maps);
-        return;
-      }
-      let ticks = 0;
-      const timer = window.setInterval(() => {
-        ticks += 1;
-        if (window.google?.maps?.Map) {
-          window.clearInterval(timer);
-          finish(window.google.maps);
-        } else if (ticks >= 50) {
-          window.clearInterval(timer);
+    const ready = async () => {
+      try {
+        const mapsNs = window.google?.maps;
+        if (!mapsNs) {
           fail(new Error("Failed to load Google Maps"));
+          return;
         }
-      }, 100);
-      script?.addEventListener("error", () => {
-        window.clearInterval(timer);
-        fail(new Error("Failed to load Google Maps"));
-      }, { once: true });
+        if (typeof mapsNs.importLibrary === "function") {
+          await mapsNs.importLibrary("maps");
+        }
+        if (!window.google?.maps?.Map) {
+          fail(new Error("Failed to load Google Maps"));
+          return;
+        }
+        finish(window.google.maps);
+      } catch (err) {
+        fail(err instanceof Error ? err : new Error("Failed to load Google Maps"));
+      }
     };
 
-    const existing = document.querySelector(`script[data-softpage-maps="1"]`) as HTMLScriptElement | null;
+    window.__softpageMapsReady = () => {
+      void ready();
+    };
+
+    const existing = document.querySelector(
+      `script[data-softpage-maps="1"]`,
+    ) as HTMLScriptElement | null;
     if (existing) {
-      waitForMaps(existing);
+      if (window.google?.maps) {
+        void ready();
+      }
+      existing.addEventListener(
+        "error",
+        () => fail(new Error("Failed to load Google Maps")),
+        { once: true },
+      );
+      window.setTimeout(() => {
+        if (!settled) fail(new Error("Failed to load Google Maps"));
+      }, 20000);
       return;
     }
 
     const script = document.createElement("script");
     script.dataset.softpageMaps = "1";
     script.async = true;
-    // Maps JS only (no Places library). Search uses the Nest geo API so we
-    // avoid Autocomplete SKUs; reverse geocode is cached separately.
-    script.src = `${GOOGLE_MAPS_SRC}?key=${encodeURIComponent(key)}&v=quarterly&loading=async&callback=__softpageMapsReady&region=IN&language=en`;
+    script.src = `${GOOGLE_MAPS_SRC}?key=${encodeURIComponent(key)}&v=weekly&loading=async&callback=__softpageMapsReady&region=IN&language=en`;
     script.onerror = () => fail(new Error("Failed to load Google Maps"));
     document.head.appendChild(script);
-    waitForMaps(script);
+    window.setTimeout(() => {
+      if (!settled) fail(new Error("Failed to load Google Maps"));
+    }, 20000);
   });
 
   return loader;

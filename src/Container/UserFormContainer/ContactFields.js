@@ -110,9 +110,16 @@ const ContactFields = (props) => {
             <Button
               type="submit"
               isLoading={busy}
+              loadingText="CONTINUE"
+              spinnerPlacement="start"
               variant="solidFull"
               alignSelf="center"
               size="lg"
+              bg="black"
+              color="white"
+              _hover={{ bg: "black", _disabled: { bg: "black", color: "white" } }}
+              _disabled={{ bg: "black", color: "white", opacity: 0.85 }}
+              _loading={{ bg: "black", color: "white", opacity: 1 }}
             >
               CONTINUE
             </Button>

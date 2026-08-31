@@ -22,13 +22,17 @@ export default function GoogleAddressMapInner({
   const circlesRef = useRef<google.maps.Circle[]>([]);
   const onPickRef = useRef(onPick);
   onPickRef.current = onPick;
+  const startRef = useRef({ lat, lng, hasPin });
+  startRef.current = { lat, lng, hasPin };
 
   useEffect(() => {
-    if (!mapEl.current || !window.google?.maps || mapRef.current) return;
+    const el = mapEl.current;
+    if (!el || !window.google?.maps?.Map) return undefined;
     const maps = window.google.maps;
-    mapRef.current = new maps.Map(mapEl.current, {
-      center: { lat, lng },
-      zoom: hasPin ? 16 : 5,
+    const start = startRef.current;
+    const map = new maps.Map(el, {
+      center: { lat: start.lat, lng: start.lng },
+      zoom: start.hasPin ? 16 : 5,
       disableDefaultUI: true,
       cameraControl: false,
       zoomControl: false,
@@ -47,22 +51,32 @@ export default function GoogleAddressMapInner({
         { featureType: "transit", stylers: [{ visibility: "off" }] },
       ],
     });
-    markerRef.current = new maps.Marker({
-      map: mapRef.current,
+    mapRef.current = map;
+    const marker = new maps.Marker({
+      map,
       draggable: true,
-      position: hasPin ? { lat, lng } : undefined,
-      visible: hasPin,
+      position: start.hasPin ? { lat: start.lat, lng: start.lng } : undefined,
+      visible: start.hasPin,
     });
-    mapRef.current.addListener('click', (e: google.maps.MapMouseEvent) => {
+    markerRef.current = marker;
+    map.addListener('click', (e: google.maps.MapMouseEvent) => {
       if (!e.latLng) return;
       onPickRef.current(e.latLng.lat(), e.latLng.lng());
     });
-    markerRef.current.addListener('dragend', () => {
+    marker.addListener('dragend', () => {
       const pos = markerRef.current?.getPosition();
       if (!pos) return;
       onPickRef.current(pos.lat(), pos.lng());
     });
-  }, [lat, lng, hasPin]);
+    return () => {
+      circlesRef.current.forEach((c) => c.setMap(null));
+      circlesRef.current = [];
+      marker.setMap(null);
+      markerRef.current = null;
+      mapRef.current = null;
+      el.replaceChildren();
+    };
+  }, []);
 
   useEffect(() => {
     if (!mapRef.current || !markerRef.current) return;
@@ -100,15 +114,6 @@ export default function GoogleAddressMapInner({
           }),
       );
   }, [zones]);
-
-  useEffect(() => {
-    return () => {
-      circlesRef.current.forEach((c) => c.setMap(null));
-      circlesRef.current = [];
-      markerRef.current = null;
-      mapRef.current = null;
-    };
-  }, []);
 
   return <div ref={mapEl} style={{ height: '100%', width: '100%' }} />;
 }

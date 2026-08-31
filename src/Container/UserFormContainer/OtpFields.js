@@ -85,10 +85,17 @@ const OtpFields = (props) => {
         <Button
           onClick={() => canSubmit && submitOtp(otp)}
           isLoading={busy}
-          opacity={canSubmit ? 1 : 0.4}
+          loadingText="SUBMIT"
+          spinnerPlacement="start"
+          opacity={busy || canSubmit ? 1 : 0.4}
           variant="solidFull"
           alignSelf="center"
           size="lg"
+          bg="black"
+          color="white"
+          _hover={{ bg: "black", _disabled: { bg: "black", color: "white" } }}
+          _disabled={{ bg: "black", color: "white", opacity: 0.85 }}
+          _loading={{ bg: "black", color: "white", opacity: 1 }}
         >
           SUBMIT
         </Button>

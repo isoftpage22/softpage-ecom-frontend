@@ -64,7 +64,7 @@ const ShoppingCart = (props) => {
   })
   const quotedFee = deliveryFeeFromQuote(quote)
   const sessionId = useGuestSessionId()
-  useSyncCartPage()
+  const { syncing: totalsSyncing } = useSyncCartPage()
   const { data: serverCart } = useGetCartQuery(
     { businessId, businessAppId, sessionId },
     { skip: !businessId || !businessAppId || !sessionId },
@@ -178,9 +178,10 @@ const ShoppingCart = (props) => {
                 showDelivery={!dineIn}
                 hasAddress={hasAddress}
                 quote={quote}
+                totalsSyncing={totalsSyncing}
               />
             </Box>
-            <Footer {...props} usersAddress={usersAddress} isShoppingCart={true} totalCartBill={totalCartBill} hideVisual />
+            <Footer {...props} usersAddress={usersAddress} isShoppingCart={true} totalCartBill={totalCartBill} totalsSyncing={totalsSyncing} hideVisual />
           </>
           : null}
     </>

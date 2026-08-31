@@ -3,6 +3,7 @@ export {};
 declare global {
   namespace google {
     namespace maps {
+      function importLibrary(name: string): Promise<unknown>;
       class Map {
         constructor(el: HTMLElement, opts?: Record<string, unknown>);
         setCenter(pos: { lat: number; lng: number }): void;
@@ -18,6 +19,7 @@ declare global {
         setVisible(v: boolean): void;
         getPosition(): { lat: () => number; lng: () => number } | undefined;
         addListener(event: string, handler: () => void): void;
+        setMap(map: Map | null): void;
       }
       class Circle {
         constructor(opts?: Record<string, unknown>);

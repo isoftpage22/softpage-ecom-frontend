@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { useBusinessAppId, useBusinessId } from "@/lib/tenant/TenantContext";
 import { useGuestSessionId } from "@/lib/cart/session";
@@ -66,14 +66,29 @@ export function useSyncCartPage() {
   );
   const debouncedSignature = useDebouncedValue(signature, 300);
   const lastSynced = useRef("");
+  const [pending, setPending] = useState(false);
+
+  useLayoutEffect(() => {
+    if (signature !== lastSynced.current) setPending(true);
+  }, [signature]);
 
   const { data: serverCart } = useGetCartQuery(
     { businessId, businessAppId, sessionId },
     { skip: !businessId || !businessAppId || !sessionId },
   );
-  const [replaceCartLines] = useReplaceCartLinesMutation();
-  const [setShippingRate] = useSetShippingRateMutation();
+  const [replaceCartLines, replaceState] = useReplaceCartLinesMutation();
+  const [setShippingRate, shippingState] = useSetShippingRateMutation();
   const [clearCart] = useClearCartMutation();
+
+  const localQty = products.reduce((sum, line) => sum + (Number(line.quantity) || 0), 0);
+  const localSubtotal = Math.round(
+    products.reduce((sum, line) => sum + (Number(line.total_amount) || 0), 0) * 100,
+  ) / 100;
+  const serverQty = Number(serverCart?.itemCount) || 0;
+  const serverSubtotal = Math.round((Number(serverCart?.subtotal) || 0) * 100) / 100;
+  const awaitingServer =
+    localQty > 0 &&
+    (!serverCart || serverQty !== localQty || serverSubtotal !== localSubtotal);
 
   useEffect(() => {
     if (!businessId || !businessAppId || !sessionId) return;
@@ -90,7 +105,10 @@ export function useSyncCartPage() {
             /* page is leaving */
           }
         }
-        if (!cancelled) lastSynced.current = debouncedSignature;
+        if (!cancelled) {
+          lastSynced.current = debouncedSignature;
+          setPending(false);
+        }
         return;
       }
 
@@ -117,7 +135,10 @@ export function useSyncCartPage() {
             /* quote on the bill still shows the REST rate */
           }
         }
-        if (!cancelled) lastSynced.current = debouncedSignature;
+        if (!cancelled) {
+          lastSynced.current = debouncedSignature;
+          setPending(false);
+        }
       } catch {
         /* retry on the next signature change */
       }
@@ -139,4 +160,12 @@ export function useSyncCartPage() {
     setShippingRate,
     clearCart,
   ]);
+
+  return {
+    syncing:
+      pending ||
+      replaceState.isLoading ||
+      shippingState.isLoading ||
+      awaitingServer,
+  };
 }

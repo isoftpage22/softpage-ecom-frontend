@@ -1,4 +1,15 @@
 
+const filledBlack = {
+  bg: "black",
+  color: "white",
+  _hover: {
+    bg: "black",
+    _disabled: { bg: "black", color: "white" },
+  },
+  _active: { bg: "black" },
+  _disabled: { bg: "black", color: "white", opacity: 0.85, cursor: "not-allowed" },
+  _loading: { bg: "black", color: "white", opacity: 1 },
+}
 
 export  const Button = {
   // The styles all button have in common
@@ -8,6 +19,13 @@ export  const Button = {
     borderRadius: "base", // <-- border radius is same for all variants and sizes
     _focus: {
       boxShadow: "none", // Remove the focus outline (box shadow)
+    },
+    // Chakra default is `_hover._disabled.bg: initial`, which wipes custom
+    // fills while isLoading (button is disabled + still hovered after click).
+    _hover: {
+      _disabled: {
+        bg: "unset",
+      },
     },
   },
   // Two sizes: sm and md
@@ -43,15 +61,11 @@ export  const Button = {
       activeColor:'black',
       focusBorderColor:"none" ,
       focusBoxShadow:"none",
-      _hover: {
-        bg: "black", 
-      },
+      ...filledBlack,
       _active: {
-        bg: "black", 
+        bg: "black",
         border:'none'
       },
-      
-
     },
     ghost:{
 
@@ -75,14 +89,12 @@ export  const Button = {
 
     },
     solid: {
-      bg: "black",
-      color: "white",
+      ...filledBlack,
       height:"20px",
       width:"69px"
     },
     solidFull:{
-      bg: "black",
-      color: "white",
+      ...filledBlack,
       height:"39px",
       width:"100%"
     },

@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, Flex, Text } from "@chakra-ui/react";
+import { Box, Flex, Text, Spinner } from "@chakra-ui/react";
 import React from "react";
 import { vibrateTap } from "@/lib/haptics";
 
@@ -23,6 +23,7 @@ export default function StickyActionBar({
   onClick,
   disabled = false,
   busy = false,
+  leftLoading = false,
 }) {
   const handleClick = (event) => {
     if (disabled || busy) {
@@ -80,17 +81,24 @@ export default function StickyActionBar({
         }}
       >
         <Box textAlign="left" minW="0" flex="1">
-          <Text
-            fontSize="17px"
-            fontWeight="800"
-            color="#111"
-            lineHeight="1.2"
-            letterSpacing="0"
-            textTransform="none"
-            noOfLines={1}
-          >
-            {leftTitle}
-          </Text>
+          <Flex align="center" gap="8px" minH="20px">
+            {leftLoading ? (
+              <Spinner size="xs" thickness="2px" color="gray.500" speed="0.7s" flexShrink={0} />
+            ) : null}
+            <Text
+              fontSize="17px"
+              fontWeight="800"
+              color="#111"
+              lineHeight="1.2"
+              letterSpacing="0"
+              textTransform="none"
+              noOfLines={1}
+              opacity={leftLoading ? 0.45 : 1}
+              transition="opacity 0.15s ease"
+            >
+              {leftTitle}
+            </Text>
+          </Flex>
           {leftSubtitle ? (
             <Text
               fontSize="12px"

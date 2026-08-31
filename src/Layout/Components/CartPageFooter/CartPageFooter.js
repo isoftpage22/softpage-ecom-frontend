@@ -284,6 +284,7 @@ const CartPageFooter = (props) => {
         onClick={onFooterClick}
         disabled={stockBlocking}
         busy={placing}
+        leftLoading={Boolean(props.totalsSyncing)}
       />
     </Fragment>
   );
