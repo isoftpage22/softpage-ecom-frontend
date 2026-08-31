@@ -1,18 +1,22 @@
+"use client";
+
 import React from 'react'
 import { Box, Text,Flex, Spacer, Container, Divider } from '@chakra-ui/react'
 import Card from '../../../Components/Card/Card'
 import { formatEtaMinutes } from '@/lib/checkout/useDeliveryQuote'
+import { formatRupee } from '../../../utils/getdetailedBill'
 
 const DetailedBill = (props) => {
   const {totalCartBill, showDelivery, hasAddress, quote}=props
+  const couponDiscount = Number(totalCartBill.couponDiscount || totalCartBill.discount || 0)
   const etaLabel = formatEtaMinutes(quote?.etaMinutes ?? quote?.winner?.etaMinutes)
   const feeKnown = quote?.serviceable && (quote.freeShippingApplied || quote.shippingCharge != null || quote.winner?.amount != null)
   let feeLabel = '—'
   if (!hasAddress) feeLabel = 'Add address'
+  else if (quote && !quote.serviceable) feeLabel = 'Unavailable'
+  else if (quote?.freeShippingApplied) feeLabel = 'Free'
+  else if (feeKnown || Number(totalCartBill.deliveryFee) > 0) feeLabel = `₹${formatRupee(totalCartBill.deliveryFee)}`
   else if (!quote) feeLabel = 'Calculating…'
-  else if (!quote.serviceable) feeLabel = 'Unavailable'
-  else if (quote.freeShippingApplied) feeLabel = 'Free'
-  else if (feeKnown) feeLabel = `₹${totalCartBill.deliveryFee}`
 
   return (
    <Card mb="3px" flexDirection="column" justify="flex-start" alignItems="flex-start">
@@ -22,7 +26,7 @@ const DetailedBill = (props) => {
      <Flex w="100%">
        <Text variant="mutedCart">Item Total</Text>
        <Spacer/>
-       <Text variant="mutedCart">₹{totalCartBill.totalAmount}</Text>
+       <Text variant="mutedCart">₹{formatRupee(totalCartBill.totalAmount)}</Text>
      </Flex>
      {showDelivery ? (
        <Box w="100%">
@@ -39,24 +43,26 @@ const DetailedBill = (props) => {
      <Flex>
        <Text variant="mutedCart">Taxes & Charges</Text>
      <Spacer/>
-       <Text variant="mutedCart">₹{totalCartBill.taxAmount}</Text>
+       <Text variant="mutedCart">₹{formatRupee(totalCartBill.taxAmount)}</Text>
      </Flex> 
      <Flex>
        <Text variant="mutedCart">Tip Amount</Text>
      <Spacer/>
-       <Text variant="mutedCart">₹{totalCartBill.tip}</Text>
+       <Text variant="mutedCart">₹{formatRupee(totalCartBill.tip)}</Text>
      </Flex>
-     <Flex>
-       <Text variant="mutedCart">Discount</Text>
-       <Spacer/>
-       <Text variant="mutedCart">₹{totalCartBill.discount}</Text>
-       </Flex> 
+     {couponDiscount > 0 ? (
+       <Flex>
+         <Text variant="mutedCart">Coupon</Text>
+         <Spacer/>
+         <Text variant="mutedCart" color="green.600">-₹{formatRupee(couponDiscount)}</Text>
+       </Flex>
+     ) : null}
      </Box>
       <Divider mt="3%" mb="3%"/>
       <Flex>
        <Text lineHeight="30px" >To Pay</Text>
        <Spacer/>
-       <Text lineHeight="30px" >₹{totalCartBill.totalFinalPriceAmount}</Text>
+       <Text lineHeight="30px" >₹{formatRupee(totalCartBill.totalFinalPriceAmount)}</Text>
        </Flex> 
      </Container>
    </Card>

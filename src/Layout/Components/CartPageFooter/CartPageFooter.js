@@ -21,6 +21,7 @@ import { setPendingCheckoutSession } from "@/lib/checkout/pendingSession";
 import { catalogStockError, formatCheckoutError } from "@/lib/api/userFacingError";
 import { isProductOutOfStock, isVariantOutOfStock } from "@/lib/catalog/options";
 import { openRazorpayCheckout } from "@/lib/payments/loadRazorpay";
+import { formatRupee } from "../../../utils/getdetailedBill";
 import StickyActionBar from "../StickyActionBar/StickyActionBar";
 
 const CartPageFooter = (props) => {
@@ -250,7 +251,7 @@ const CartPageFooter = (props) => {
       ? "Place order"
       : "Add address";
   const tableLabel = dineIn ? tableSessionLabel(tableSession) : null;
-  const totalLabel = `₹${totalCartBill?.totalFinalPriceAmount ?? price}`;
+  const totalLabel = `₹${formatRupee(totalCartBill?.totalFinalPriceAmount ?? price)}`;
 
   return (
     <Fragment>

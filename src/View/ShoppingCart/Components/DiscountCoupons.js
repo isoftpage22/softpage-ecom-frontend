@@ -1,3 +1,5 @@
+"use client";
+
 import { Flex, Icon, Text, Box, IconButton, Spinner } from '@chakra-ui/react'
 import React, { useState } from 'react'
 import { CloseIcon } from '@chakra-ui/icons'

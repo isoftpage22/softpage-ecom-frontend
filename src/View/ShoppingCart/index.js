@@ -1,3 +1,5 @@
+"use client";
+
 import ShoppingCart from './ShoppingCart';
 import { connect } from 'react-redux';
 import { bindActionCreators } from "redux";

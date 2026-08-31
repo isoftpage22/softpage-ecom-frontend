@@ -1,8 +1,12 @@
+"use client";
+
 import { Box, Text } from '@chakra-ui/react'
 import { useEffect, useState } from 'react'
 import { useAbandonCheckoutSessionMutation, useAbandonLockedCartMutation } from '@/store/api/ordersApi'
 import { useBusinessId, useBusinessAppId } from '@/lib/tenant/TenantContext'
-import { getGuestSessionId } from '@/lib/cart/session'
+import { getGuestSessionId, useGuestSessionId } from '@/lib/cart/session'
+import { useGetCartQuery } from '@/store/api/cartApi'
+import { useSyncCartPage } from '@/lib/cart/useSyncCartPage'
 import {
   getPendingCheckoutSession,
   clearPendingCheckoutSession,
@@ -13,7 +17,7 @@ import DetailedBill from './Components/DetailedBill'
 import DiscountCoupons from './Components/DiscountCoupons'
 import MoneyTip from './Components/MoneyTip'
 import SpecialInstructions from './Components/SpecialInstructions'
-import { getDetailBill } from '../../utils/getdetailedBill'
+import { buildMenuBill } from '../../utils/getdetailedBill'
 import TopBarWithBackButton from '../../Layout/Components/TopBarWithBackButton/TopBarWithBackButton'
 import Footer from '../../Layout/Guest/Components/Footer'
 import TopAddressBarContainer from '../../Container/TopAddressBarContainer/TopAddressBarContainer'
@@ -32,6 +36,9 @@ const ShoppingCart = (props) => {
   const { addToCart, deleteToCartProduct, addToCartProduct, usersAddress, setLoader } = props
   const tip = useSelector((state) => state.shoppingCart.tip || 0)
   const storeSlug = useStoreSlug()
+  const businessId = useBusinessId()
+  const businessAppId = useBusinessAppId()
+  const dispatch = useDispatch()
   const { products } = addToCart
   const qty = props.addToCart && props.addToCart.products.length;
   let price = 0;
@@ -56,7 +63,24 @@ const ShoppingCart = (props) => {
     enabled: !dineIn && hasAddress,
   })
   const quotedFee = deliveryFeeFromQuote(quote)
-  const totalCartBill = getDetailBill(addToCart, 'percentage', 18, tip, quotedFee == null ? 0 : quotedFee)
+  const sessionId = useGuestSessionId()
+  useSyncCartPage()
+  const { data: serverCart } = useGetCartQuery(
+    { businessId, businessAppId, sessionId },
+    { skip: !businessId || !businessAppId || !sessionId },
+  )
+  const deliveryFee = dineIn
+    ? 0
+    : quotedFee != null
+      ? quotedFee
+      : Number(serverCart?.shippingCost) || 0
+  const totalCartBill = buildMenuBill({
+    cart: serverCart,
+    tip,
+    deliveryFee,
+    fallbackSubtotal: price,
+    lines: products,
+  })
   const tableLabel = tableSessionLabel(tableSession)
   const checkoutError = useSelector((state) => state.shoppingCart.checkoutError)
   const hasUnavailableLine = (products || []).some((line) => {
@@ -66,9 +90,6 @@ const ShoppingCart = (props) => {
     return isProductOutOfStock(line?.product) || isVariantOutOfStock(selectedVariant, line?.product)
   })
   const extraFooterSpace = checkoutError || hasUnavailableLine
-  const dispatch = useDispatch()
-  const businessId = useBusinessId()
-  const businessAppId = useBusinessAppId()
   const [abandonCheckoutSession] = useAbandonCheckoutSessionMutation()
   const [abandonLockedCart] = useAbandonLockedCartMutation()
   const activeOrder = useSelector((state) => state.shoppingCart.activeOrder)
@@ -150,7 +171,7 @@ const ShoppingCart = (props) => {
               }
               <SpecialInstructions />
               <MoneyTip />
-              <DiscountCoupons />
+              <DiscountCoupons cart={serverCart} />
               <DetailedBill
                 qty={qty}
                 totalCartBill={totalCartBill}

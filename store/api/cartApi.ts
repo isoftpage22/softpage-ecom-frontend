@@ -169,6 +169,7 @@ export const cartApi = createApi({
       }),
       transformResponse: (response: { ecommerceReplaceCartLines: Cart }) =>
         response.ecommerceReplaceCartLines,
+      invalidatesTags: ["Cart"],
     }),
 
     applyCoupon: builder.mutation<Cart, { businessId: number; cartId: string; couponCode: string }>({

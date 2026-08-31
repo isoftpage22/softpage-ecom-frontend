@@ -12,6 +12,8 @@ const PRODUCT_FIELDS = gql`
     price
     compareAtPrice
     status
+    taxClass
+    taxInclusive
     categoryId
     availableQuantity
     isVeg

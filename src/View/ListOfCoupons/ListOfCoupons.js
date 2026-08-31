@@ -15,8 +15,10 @@ import TopBarWithBackButton from '../../Layout/Components/TopBarWithBackButton/T
 import { useHistory } from '../../lib/nav'
 import { useBusinessId, useBusinessAppId } from '@/lib/tenant/TenantContext'
 import { useGuestSessionId } from '@/lib/cart/session'
+import { useSelector } from 'react-redux'
 import { useGetAvailableCouponsQuery } from '@/store/api/promotionsApi'
-import { useApplyCouponMutation, useGetCartQuery } from '@/store/api/cartApi'
+import { useApplyCouponMutation, useGetCartQuery, useReplaceCartLinesMutation } from '@/store/api/cartApi'
+import { lineToAddToCartInput } from '@/lib/checkout/placeMenuOrder'
 
 function discountParts(coupon) {
   if (!coupon) return { amount: '', unit: 'OFF' }
@@ -196,7 +198,12 @@ const ListOfCoupons = () => {
     { businessId, businessAppId, sessionId },
     { skip: !businessId || !businessAppId || !sessionId },
   )
-  const itemCount = cart?.itemCount || 0
+  const localProducts = useSelector((state) => state.shoppingCart.addToCart?.products || [])
+  const localItemCount = (localProducts || []).reduce(
+    (sum, line) => sum + (Number(line.quantity) || 0),
+    0,
+  )
+  const itemCount = Number(cart?.itemCount) || localItemCount
   const [error, setError] = useState('')
   const [applyingCode, setApplyingCode] = useState('')
   const [manualCode, setManualCode] = useState('')
@@ -206,6 +213,7 @@ const ListOfCoupons = () => {
     { skip: !businessId },
   )
   const [applyCoupon] = useApplyCouponMutation()
+  const [replaceCartLines] = useReplaceCartLinesMutation()
 
   const appliedCode = (cart?.appliedCoupon?.code || '').toUpperCase()
 
@@ -217,13 +225,29 @@ const ListOfCoupons = () => {
       setError('Add items to your cart first, then apply a coupon')
       return
     }
-    if (!cart?.id) {
-      setError('Could not load your cart')
-      return
-    }
     setApplyingCode(nextCode)
     try {
-      await applyCoupon({ businessId, cartId: cart.id, couponCode: nextCode }).unwrap()
+      let cartId = cart?.id
+      if (!cartId) {
+        if (!businessId || !businessAppId || !sessionId) {
+          setError('Could not load your cart')
+          return
+        }
+        const synced = await replaceCartLines({
+          businessId,
+          businessAppId,
+          sessionId,
+          input: {
+            lines: (localProducts || []).map((line) => lineToAddToCartInput(line)),
+          },
+        }).unwrap()
+        cartId = synced?.id
+      }
+      if (!cartId) {
+        setError('Could not load your cart')
+        return
+      }
+      await applyCoupon({ businessId, cartId, couponCode: nextCode }).unwrap()
       history.push('/cart')
     } catch (e) {
       setError(e?.data?.message || e?.message || 'This coupon cannot be applied')
