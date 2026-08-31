@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect, useMemo, useState } from 'react'
 import CategoryWithProducts from './Component/CategoryWithProducts'
 import CurrentOffers from './Component/CurrentOffers'

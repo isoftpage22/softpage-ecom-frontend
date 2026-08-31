@@ -1,3 +1,5 @@
+"use client";
+
 import { Box, Flex, Text, Drawer, DrawerOverlay, DrawerContent, DrawerBody } from '@chakra-ui/react'
 import { CloseIcon } from '@chakra-ui/icons'
 import React, { useMemo, useState } from 'react'

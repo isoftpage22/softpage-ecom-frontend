@@ -1,3 +1,5 @@
+"use client";
+
 import Home from './Home';
 import { connect } from 'react-redux';
 import { bindActionCreators } from "redux";

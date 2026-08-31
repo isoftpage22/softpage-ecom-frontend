@@ -1,3 +1,5 @@
+"use client";
+
 import { Switch, Box, FormControl, FormLabel, Flex, Text } from '@chakra-ui/react'
 import React from 'react'
 import { MdOutlineEventAvailable } from 'react-icons/md'
