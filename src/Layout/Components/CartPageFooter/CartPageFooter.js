@@ -16,7 +16,8 @@ import { setLoader } from "../../../Store/action/loader";
 import { hasStorefrontToken, setPostAuthRedirect } from "@/lib/auth/persistAuth";
 import { placeMenuOrder } from "@/lib/checkout/placeMenuOrder";
 import { useReplaceCartLinesMutation } from "@/store/api/cartApi";
-import { useInitiateCheckoutMutation, useConfirmPaymentMutation } from "@/store/api/ordersApi";
+import { useInitiateCheckoutMutation, useConfirmPaymentMutation, useAbandonCheckoutSessionMutation, useAbandonLockedCartMutation } from "@/store/api/ordersApi";
+import { setPendingCheckoutSession } from "@/lib/checkout/pendingSession";
 import { catalogStockError, formatCheckoutError } from "@/lib/api/userFacingError";
 import { isProductOutOfStock, isVariantOutOfStock } from "@/lib/catalog/options";
 import { openRazorpayCheckout } from "@/lib/payments/loadRazorpay";
@@ -58,6 +59,8 @@ const CartPageFooter = (props) => {
   const [replaceCartLines] = useReplaceCartLinesMutation();
   const [initiateCheckout] = useInitiateCheckoutMutation();
   const [confirmPayment] = useConfirmPaymentMutation();
+  const [abandonCheckoutSession] = useAbandonCheckoutSessionMutation();
+  const [abandonLockedCart] = useAbandonLockedCartMutation();
 
   const tableSession = typeof window !== "undefined" ? getTableSession() : null;
   const dineIn = isDineInSession(tableSession);
@@ -99,6 +102,7 @@ const CartPageFooter = (props) => {
         specialInstructions: specialInstructions || "",
         replaceCartLines,
         initiateCheckout,
+        abandonLockedCart,
       });
 
       if (result.paymentRequired && result.paymentPageUrl) {
@@ -110,6 +114,7 @@ const CartPageFooter = (props) => {
             phase: "processing",
           }),
         );
+        setPendingCheckoutSession(result.checkoutSessionId);
         window.location.replace(result.paymentPageUrl);
         releasePlacing = false;
         return;
@@ -154,6 +159,16 @@ const CartPageFooter = (props) => {
           onDismiss: () => {
             setPlacing(false);
             dispatch(setLoader(false));
+            const sessionId = result.checkoutSessionId;
+            if (sessionId) {
+              abandonCheckoutSession({
+                businessId,
+                checkoutSessionId: sessionId,
+                reason: "Payment cancelled by shopper",
+              })
+                .unwrap()
+                .catch(() => undefined);
+            }
             dispatch(setActiveOrder(null));
             dispatch(
               setCartCheckoutError({

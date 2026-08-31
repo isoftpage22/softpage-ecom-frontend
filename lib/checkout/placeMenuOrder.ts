@@ -9,6 +9,7 @@ import {
   type TableSession,
 } from "@/lib/restaurant/table-session";
 import { rtkErrorMessage } from "@/lib/auth/persistAuth";
+import { isCartLockedError } from "@/lib/checkout/cartLock";
 
 export type MenuCartProduct = {
   product_id: string | number;
@@ -88,6 +89,15 @@ export async function placeMenuOrder(opts: {
     },
     CheckoutResult
   >;
+  abandonLockedCart?: MutateFn<
+    {
+      businessId: number;
+      businessAppId: number;
+      sessionId?: string;
+      reason?: string;
+    },
+    boolean
+  >;
 }): Promise<CheckoutResult> {
   try {
     return await runPlaceMenuOrder(opts);
@@ -120,17 +130,35 @@ async function runPlaceMenuOrder(
     }
   }
 
-  const cart = await opts
-    .replaceCartLines({
-      businessId: opts.businessId,
-      businessAppId: opts.businessAppId,
-      sessionId,
-      input: {
-        lines: opts.products.map(lineToAddToCartInput),
-        ...(shippingAddress ? { shippingAddress } : {}),
-      },
-    })
-    .unwrap();
+  const replaceLines = () =>
+    opts
+      .replaceCartLines({
+        businessId: opts.businessId,
+        businessAppId: opts.businessAppId,
+        sessionId,
+        input: {
+          lines: opts.products.map(lineToAddToCartInput),
+          ...(shippingAddress ? { shippingAddress } : {}),
+        },
+      })
+      .unwrap();
+
+  let cart: { id: string };
+  try {
+    cart = await replaceLines();
+  } catch (err) {
+    if (!isCartLockedError(err) || !opts.abandonLockedCart) throw err;
+    await opts
+      .abandonLockedCart({
+        businessId: opts.businessId,
+        businessAppId: opts.businessAppId,
+        sessionId,
+        reason: "Payment cancelled",
+      })
+      .unwrap()
+      .catch(() => undefined);
+    cart = await replaceLines();
+  }
 
   if (!cart?.id) {
     throw new Error("Could not create cart");
@@ -161,7 +189,7 @@ async function runPlaceMenuOrder(
       resourceId: opts.tableSession?.resourceId,
       tip: tip > 0 ? tip : undefined,
       payLater: payLater || undefined,
-      returnOrigin: typeof window !== "undefined" ? window.location.origin : undefined,
+      returnOrigin: typeof window !== "undefined" ? window.location.href : undefined,
     })
     .unwrap();
 }

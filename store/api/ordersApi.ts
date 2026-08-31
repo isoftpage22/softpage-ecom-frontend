@@ -380,6 +380,33 @@ export const ordersApi = createApi({
       invalidatesTags: ["Cart"],
     }),
 
+    abandonLockedCart: builder.mutation<
+      boolean,
+      { businessId: number; businessAppId: number; sessionId?: string; reason?: string }
+    >({
+      query: ({ businessId, businessAppId, sessionId, reason }) => ({
+        document: gql`
+          mutation MenuAbandonLockedCart(
+            $businessId: Int!
+            $businessAppId: Int!
+            $sessionId: String
+            $reason: String
+          ) {
+            ecommerceAbandonLockedCart(
+              businessId: $businessId
+              businessAppId: $businessAppId
+              sessionId: $sessionId
+              reason: $reason
+            )
+          }
+        `,
+        variables: { businessId, businessAppId, sessionId, reason },
+      }),
+      transformResponse: (response: { ecommerceAbandonLockedCart: boolean }) =>
+        response.ecommerceAbandonLockedCart,
+      invalidatesTags: ["Cart"],
+    }),
+
     getOrders: builder.query<
       OrdersResponse,
       { businessId: number; page?: number; pageSize?: number }
@@ -460,6 +487,7 @@ export const {
   useConfirmPaymentMutation,
   useCheckoutSessionStatusQuery,
   useAbandonCheckoutSessionMutation,
+  useAbandonLockedCartMutation,
   useGetOrdersQuery,
   useGetOrderByIdQuery,
   useGetOrderTrackingQuery,

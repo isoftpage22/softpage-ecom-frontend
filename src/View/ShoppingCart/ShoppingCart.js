@@ -1,5 +1,12 @@
 import { Box, Text } from '@chakra-ui/react'
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useAbandonCheckoutSessionMutation, useAbandonLockedCartMutation } from '@/store/api/ordersApi'
+import { useBusinessId, useBusinessAppId } from '@/lib/tenant/TenantContext'
+import { getGuestSessionId } from '@/lib/cart/session'
+import {
+  getPendingCheckoutSession,
+  clearPendingCheckoutSession,
+} from '@/lib/checkout/pendingSession'
 import { useDispatch, useSelector } from 'react-redux'
 import ItemCardAtCheckout from '../../Container/ItemCardAtCheckout/ItemCardAtCheckout'
 import DetailedBill from './Components/DetailedBill'
@@ -60,11 +67,42 @@ const ShoppingCart = (props) => {
   })
   const extraFooterSpace = checkoutError || hasUnavailableLine
   const dispatch = useDispatch()
+  const businessId = useBusinessId()
+  const businessAppId = useBusinessAppId()
+  const [abandonCheckoutSession] = useAbandonCheckoutSessionMutation()
+  const [abandonLockedCart] = useAbandonLockedCartMutation()
   const activeOrder = useSelector((state) => state.shoppingCart.activeOrder)
 
   useEffect(() => {
-    if (paymentCancelled) dispatch(setActiveOrder(null))
-  }, [paymentCancelled, dispatch])
+    if (!paymentCancelled) return
+    const checkoutSessionId = getPendingCheckoutSession() || activeOrder?.checkoutSessionId
+    dispatch(setActiveOrder(null))
+    if (!businessId) {
+      clearPendingCheckoutSession()
+      return
+    }
+    const release = checkoutSessionId
+      ? abandonCheckoutSession({
+          businessId,
+          checkoutSessionId,
+          reason: 'Payment cancelled by shopper',
+        }).unwrap()
+      : abandonLockedCart({
+          businessId,
+          businessAppId,
+          sessionId: getGuestSessionId(),
+          reason: 'Payment cancelled by shopper',
+        }).unwrap()
+    release.catch(() => undefined).finally(() => clearPendingCheckoutSession())
+  }, [
+    paymentCancelled,
+    abandonCheckoutSession,
+    abandonLockedCart,
+    businessId,
+    businessAppId,
+    activeOrder,
+    dispatch,
+  ])
 
   useEffect(() => {
     if ((products || []).length > 0) return

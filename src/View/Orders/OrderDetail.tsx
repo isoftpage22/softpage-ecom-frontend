@@ -197,7 +197,7 @@ export default function OrderDetail() {
       const result = await resumePayment({
         businessId,
         orderId: order.id,
-        returnOrigin: typeof window !== "undefined" ? window.location.origin : undefined,
+        returnOrigin: typeof window !== "undefined" ? window.location.href : undefined,
       }).unwrap();
 
       if (result.paymentPageUrl) {

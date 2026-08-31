@@ -24,8 +24,8 @@ const PAYMENT_STATUS_LABELS: Record<string, string> = {
 const DELIVERY_STATUS_LABELS: Record<string, string> = {
   pending: "Looking for rider",
   quoted: "Looking for rider",
-  created: "Booking created",
-  accepted: "Rider assigned",
+  created: "Looking for rider",
+  accepted: "Looking for rider",
   assigned: "Rider assigned",
   picked_up: "Picked up",
   in_transit: "On the way",
