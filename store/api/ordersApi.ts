@@ -115,6 +115,13 @@ const MENU_ORDER_DETAIL_FIELDS = gql`
       lastName
       addressLine1
       addressLine2
+      houseNumber
+      floor
+      tower
+      societyName
+      landmark
+      label
+      labelType
       city
       state
       postalCode
@@ -448,14 +455,20 @@ export const ordersApi = createApi({
       providesTags: (result, error, { orderId }) => [{ type: "Order", id: orderId }],
     }),
 
-    getOrderTracking: builder.query<OrderTracking | null, { businessId: number; orderId: string }>({
-      query: ({ businessId, orderId }) => ({
+    getOrderTracking: builder.query<
+      OrderTracking | null,
+      { businessId: number; orderId: string; refresh?: boolean }
+    >({
+      query: ({ businessId, orderId, refresh }) => ({
         document: gql`
-          query GetMenuOrderTracking($businessId: Int!, $orderId: String!) {
-            ecommerceOrderTracking(businessId: $businessId, orderId: $orderId) {
+          query GetMenuOrderTracking($businessId: Int!, $orderId: String!, $refresh: Boolean) {
+            ecommerceOrderTracking(businessId: $businessId, orderId: $orderId, refresh: $refresh) {
               orderId
               status
               provider
+              providerLabel
+              booked
+              quotedProvider
               trackingId
               trackingUrl
               labelUrl
@@ -471,11 +484,12 @@ export const ordersApi = createApi({
             }
           }
         `,
-        variables: { businessId, orderId },
+        variables: { businessId, orderId, refresh: Boolean(refresh) },
       }),
       transformResponse: (response: { ecommerceOrderTracking: OrderTracking | null }) =>
         response.ecommerceOrderTracking,
       providesTags: (result, error, { orderId }) => [{ type: "Order", id: orderId }],
+      forceRefetch: ({ currentArg }) => Boolean(currentArg?.refresh),
     }),
   }),
 });
@@ -491,4 +505,5 @@ export const {
   useGetOrdersQuery,
   useGetOrderByIdQuery,
   useGetOrderTrackingQuery,
+  useLazyGetOrderTrackingQuery,
 } = ordersApi;

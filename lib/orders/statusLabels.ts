@@ -22,6 +22,7 @@ const PAYMENT_STATUS_LABELS: Record<string, string> = {
 };
 
 const DELIVERY_STATUS_LABELS: Record<string, string> = {
+  awaiting_kitchen: "Waiting on kitchen",
   pending: "Looking for rider",
   quoted: "Looking for rider",
   created: "Looking for rider",
@@ -77,6 +78,23 @@ export function deliveryStatusLabel(value?: string | null): string {
 
 export function isCancelledOrder(status?: string | null): boolean {
   return normalizeStatus(status) === "cancelled";
+}
+
+const LIVE_COURIER_CLOSED = new Set([
+  "cancelled",
+  "delivered",
+  "failed",
+  "cancel_failed",
+  "rto",
+]);
+
+/** Manual live-location only — cancelled / delivered bookings must not hit Porter. */
+export function canRefreshLiveCourier(opts: {
+  orderStatus?: string | null;
+  deliveryStatus?: string | null;
+}): boolean {
+  if (isCancelledOrder(opts.orderStatus)) return false;
+  return !LIVE_COURIER_CLOSED.has(normalizeStatus(opts.deliveryStatus));
 }
 
 export function isDeliveryOrder(order?: {

@@ -52,12 +52,19 @@ export interface StorefrontMe {
   profile: StorefrontProfile;
 }
 
+export type AddressLabelType = "HOME" | "WORK" | "HOTEL" | "OTHER";
+
 export interface CustomerAddress {
   id: number;
   fullName: string | null;
   phone: string | null;
   line1: string;
   line2: string | null;
+  houseNumber?: string | null;
+  floor?: string | null;
+  tower?: string | null;
+  societyName?: string | null;
+  landmark?: string | null;
   city: string | null;
   state: string | null;
   postalCode: string | null;
@@ -65,6 +72,7 @@ export interface CustomerAddress {
   latitude?: number | null;
   longitude?: number | null;
   label?: string | null;
+  labelType?: AddressLabelType | null;
   isDefaultShipping: boolean;
   isDefaultBilling: boolean;
 }
@@ -74,6 +82,11 @@ export interface AddressInput {
   phone?: string;
   line1: string;
   line2?: string;
+  houseNumber?: string;
+  floor?: string;
+  tower?: string;
+  societyName?: string;
+  landmark?: string;
   city?: string;
   state?: string;
   postalCode?: string;
@@ -81,6 +94,7 @@ export interface AddressInput {
   latitude?: number;
   longitude?: number;
   label?: string;
+  labelType?: AddressLabelType;
   isDefaultShipping?: boolean;
   isDefaultBilling?: boolean;
 }

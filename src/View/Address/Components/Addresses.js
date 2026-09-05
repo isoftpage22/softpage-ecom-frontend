@@ -5,13 +5,23 @@ import { getAdrresFromLocal } from "../../../utils/CommonFunctions";
 import { LOCAL_STORAGE_CUSTOMER_ADDRESS } from "../../../utils/constants";
 import { useHistory } from "../../../lib/nav";
 import { useDeleteAddressMutation } from "@/store/api/storefrontAuthApi";
+import { formatStructuredAddress } from "@/lib/checkout/addressMapping";
 
 const Addresses = (props) => {
   const { selected, index, dataKey, setAddresses } = props;
   const history = useHistory();
   const [deleteAddress] = useDeleteAddressMutation();
   const title = dataKey?.checkbox || dataKey?.label || dataKey?.addressType || "Address";
-  const line = [dataKey?.address1, dataKey?.city, dataKey?.pincode].filter(Boolean).join(", ");
+  const line = formatStructuredAddress({
+    houseNumber: dataKey?.houseNumber,
+    floor: dataKey?.floor,
+    tower: dataKey?.tower,
+    societyName: dataKey?.societyName,
+    street: dataKey?.address1,
+    landmark: dataKey?.landmark,
+    city: dataKey?.city,
+    postalCode: dataKey?.pincode,
+  });
 
   const deleteSelectedAddress = async (event) => {
     event?.stopPropagation?.();

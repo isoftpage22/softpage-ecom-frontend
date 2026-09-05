@@ -34,6 +34,9 @@ const AddressListing = (props) => {
       const prev = localByServer.get(Number(row.id))
       if (!row.label && prev?.checkbox) local.checkbox = prev.checkbox
       if (!row.label && prev?.addressType) local.addressType = prev.addressType
+      if (!row.houseNumber && prev?.houseNumber) local.houseNumber = prev.houseNumber
+      if (!row.floor && prev?.floor) local.floor = prev.floor
+      if (!row.societyName && prev?.societyName) local.societyName = prev.societyName
       return local
     })
     setAddresses(mapped)

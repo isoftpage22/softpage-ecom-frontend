@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Box,
   Button,
@@ -19,6 +19,7 @@ import {
   useConfirmPaymentMutation,
   useGetOrderByIdQuery,
   useGetOrderTrackingQuery,
+  useLazyGetOrderTrackingQuery,
   useResumePaymentMutation,
 } from "@/store/api/ordersApi";
 import { addToCartProduct, emptyCartProduct } from "@/src/Store/action/shoppingCart";
@@ -29,6 +30,7 @@ import {
   isServerPaid,
 } from "@/lib/orders/paymentConfirmation";
 import {
+  canRefreshLiveCourier,
   deliveryStatusLabel,
   isCancelledOrder,
   isDeliveryOrder,
@@ -41,6 +43,7 @@ import { rtkErrorMessage } from "@/lib/api/userFacingError";
 import { getUserInFromLocal } from "@/src/utils/CommonFunctions";
 import type { Address } from "@/types/cart.types";
 import type { Order, OrderLine, OrderTracking } from "@/types/order.types";
+import { formatStructuredAddress } from "@/lib/checkout/addressMapping";
 
 function money(amount?: number | null, currency = "INR"): string {
   const n = Number(amount) || 0;
@@ -104,9 +107,17 @@ function formatAddress(address?: Address | null): string {
   const name = [address.firstName, address.lastName].filter(Boolean).join(" ").trim();
   const lines = [
     name,
-    address.addressLine1,
-    address.addressLine2,
-    [address.city, address.state, address.postalCode].filter(Boolean).join(", "),
+    formatStructuredAddress({
+      houseNumber: address.houseNumber,
+      floor: address.floor,
+      tower: address.tower,
+      societyName: address.societyName,
+      street: address.addressLine1,
+      landmark: address.landmark,
+      city: address.city,
+      state: address.state,
+      postalCode: address.postalCode,
+    }),
     address.phone,
   ].filter(Boolean);
   return lines.join("\n");
@@ -127,14 +138,11 @@ function deliveryCopy(tracking?: OrderTracking | null): string | null {
   if (status === "cancelled" || status === "failed") {
     return tracking.message || "Delivery was cancelled.";
   }
-  const msg = String(tracking.message || "");
-  if (/not been booked/i.test(msg) || /shipping has not/i.test(msg)) {
+  if (tracking.message) return tracking.message;
+  if (!tracking.current && !tracking.pickup && !tracking.drop) {
     return "Looking for a rider.";
   }
-  if (!tracking.current && !tracking.pickup && !tracking.drop) {
-    return tracking.message || "Looking for a rider.";
-  }
-  return tracking.message || null;
+  return null;
 }
 
 export default function OrderDetail() {
@@ -159,11 +167,19 @@ export default function OrderDetail() {
   const confirmedPlacement =
     isServerPaid(order?.paymentStatus) || isCodLikePayment(order?.paymentMethod);
   const showDelivery = Boolean(order && isDeliveryOrder(order) && confirmedPlacement);
+  const cancelled = isCancelledOrder(order?.status);
 
   const { data: tracking } = useGetOrderTrackingQuery(
-    { businessId, orderId },
-    { skip: !orderId || !showDelivery, pollingInterval: showDelivery ? 15000 : 0 },
+    { businessId, orderId, refresh: false },
+    { skip: !orderId || !showDelivery || cancelled },
   );
+  const [fetchLiveTracking, { isFetching: liveFetching }] = useLazyGetOrderTrackingQuery();
+  const [liveTracking, setLiveTracking] = useState<OrderTracking | null>(null);
+  const displayTracking = liveTracking ?? tracking;
+
+  useEffect(() => {
+    setLiveTracking(null);
+  }, [orderId]);
 
   const [resumePayment] = useResumePaymentMutation();
   const [confirmPayment] = useConfirmPaymentMutation();
@@ -171,8 +187,24 @@ export default function OrderDetail() {
   const lines = order?.lines || [];
   const showPayNow = canResumeOnlinePayment(order);
   const showRepeat = canRepeatOrder(order);
-  const cancelled = isCancelledOrder(order?.status);
-  const deliveryNote = showDelivery ? deliveryCopy(tracking) : null;
+  const deliveryNote = showDelivery ? deliveryCopy(displayTracking) : null;
+  const canRefreshLive = Boolean(
+    showDelivery &&
+      canRefreshLiveCourier({
+        orderStatus: order?.status,
+        deliveryStatus: displayTracking?.status || order?.deliveryStatus,
+      }),
+  );
+
+  const refreshLiveLocation = async () => {
+    if (!orderId || !canRefreshLive) return;
+    try {
+      const next = await fetchLiveTracking({ businessId, orderId, refresh: true }).unwrap();
+      setLiveTracking(next);
+    } catch {
+      /* keep last known pin */
+    }
+  };
 
   const placedAt = useMemo(() => {
     if (!order?.createdAt) return "";
@@ -416,35 +448,49 @@ export default function OrderDetail() {
               <Box bg="white" borderRadius="md" p={4} mb={3} boxShadow="sm">
                 <Flex justify="space-between" align="center" mb={2} gap={2}>
                   <Text fontWeight="700">Delivery</Text>
-                  {tracking?.status ? (
-                    <StatusChip
-                      kind="delivery"
-                      value={tracking.status}
-                      label={deliveryStatusLabel(tracking.status)}
-                    />
-                  ) : null}
+                  <Flex align="center" gap={2} flexWrap="wrap" justify="flex-end">
+                    {displayTracking?.providerLabel || displayTracking?.provider ? (
+                      <Text fontSize="12px" color="gray.600">
+                        {displayTracking.providerLabel || displayTracking.provider}
+                        {displayTracking.booked ? "" : " (quoted)"}
+                      </Text>
+                    ) : null}
+                    {displayTracking?.status ? (
+                      <StatusChip
+                        kind="delivery"
+                        value={displayTracking.status}
+                        label={deliveryStatusLabel(displayTracking.status)}
+                      />
+                    ) : null}
+                  </Flex>
                 </Flex>
-                {tracking?.driverName || tracking?.vehicleNumber ? (
+                {displayTracking?.driverName || displayTracking?.vehicleNumber ? (
                   <Box bg="gray.50" borderRadius="md" p={3} mb={3}>
-                    {tracking.driverName ? (
-                      <Text fontSize="sm">Rider: {tracking.driverName}</Text>
+                    {displayTracking.driverName ? (
+                      <Text fontSize="sm">Rider: {displayTracking.driverName}</Text>
                     ) : null}
-                    {tracking.driverPhone ? (
-                      <Text fontSize="sm">Phone: {tracking.driverPhone}</Text>
+                    {displayTracking.driverPhone ? (
+                      <Text fontSize="sm">Phone: {displayTracking.driverPhone}</Text>
                     ) : null}
-                    {tracking.vehicleNumber ? (
-                      <Text fontSize="sm">Vehicle: {tracking.vehicleNumber}</Text>
+                    {displayTracking.vehicleNumber ? (
+                      <Text fontSize="sm">Vehicle: {displayTracking.vehicleNumber}</Text>
                     ) : null}
                   </Box>
                 ) : null}
                 <ShipmentTrackingMap
-                  current={tracking?.current}
-                  pickup={tracking?.pickup}
-                  drop={tracking?.drop}
-                  live={tracking?.live}
+                  current={displayTracking?.current}
+                  pickup={displayTracking?.pickup}
+                  drop={displayTracking?.drop}
+                  live={displayTracking?.live}
+                  provider={displayTracking?.provider}
+                  providerLabel={displayTracking?.providerLabel}
+                  booked={displayTracking?.booked}
                   fallbackMessage={deliveryNote || "Looking for a rider…"}
+                  canRefreshLive={canRefreshLive}
+                  refreshingLive={liveFetching}
+                  onRefreshLive={refreshLiveLocation}
                 />
-                {deliveryNote && (tracking?.current || tracking?.pickup || tracking?.drop) ? (
+                {deliveryNote && (displayTracking?.current || displayTracking?.pickup || displayTracking?.drop) ? (
                   <Text fontSize="sm" color="gray.600" mt={3}>
                     {deliveryNote}
                   </Text>

@@ -129,6 +129,9 @@ export interface OrderTracking {
   orderId: string;
   status: string;
   provider?: string;
+  providerLabel?: string;
+  booked?: boolean;
+  quotedProvider?: string;
   trackingId?: string;
   trackingUrl?: string;
   labelUrl?: string;

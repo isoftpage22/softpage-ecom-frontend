@@ -30,10 +30,17 @@ export interface CartItem {
 
 export interface Address {
   firstName: string;
-  lastName: string;
+  lastName?: string;
   company?: string;
   addressLine1: string;
   addressLine2?: string;
+  houseNumber?: string;
+  floor?: string;
+  tower?: string;
+  societyName?: string;
+  landmark?: string;
+  label?: string;
+  labelType?: string;
   city: string;
   state: string;
   postalCode: string;

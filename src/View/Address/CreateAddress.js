@@ -1,12 +1,12 @@
 import React, { useState, useRef } from 'react'
 import TopBarWithBackButton from '../../Layout/Components/TopBarWithBackButton/TopBarWithBackButton'
-import { Box, Button, Flex, Text, FormControl, FormLabel, Input } from '@chakra-ui/react'
+import { Box, Button, Flex, Text, FormControl, FormLabel, Input, InputGroup, InputLeftAddon } from '@chakra-ui/react'
 import * as Yup from "yup";
 import { useFormik } from "formik";
 import { AiFillHome } from "react-icons/ai";
-import { MdWork, MdPlace } from 'react-icons/md'
+import { MdWork, MdPlace, MdHotel } from 'react-icons/md'
 import ContinueButton from './Components/ContinueButton';
-import { generateUniqueRandomString, getAddressOnBasisOfId, getAdrresFromLocal } from '../../utils/CommonFunctions';
+import { generateUniqueRandomString, getAddressOnBasisOfId, getAdrresFromLocal, getUserInFromLocal } from '../../utils/CommonFunctions';
 import { LOCAL_STORAGE_CUSTOMER_ADDRESS } from '../../utils/constants';
 import { connect } from 'react-redux';
 import { bindActionCreators } from "redux";
@@ -15,30 +15,46 @@ import { useHistory } from '../../lib/nav';
 import { useParams } from 'next/navigation';
 import { AddressMapPicker } from '../../Components/AddressMapPicker/AddressMapPicker';
 import { useCreateAddressMutation, useUpdateAddressMutation } from '@/store/api/storefrontAuthApi';
-import { localAddressToApiInput } from '@/lib/checkout/addressMapping';
-import { getUserInFromLocal } from '../../utils/CommonFunctions';
+import { inferLabelType, labelFromType, localAddressToApiInput } from '@/lib/checkout/addressMapping';
 import { isValidCoordPair, toCoord } from '@/lib/geo/coords';
 import { rtkErrorMessage } from '@/lib/auth/persistAuth';
 import { useRequireStorefrontAuth } from '@/lib/auth/useRequireStorefrontAuth';
 
+const CHIP_ICONS = {
+  HOME: <AiFillHome />,
+  WORK: <MdWork />,
+  HOTEL: <MdHotel />,
+  OTHER: <MdPlace />,
+}
+
 const fieldStyle = {
-  h: "44px",
-  bg: "#F4F4F5",
+  h: "48px",
+  bg: "white",
   border: "1px solid",
-  borderColor: "#E4E4E7",
+  borderColor: "#D4D4D8",
   borderRadius: "10px",
   fontSize: "14px",
   _placeholder: { color: "#A1A1AA" },
-  _focus: { bg: "white", borderColor: "#111", boxShadow: "none" },
+  _focus: {
+    bg: "white",
+    borderColor: "var(--brand-secondary, #111)",
+    boxShadow: "0 0 0 1px var(--brand-secondary, #111)",
+  },
 }
 
 const labelStyle = {
-  fontSize: "11px",
-  fontWeight: "700",
-  color: "#71717A",
-  letterSpacing: "0.04em",
+  fontSize: "13px",
+  fontWeight: "600",
+  color: "#3F3F46",
   mb: "6px",
-  textTransform: "uppercase",
+  letterSpacing: "0",
+  textTransform: "none",
+}
+
+function nationalPhone(raw) {
+  const digits = String(raw || "").replace(/\D/g, "")
+  if (digits.startsWith("91") && digits.length > 10) return digits.slice(-10)
+  return digits.slice(0, 10)
 }
 
 const CreateAddress = (props) => {
@@ -48,31 +64,36 @@ const CreateAddress = (props) => {
   const isEdit  = id?true:false
   const { loggedIn, promptLogin } = useRequireStorefrontAuth(isEdit && id ? `/edit-address/${id}` : "/create-address")
   const [currentAddres, setCurrentAdrres] = useState(getAddressOnBasisOfId(id))
+  const profile = (() => {
+    const customer = getUserInFromLocal()
+    return Array.isArray(customer) ? {} : customer
+  })()
 
-  const [selectedAddressType, setselectedAddressType] = useState(currentAddres?.checkbox ?? 'Home')
+  const initialLabelType = inferLabelType(currentAddres || {})
+  const [selectedLabelType, setSelectedLabelType] = useState(initialLabelType)
   const [submitError, setSubmitError] = useState('')
   const [outOfZone, setOutOfZone] = useState(false)
   const outOfZoneRef = useRef(false)
 
    
   const validateSchema = Yup.object().shape({
-    address1: Yup.string().required("required *"),
+    houseNumber: Yup.string().trim().required("required *"),
+    floor: Yup.string().trim().required("required *"),
+    tower: Yup.string().trim().required("required *"),
+    societyName: Yup.string().trim().required("required *"),
+    address1: Yup.string().required("Pin a location on the map"),
     pincode: Yup.string().required('required *'),
+    fullName: Yup.string().trim().required("required *"),
   });
   const validateOtherType = (values) => {
     const errors = {};
     const digitRegex = /^\d+$/;
 
-    // Check if the checkbox is selected
-    if (values.checkbox == "Other") {
-      // Validate the inputField when the checkbox is selected
-      if (!values.addressType) {
-        errors.addressType = "Required";
-      }
+    if (values.labelType === "OTHER" && !String(values.addressType || "").trim()) {
+      errors.addressType = "Required";
     }
     else if (!digitRegex.test(values.pincode) || values.pincode.length > 6){
       errors.pincode = 'Pincode must be a maximum of 6 digits.';
-
     }
 
     return errors;
@@ -85,15 +106,22 @@ const CreateAddress = (props) => {
       id: currentAddres?.id ?? generateUniqueRandomString(),
       address1: currentAddres?.address1 ?? '',
       address2: currentAddres?.address2 ?? '',
+      houseNumber: currentAddres?.houseNumber ?? '',
+      floor: currentAddres?.floor ?? '',
+      tower: currentAddres?.tower ?? '',
+      societyName: currentAddres?.societyName ?? '',
       pincode: currentAddres?.pincode ?? '',
       landmark: currentAddres?.landmark ?? '',
-      checkbox:  currentAddres?.checkbox ?? selectedAddressType,
+      checkbox: currentAddres?.checkbox ?? labelFromType(initialLabelType, currentAddres?.addressType),
+      labelType: initialLabelType,
       addressType: currentAddres?.addressType ?? '',
       city: currentAddres?.city ?? '',
       state: currentAddres?.state ?? '',
       country: currentAddres?.country ?? 'India',
       latitude: currentAddres?.latitude ?? '',
       longitude: currentAddres?.longitude ?? '',
+      fullName: currentAddres?.fullName || profile?.customerName || '',
+      phone: nationalPhone(currentAddres?.phone || profile?.whatsAppNumber),
     },
     validationSchema: validateSchema,
     validateOnChange: true,
@@ -110,7 +138,11 @@ const CreateAddress = (props) => {
         return
       }
       const customer = getUserInFromLocal();
-      const payload = { ...values };
+      const payload = {
+        ...values,
+        checkbox: labelFromType(values.labelType, values.addressType),
+        phone: nationalPhone(values.phone),
+      };
       try {
         if (typeof window !== 'undefined' && localStorage.getItem('accessToken')) {
           const input = localAddressToApiInput(payload, Array.isArray(customer) ? {} : customer);
@@ -144,35 +176,36 @@ const CreateAddress = (props) => {
   const handleDigitsChange = (event, lengthOfChar) => {
     const inputValue = event.target.value;
 
-    // Check if the input has more than 10 digits
     if (inputValue.length <= lengthOfChar) {
-      formik.handleChange(event); // Update the formik field value
+      formik.handleChange(event);
     }
   };
-  const handleAddressTypeChange = (type) => {
-    setselectedAddressType(type)
-    formik.setFieldValue("checkbox", type)
+  const handleLabelTypeChange = (type) => {
+    setSelectedLabelType(type)
+    formik.setFieldValue("labelType", type)
+    formik.setFieldValue("checkbox", labelFromType(type, formik.values.addressType))
   }
 
   const typeChip = (type, label, icon) => {
-    const active = selectedAddressType === type
+    const active = selectedLabelType === type
     return (
       <Button
         type="button"
-        onClick={() => handleAddressTypeChange(type)}
+        onClick={() => handleLabelTypeChange(type)}
         flex="1"
+        minW="72px"
         h="42px"
         leftIcon={icon}
         fontSize="13px"
         fontWeight="600"
         textTransform="none"
         letterSpacing="0"
-        borderRadius="10px"
-        border="1px solid"
-        borderColor={active ? "#111" : "#E4E4E7"}
-        bg={active ? "#111" : "white"}
+        borderRadius="999px"
+        border="1.5px solid"
+        borderColor={active ? "var(--brand-secondary, #111)" : "#E4E4E7"}
+        bg={active ? "var(--brand-secondary, #111)" : "white"}
         color={active ? "white" : "#3F3F46"}
-        _hover={{ bg: active ? "#111" : "#F4F4F5" }}
+        _hover={{ bg: active ? "var(--brand-secondary, #111)" : "#F4F4F5" }}
       >
         {label}
       </Button>
@@ -221,100 +254,42 @@ const CreateAddress = (props) => {
               formik.setFieldValue('country', addr.country || 'India');
               formik.setFieldValue('latitude', addr.lat);
               formik.setFieldValue('longitude', addr.lng);
+              if (addr.houseNumber !== undefined) formik.setFieldValue('houseNumber', addr.houseNumber);
+              if (addr.floor !== undefined) formik.setFieldValue('floor', addr.floor);
+              if (addr.tower !== undefined) formik.setFieldValue('tower', addr.tower);
+              if (addr.societyName !== undefined) formik.setFieldValue('societyName', addr.societyName);
+              if (addr.landmark !== undefined) formik.setFieldValue('landmark', addr.landmark);
             }}
           />
           {submitError ? (
             <Text fontSize="13px" color="red.600" mb={3} letterSpacing="0" textTransform="none">{submitError}</Text>
           ) : null}
 
+          <FormControl mb="14px">
+            <FormLabel {...labelStyle}>Area</FormLabel>
+            <Input
+              {...fieldStyle}
+              name="address1"
+              value={formik.values.address1}
+              placeholder="Filled from the map pin"
+              isReadOnly
+              bg="#F4F4F5"
+              cursor="default"
+            />
+          </FormControl>
+
           <Flex direction="column" gap="14px">
             <FormControl>
-              <FormLabel {...labelStyle}>House / street</FormLabel>
-              <Input
-                {...fieldStyle}
-                isInvalid={formik.touched.address1 && formik.errors.address1}
-                name="address1"
-                placeholder="Flat, building, street"
-                onChange={(e) => handleDigitsChange(e, 250)}
-                value={formik.values.address1}
-              />
-              {formik.errors.address1 && formik.touched.address1 ? (
-                <Text mt="4px" fontSize="11px" color="red.500">{formik.errors.address1}</Text>
-              ) : null}
-            </FormControl>
-
-            <FormControl>
-              <FormLabel {...labelStyle}>Area / locality</FormLabel>
-              <Input
-                {...fieldStyle}
-                name="address2"
-                placeholder="Optional"
-                onChange={(e) => handleDigitsChange(e, 250)}
-                value={formik.values.address2}
-              />
-            </FormControl>
-
-            <Flex gap="12px">
-              <FormControl>
-                <FormLabel {...labelStyle}>Pincode</FormLabel>
-                <Input
-                  {...fieldStyle}
-                  isInvalid={formik.touched.pincode && formik.errors.pincode}
-                  name="pincode"
-                  inputMode="numeric"
-                  placeholder="6 digits"
-                  onChange={(e) => handleDigitsChange(e, 6)}
-                  value={formik.values.pincode}
-                />
-                {formik.errors.pincode && formik.touched.pincode ? (
-                  <Text mt="4px" fontSize="11px" color="red.500">{formik.errors.pincode}</Text>
-                ) : null}
-              </FormControl>
-              <FormControl>
-                <FormLabel {...labelStyle}>Landmark</FormLabel>
-                <Input
-                  {...fieldStyle}
-                  name="landmark"
-                  placeholder="Optional"
-                  onChange={(e) => handleDigitsChange(e, 40)}
-                  value={formik.values.landmark}
-                />
-              </FormControl>
-            </Flex>
-
-            <Flex gap="12px">
-              <FormControl>
-                <FormLabel {...labelStyle}>City</FormLabel>
-                <Input
-                  {...fieldStyle}
-                  name="city"
-                  placeholder="City"
-                  onChange={(e) => handleDigitsChange(e, 80)}
-                  value={formik.values.city}
-                />
-              </FormControl>
-              <FormControl>
-                <FormLabel {...labelStyle}>State</FormLabel>
-                <Input
-                  {...fieldStyle}
-                  name="state"
-                  placeholder="State"
-                  onChange={(e) => handleDigitsChange(e, 80)}
-                  value={formik.values.state}
-                />
-              </FormControl>
-            </Flex>
-
-            <FormControl>
-              <FormLabel {...labelStyle}>Save as</FormLabel>
-              <Flex gap="8px">
-                {typeChip("Home", "Home", <AiFillHome />)}
-                {typeChip("Work", "Work", <MdWork />)}
-                {typeChip("Other", "Other", <MdPlace />)}
+              <FormLabel {...labelStyle}>Save address as *</FormLabel>
+              <Flex gap="8px" wrap="wrap">
+                {typeChip("HOME", "Home", CHIP_ICONS.HOME)}
+                {typeChip("WORK", "Work", CHIP_ICONS.WORK)}
+                {typeChip("HOTEL", "Hotel", CHIP_ICONS.HOTEL)}
+                {typeChip("OTHER", "Other", CHIP_ICONS.OTHER)}
               </Flex>
             </FormControl>
 
-            {selectedAddressType === "Other" ? (
+            {selectedLabelType === "OTHER" ? (
               <FormControl>
                 <FormLabel {...labelStyle}>Custom label</FormLabel>
                 <Input
@@ -330,9 +305,134 @@ const CreateAddress = (props) => {
                 ) : null}
               </FormControl>
             ) : null}
+
+            <FormControl>
+              <FormLabel {...labelStyle}>House number *</FormLabel>
+              <Input
+                {...fieldStyle}
+                isInvalid={formik.touched.houseNumber && formik.errors.houseNumber}
+                name="houseNumber"
+                placeholder="D7 305"
+                onChange={(e) => handleDigitsChange(e, 100)}
+                value={formik.values.houseNumber}
+              />
+              {formik.errors.houseNumber && formik.touched.houseNumber ? (
+                <Text mt="4px" fontSize="11px" color="red.500">{formik.errors.houseNumber}</Text>
+              ) : null}
+            </FormControl>
+
+            <FormControl>
+              <FormLabel {...labelStyle}>Floor *</FormLabel>
+              <Input
+                {...fieldStyle}
+                isInvalid={formik.touched.floor && formik.errors.floor}
+                name="floor"
+                placeholder="3"
+                onChange={(e) => handleDigitsChange(e, 50)}
+                value={formik.values.floor}
+              />
+              {formik.errors.floor && formik.touched.floor ? (
+                <Text mt="4px" fontSize="11px" color="red.500">{formik.errors.floor}</Text>
+              ) : null}
+            </FormControl>
+
+            <FormControl>
+              <FormLabel {...labelStyle}>Tower / Block *</FormLabel>
+              <Input
+                {...fieldStyle}
+                isInvalid={formik.touched.tower && formik.errors.tower}
+                name="tower"
+                placeholder="D7"
+                onChange={(e) => handleDigitsChange(e, 100)}
+                value={formik.values.tower}
+              />
+              {formik.errors.tower && formik.touched.tower ? (
+                <Text mt="4px" fontSize="11px" color="red.500">{formik.errors.tower}</Text>
+              ) : null}
+            </FormControl>
+
+            <FormControl>
+              <FormLabel {...labelStyle}>Society name *</FormLabel>
+              <Input
+                {...fieldStyle}
+                isInvalid={formik.touched.societyName && formik.errors.societyName}
+                name="societyName"
+                placeholder="Amrapali Riverview"
+                onChange={(e) => handleDigitsChange(e, 150)}
+                value={formik.values.societyName}
+              />
+              {formik.errors.societyName && formik.touched.societyName ? (
+                <Text mt="4px" fontSize="11px" color="red.500">{formik.errors.societyName}</Text>
+              ) : null}
+            </FormControl>
+
+            <FormControl>
+              <FormLabel {...labelStyle}>Nearby landmark (optional)</FormLabel>
+              <Input
+                {...fieldStyle}
+                name="landmark"
+                placeholder="Opposite the park"
+                onChange={(e) => handleDigitsChange(e, 150)}
+                value={formik.values.landmark}
+              />
+            </FormControl>
+
+            {formik.errors.address1 && formik.touched.address1 ? (
+              <Text fontSize="12px" color="red.500">{formik.errors.address1}</Text>
+            ) : null}
+            {formik.errors.pincode && formik.touched.pincode ? (
+              <Text fontSize="12px" color="red.500">{formik.errors.pincode}</Text>
+            ) : null}
+
+            <Text mt="8px" fontSize="14px" fontWeight="600" color="#18181B" letterSpacing="0" textTransform="none">
+              Enter your details for seamless delivery experience
+            </Text>
+
+            <FormControl>
+              <FormLabel {...labelStyle}>Your name *</FormLabel>
+              <Input
+                {...fieldStyle}
+                isInvalid={formik.touched.fullName && formik.errors.fullName}
+                name="fullName"
+                placeholder="Sharad"
+                onChange={(e) => handleDigitsChange(e, 150)}
+                value={formik.values.fullName}
+              />
+              {formik.errors.fullName && formik.touched.fullName ? (
+                <Text mt="4px" fontSize="11px" color="red.500">{formik.errors.fullName}</Text>
+              ) : null}
+            </FormControl>
+
+            <FormControl>
+              <FormLabel {...labelStyle}>Your phone number (optional)</FormLabel>
+              <InputGroup>
+                <InputLeftAddon
+                  h="48px"
+                  bg="white"
+                  borderColor="#D4D4D8"
+                  color="#52525B"
+                  fontSize="14px"
+                  fontWeight="600"
+                >
+                  +91
+                </InputLeftAddon>
+                <Input
+                  {...fieldStyle}
+                  borderLeftRadius="0"
+                  name="phone"
+                  inputMode="numeric"
+                  placeholder="8588913958"
+                  onChange={(e) => {
+                    const next = nationalPhone(e.target.value)
+                    formik.setFieldValue("phone", next)
+                  }}
+                  value={formik.values.phone}
+                />
+              </InputGroup>
+            </FormControl>
           </Flex>
         </Box>
-        <ContinueButton text={isEdit ? "Save address" : "Save address"} isDisabled={outOfZone} onClick={() => formik.handleSubmit()} />
+        <ContinueButton text="Save Address" isDisabled={outOfZone} onClick={() => formik.handleSubmit()} />
       </form>
       )}
     </>

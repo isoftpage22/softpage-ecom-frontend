@@ -55,7 +55,7 @@ const TopAddressBarContainer = ({ etaLabel, variant = 'bar' }) => {
           </Text>
           {etaLabel ? (
             <Text alignSelf="center" fontSize={12} color="white" whiteSpace="nowrap" pr={1}>
-              {etaLabel}
+             Delivery in {etaLabel}
             </Text>
           ) : null}
           <ChevronDownIcon boxSize={6} color="white" />

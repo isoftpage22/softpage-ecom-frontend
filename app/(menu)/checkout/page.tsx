@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { shouldStartRouteLoading, startRouteLoading } from "@/src/Store/action/loader";
 
 /** Hosted payments cancel URL is /checkout?payment=cancelled */
 export default function CheckoutReturnPage() {
@@ -10,7 +11,9 @@ export default function CheckoutReturnPage() {
 
   useEffect(() => {
     const cancelled = search.get("payment") === "cancelled";
-    router.replace(cancelled ? "/cart?payment=cancelled" : "/cart");
+    const dest = cancelled ? "/cart?payment=cancelled" : "/cart";
+    if (shouldStartRouteLoading(dest)) startRouteLoading();
+    router.replace(dest);
   }, [router, search]);
 
   return null;

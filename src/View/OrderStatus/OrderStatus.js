@@ -51,8 +51,8 @@ const OrderStatus = (props) => {
   const showOrderPanel = Boolean(orderId) && !cancelled && !timedOut && !awaitingPayment
 
   const { data: tracking } = useGetOrderTrackingQuery(
-    { businessId, orderId },
-    { skip: !orderId || cancelled || awaitingPayment || !showDelivery, pollingInterval: 15000 },
+    { businessId, orderId, refresh: false },
+    { skip: !orderId || cancelled || awaitingPayment || !showDelivery },
   )
 
   useEffect(() => {
@@ -150,6 +150,9 @@ const OrderStatus = (props) => {
             pickup={tracking?.pickup}
             drop={tracking?.drop}
             live={tracking?.live}
+            provider={tracking?.provider}
+            providerLabel={tracking?.providerLabel}
+            booked={tracking?.booked}
             fallbackMessage={tracking?.message || 'Looking for a rider…'}
           />
         ) : null}

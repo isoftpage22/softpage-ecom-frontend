@@ -12,9 +12,13 @@ export function getGoogleMapsApiKey(): string {
   return (process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "").trim();
 }
 
-export function isGoogleMapsEnabled(): boolean {
+export function isGoogleMapsFlagOn(): boolean {
   const flag = (process.env.NEXT_PUBLIC_USE_GOOGLE_MAPS || "").trim().toLowerCase();
-  return (flag === "true" || flag === "1") && Boolean(getGoogleMapsApiKey());
+  return flag === "true" || flag === "1";
+}
+
+export function isGoogleMapsEnabled(): boolean {
+  return isGoogleMapsFlagOn() && Boolean(getGoogleMapsApiKey());
 }
 
 /**
@@ -27,7 +31,12 @@ export function loadGoogleMaps(): Promise<any> {
   if (!isGoogleMapsEnabled()) return Promise.resolve(null);
   const key = getGoogleMapsApiKey();
   if (!key) return Promise.resolve(null);
-  if (window.google?.maps?.Map) return Promise.resolve(window.google.maps);
+  if (window.google?.maps?.Map) {
+    if (typeof window.google.maps.importLibrary === "function" && !window.google.maps.places) {
+      return window.google.maps.importLibrary("places").then(() => window.google.maps).catch(() => window.google.maps);
+    }
+    return Promise.resolve(window.google.maps);
+  }
   if (loader) return loader;
 
   loader = new Promise((resolve, reject) => {
@@ -53,6 +62,11 @@ export function loadGoogleMaps(): Promise<any> {
         }
         if (typeof mapsNs.importLibrary === "function") {
           await mapsNs.importLibrary("maps");
+          try {
+            await mapsNs.importLibrary("places");
+          } catch {
+            /* Places is optional — map still works, search falls back to Nominatim. */
+          }
         }
         if (!window.google?.maps?.Map) {
           fail(new Error("Failed to load Google Maps"));
@@ -89,7 +103,7 @@ export function loadGoogleMaps(): Promise<any> {
     const script = document.createElement("script");
     script.dataset.softpageMaps = "1";
     script.async = true;
-    script.src = `${GOOGLE_MAPS_SRC}?key=${encodeURIComponent(key)}&v=weekly&loading=async&callback=__softpageMapsReady&region=IN&language=en`;
+    script.src = `${GOOGLE_MAPS_SRC}?key=${encodeURIComponent(key)}&v=weekly&loading=async&libraries=places&callback=__softpageMapsReady&region=IN&language=en`;
     script.onerror = () => fail(new Error("Failed to load Google Maps"));
     document.head.appendChild(script);
     window.setTimeout(() => {
@@ -98,48 +112,4 @@ export function loadGoogleMaps(): Promise<any> {
   });
 
   return loader;
-}
-
-type AddressComponent = { long_name: string; types: string[] };
-
-export function parseGoogleGeocode(
-  result: { formatted_address?: string; address_components?: AddressComponent[] } | undefined,
-  lat: number,
-  lng: number,
-): {
-  lat: number;
-  lng: number;
-  line1: string;
-  city: string;
-  state: string;
-  pincode: string;
-  country: string;
-} {
-  const comps = result?.address_components || [];
-  const get = (...types: string[]) =>
-    comps.find((c) => types.every((t) => c.types.includes(t)))?.long_name ||
-    comps.find((c) => types.some((t) => c.types.includes(t)))?.long_name ||
-    "";
-
-  const streetNumber = get("street_number");
-  const route = get("route");
-  const premise = get("premise") || get("subpremise");
-  const line1 =
-    [streetNumber, route].filter(Boolean).join(" ") ||
-    premise ||
-    get("neighborhood") ||
-    get("sublocality_level_1") ||
-    get("sublocality") ||
-    result?.formatted_address?.split(",")[0] ||
-    "";
-
-  return {
-    lat,
-    lng,
-    line1,
-    city: get("locality") || get("administrative_area_level_2") || "",
-    state: get("administrative_area_level_1") || "",
-    pincode: get("postal_code") || "",
-    country: get("country") || "India",
-  };
 }

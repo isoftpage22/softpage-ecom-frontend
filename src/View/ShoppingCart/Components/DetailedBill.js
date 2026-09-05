@@ -49,16 +49,25 @@ const DetailedBill = (props) => {
        <Text variant="mutedCart">₹{formatRupee(totalCartBill.totalAmount)}</Text>
      </Flex>
      {showDelivery ? (
-       <Box w="100%">
-         <Flex>
+       <Flex w="100%" align="flex-start">
+         <Box>
            <Text variant="mutedCart">Delivery Fee</Text>
-           <Spacer/>
-           <PriceValue loading={totalsSyncing && !quote}>{feeLabel}</PriceValue>
-         </Flex>
-         {etaLabel && quote?.serviceable ? (
-           <Text variant="mutedCart" fontSize="12px" mt="2px">Delivery in {etaLabel}</Text>
-         ) : null}
-       </Box>
+           {etaLabel && quote?.serviceable ? (
+             <Text
+               fontSize="11px"
+               lineHeight="14px"
+               color="#9A9A9A"
+               mt="1px"
+               letterSpacing="0"
+               textTransform="none"
+             >
+               {etaLabel}
+             </Text>
+           ) : null}
+         </Box>
+         <Spacer />
+         <PriceValue loading={totalsSyncing && !quote}>{feeLabel}</PriceValue>
+       </Flex>
      ) : null}
      <Flex>
        <Text variant="mutedCart">Taxes & Charges</Text>

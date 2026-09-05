@@ -1,11 +1,17 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { Box, Flex, IconButton, Input, InputGroup, InputRightElement, Spinner, Text } from "@chakra-ui/react";
 import { MdMyLocation } from "react-icons/md";
-import { searchPlaces, type GeoAddress } from "@/lib/geo/geoApi";
-import { isGoogleMapsEnabled, loadGoogleMaps } from "@/lib/geo/loadGoogleMaps";
+import { nearFromCoords, searchPlaces, type GeoAddress } from "@/lib/geo/geoApi";
+import {
+  getAccuratePosition,
+  resolveGooglePlace,
+  searchGooglePlaces,
+  type PlacePrediction,
+} from "@/lib/geo/googlePlaces";
+import { isGoogleMapsEnabled, isGoogleMapsFlagOn, loadGoogleMaps } from "@/lib/geo/loadGoogleMaps";
 import { lookupReverseGeocode, reverseGeocodeCached } from "@/lib/geo/geocodeCache";
 import { isValidCoordPair } from "@/lib/geo/coords";
 import {
@@ -14,7 +20,7 @@ import {
   type DeliveryAreaZone,
   type ServiceabilityQuote,
 } from "@/lib/logisticsApi";
-import { useStoreSlug } from "@/lib/tenant/TenantContext";
+import { useStoreSlug, useStoreConfig } from "@/lib/tenant/TenantContext";
 
 const OsmMap = dynamic(() => import("./OsmAddressMapInner"), {
   ssr: false,
@@ -61,12 +67,18 @@ export function AddressMapPicker({
   height?: number;
 }) {
   const storeSlug = useStoreSlug();
+  const storeConfig = useStoreConfig();
   const googleAvailable = isGoogleMapsEnabled();
+  const wantsGoogle = isGoogleMapsFlagOn();
   const [query, setQuery] = useState("");
-  const [hits, setHits] = useState<GeoAddress[]>([]);
+  const [hits, setHits] = useState<PlacePrediction[]>([]);
   const [searching, setSearching] = useState(false);
+  const [resolvingPlace, setResolvingPlace] = useState(false);
+  const [completedQuery, setCompletedQuery] = useState("");
   const [locating, setLocating] = useState(false);
+  const [detected, setDetected] = useState("");
   const [error, setError] = useState("");
+  const [mapsError, setMapsError] = useState("");
   const [mapsReady, setMapsReady] = useState(false);
   const [googleFailed, setGoogleFailed] = useState(false);
   const [zones, setZones] = useState<DeliveryAreaZone[]>([]);
@@ -83,6 +95,32 @@ export function AddressMapPicker({
   const lng = hasPin ? Number(value.lng) : INDIA.lng;
   const useGoogle = googleAvailable && mapsReady && !googleFailed;
   const waitingOnGoogle = googleAvailable && !mapsReady && !googleFailed;
+  const searchNear = useMemo(() => {
+    const fromFence = nearFromCoords(fence?.centerLat, fence?.centerLng, fence?.radiusKm);
+    if (fromFence) return fromFence;
+    const zone = zones.find(
+      (z) =>
+        z.type === "radius" &&
+        Number.isFinite(Number(z.centerLat)) &&
+        Number.isFinite(Number(z.centerLng)),
+    );
+    if (zone) return nearFromCoords(zone.centerLat, zone.centerLng, zone.radiusKm);
+    const storeAddr = storeConfig?.address;
+    if (storeAddr && typeof storeAddr === "object") {
+      const fromStore = nearFromCoords(storeAddr.latitude, storeAddr.longitude);
+      if (fromStore) return fromStore;
+    }
+    if (hasPin) return nearFromCoords(lat, lng, fence?.radiusKm);
+    return undefined;
+  }, [fence, zones, storeConfig, hasPin, lat, lng]);
+
+  useEffect(() => {
+    if (wantsGoogle && !googleAvailable) {
+      setMapsError(
+        "Google Maps is flagged on but this build has no API key. Restart next dev or redeploy after setting NEXT_PUBLIC_GOOGLE_MAPS_API_KEY.",
+      );
+    }
+  }, [wantsGoogle, googleAvailable]);
 
   useEffect(() => {
     if (document.getElementById("softpage-pac-z")) return;
@@ -112,7 +150,7 @@ export function AddressMapPicker({
       setGoogleFailed(true);
       setMapsReady(false);
       const origin = window.location.origin;
-      setError(
+      setMapsError(
         `Google Maps blocked ${origin} (RefererNotAllowedMapError). Add ${origin}/* to this API key’s Website restrictions, then reload.`,
       );
     };
@@ -120,12 +158,15 @@ export function AddressMapPicker({
       .then((maps) => {
         if (cancelled) return;
         if (maps) setMapsReady(true);
-        else setGoogleFailed(true);
+        else {
+          setGoogleFailed(true);
+          setMapsError("Google Maps failed to load.");
+        }
       })
       .catch(() => {
         if (cancelled) return;
         setGoogleFailed(true);
-        setError("Google Maps failed to load. Using OpenStreetMap instead.");
+        setMapsError("Google Maps failed to load.");
       });
     return () => {
       cancelled = true;
@@ -135,8 +176,9 @@ export function AddressMapPicker({
 
   useEffect(() => {
     const q = query.trim();
-    if (q.length < 3) {
+    if (q.length < 2) {
       setHits([]);
+      setCompletedQuery("");
       return;
     }
     const controller = new AbortController();
@@ -144,19 +186,37 @@ export function AddressMapPicker({
     debounce.current = setTimeout(async () => {
       setSearching(true);
       try {
-        const next = await searchPlaces(q, controller.signal);
-        if (!controller.signal.aborted) setHits(next);
+        let next: PlacePrediction[] = [];
+        if (useGoogle) {
+          next = await searchGooglePlaces(q, searchNear);
+        }
+        if (!next.length) {
+          const osm = await searchPlaces(q, controller.signal, searchNear);
+          next = osm.map((hit) => ({
+            placeId: "",
+            label: [hit.line1, hit.city, hit.pincode].filter(Boolean).join(", "),
+            secondary: [hit.city, hit.state].filter(Boolean).join(", ") || undefined,
+            address: hit,
+          }));
+        }
+        if (!controller.signal.aborted) {
+          setHits(next);
+          setCompletedQuery(q);
+        }
       } catch {
-        if (!controller.signal.aborted) setHits([]);
+        if (!controller.signal.aborted) {
+          setHits([]);
+          setCompletedQuery(q);
+        }
       } finally {
         if (!controller.signal.aborted) setSearching(false);
       }
-    }, 400);
+    }, 220);
     return () => {
       controller.abort();
       if (debounce.current) clearTimeout(debounce.current);
     };
-  }, [query]);
+  }, [query, searchNear, useGoogle]);
 
   useEffect(() => {
     if (!hasPin || !storeSlug) {
@@ -197,7 +257,31 @@ export function AddressMapPicker({
     setError("");
     setHits([]);
     setQuery("");
+    setDetected(
+      [addr.tower && `Tower ${addr.tower}`, addr.houseNumber, addr.societyName, addr.line1, addr.city, addr.pincode]
+        .filter(Boolean)
+        .join(", "),
+    );
     onChange(addr);
+  };
+
+  const pickHit = async (hit: PlacePrediction) => {
+    if (hit.address) {
+      apply(hit.address);
+      return;
+    }
+    if (!hit.placeId) return;
+    setResolvingPlace(true);
+    setError("");
+    try {
+      const addr = await resolveGooglePlace(hit.placeId);
+      if (addr) apply(addr);
+      else setError("Could not open that place. Try another result or drop a pin.");
+    } catch {
+      setError("Could not open that place. Try another result or drop a pin.");
+    } finally {
+      setResolvingPlace(false);
+    }
   };
 
   const pickCoords = (nextLat: number, nextLng: number) => {
@@ -233,26 +317,14 @@ export function AddressMapPicker({
   }, []);
 
   const useMyLocation = () => {
-    if (!navigator.geolocation) {
-      setError("Location is not available in this browser");
-      return;
-    }
     setLocating(true);
     setError("");
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        try {
-          await pickCoords(pos.coords.latitude, pos.coords.longitude);
-        } finally {
-          setLocating(false);
-        }
-      },
-      () => {
-        setLocating(false);
+    void getAccuratePosition()
+      .then((pos) => pickCoords(pos.lat, pos.lng))
+      .catch(() => {
         setError("Could not read your location. Allow location access and try again.");
-      },
-      { enableHighAccuracy: false, timeout: 12000, maximumAge: 120000 },
-    );
+      })
+      .finally(() => setLocating(false));
   };
 
   const mapZones: DeliveryAreaZone[] = (() => {
@@ -367,7 +439,7 @@ export function AddressMapPicker({
             >
               {hits.map((hit, i) => (
                 <Box
-                  key={`${hit.lat}-${hit.lng}-${i}`}
+                  key={`${hit.placeId || hit.label}-${i}`}
                   as="button"
                   type="button"
                   w="100%"
@@ -376,9 +448,17 @@ export function AddressMapPicker({
                   py={2.5}
                   fontSize="13px"
                   _hover={{ bg: "gray.50" }}
-                  onClick={() => apply(hit)}
+                  onClick={() => void pickHit(hit)}
+                  disabled={resolvingPlace}
                 >
-                  {[hit.line1, hit.city, hit.state, hit.pincode].filter(Boolean).join(", ")}
+                  <Text as="span" display="block" fontWeight="600" color="#18181B">
+                    {hit.label}
+                  </Text>
+                  {hit.secondary ? (
+                    <Text as="span" display="block" fontSize="12px" color="gray.500">
+                      {hit.secondary}
+                    </Text>
+                  ) : null}
                 </Box>
               ))}
             </Box>
@@ -388,12 +468,21 @@ export function AddressMapPicker({
 
       <Text mt={2} fontSize="12px" color="gray.500" letterSpacing="0" textTransform="none">
         {hasPin
-          ? "Drag the pin or tap the map to set the exact spot."
+          ? ""
           : "Search, use your location, or tap the map to drop a pin."}
       </Text>
-      {searching ? (
+      {detected && hasPin ? (
+        <Text fontSize="12px" color="gray.700" letterSpacing="0" textTransform="none">
+          Area: {detected}
+        </Text>
+      ) : null}
+      {searching || resolvingPlace ? (
         <Text fontSize="12px" color="gray.500" letterSpacing="0" textTransform="none">
           Searching…
+        </Text>
+      ) : completedQuery === query.trim() && completedQuery.length >= 2 && hits.length === 0 ? (
+        <Text fontSize="12px" color="gray.500" letterSpacing="0" textTransform="none">
+          No nearby matches. Try a street, sector, or landmark close to this store.
         </Text>
       ) : null}
       {fenceText ? (
@@ -404,6 +493,16 @@ export function AddressMapPicker({
           textTransform="none"
         >
           {fence?.reason === "out_of_zone" ? `Outside delivery area. ${fenceText}` : fenceText}
+        </Text>
+      ) : null}
+      {wantsGoogle && !waitingOnGoogle && !useGoogle ? (
+        <Text fontSize="12px" color="gray.600" letterSpacing="0" textTransform="none">
+          Using OpenStreetMap (Google Maps unavailable).
+        </Text>
+      ) : null}
+      {mapsError ? (
+        <Text fontSize="12px" color="orange.700" letterSpacing="0" textTransform="none">
+          {mapsError}
         </Text>
       ) : null}
       {error ? (

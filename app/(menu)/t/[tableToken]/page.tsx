@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Box, Text } from "@chakra-ui/react";
+import { startRouteLoading } from "@/src/Store/action/loader";
 
 /**
  * Legacy restaurant table QR entry (`/t/:token`). CRM still prints
@@ -15,6 +16,7 @@ export default function LegacyTableRedirectPage() {
 
   useEffect(() => {
     if (tableToken) {
+      startRouteLoading();
       router.replace(`/qr/${encodeURIComponent(tableToken)}`);
     }
   }, [tableToken, router]);

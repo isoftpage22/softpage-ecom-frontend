@@ -32,6 +32,9 @@ declare global {
           results: GeocoderResult[];
         }>;
       }
+      class LatLng {
+        constructor(lat: number, lng: number);
+      }
       interface MapMouseEvent {
         latLng?: { lat: () => number; lng: () => number };
       }
@@ -40,9 +43,37 @@ declare global {
         address_components?: Array<{ long_name: string; types: string[] }>;
         geometry?: { location?: { lat: () => number; lng: () => number } };
         name?: string;
+        types?: string[];
       }
       namespace places {
         class AutocompleteSessionToken {}
+        class AutocompleteService {
+          getPlacePredictions(
+            req: Record<string, unknown>,
+            cb?: (results: Array<{ place_id?: string; description?: string; structured_formatting?: { main_text?: string; secondary_text?: string } }> | null, status: string) => void,
+          ): Promise<{ predictions?: unknown[] }> | void;
+        }
+        class PlacesService {
+          constructor(attr: HTMLElement);
+          getDetails(
+            req: Record<string, unknown>,
+            cb: (place: unknown, status: string) => void,
+          ): void;
+        }
+        class Place {
+          constructor(opts: { id: string });
+          fetchFields(opts: { fields: string[] }): Promise<void>;
+          location?: { lat: () => number; lng: () => number };
+          addressComponents?: unknown;
+          displayName?: string;
+          formattedAddress?: string;
+          types?: string[];
+        }
+        class AutocompleteSuggestion {
+          static fetchAutocompleteSuggestions(req: Record<string, unknown>): Promise<{
+            suggestions: Array<{ placePrediction?: { placeId?: string; text?: { text?: string }; mainText?: { text?: string }; secondaryText?: { text?: string } } }>;
+          }>;
+        }
         class Autocomplete {
           constructor(input: HTMLInputElement, opts?: Record<string, unknown>);
           addListener(event: string, handler: () => void): void;
