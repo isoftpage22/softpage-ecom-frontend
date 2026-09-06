@@ -9,11 +9,20 @@ declare global {
 }
 
 export function getGoogleMapsApiKey(): string {
-  return (process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "").trim();
+  return (
+    (process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "").trim() ||
+    (process.env.SOFTPAGE_MAPS_BROWSER_KEY || "").trim()
+  );
 }
 
 export function isGoogleMapsFlagOn(): boolean {
-  const flag = (process.env.NEXT_PUBLIC_USE_GOOGLE_MAPS || "").trim().toLowerCase();
+  const flag = (
+    process.env.NEXT_PUBLIC_USE_GOOGLE_MAPS ||
+    process.env.SOFTPAGE_MAPS_BROWSER_ON ||
+    ""
+  )
+    .trim()
+    .toLowerCase();
   return flag === "true" || flag === "1";
 }
 
