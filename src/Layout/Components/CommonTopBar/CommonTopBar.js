@@ -14,7 +14,7 @@ import { CloseIcon, SearchIcon } from '@chakra-ui/icons'
 import { useHistory } from '../../../lib/nav'
 import TopAddressBarContainer from '../../../Container/TopAddressBarContainer/TopAddressBarContainer'
 import { storeAddressLabel, useStoreConfig, useTenant } from '@/lib/tenant/TenantContext'
-import { getTableSession, isDineInSession, tableSessionLabel } from '@/lib/restaurant/table-session'
+import { exitTableSessionToWebsite, getTableSession, isDineInSession, tableSessionLabel } from '@/lib/restaurant/table-session'
 import { StoreLogo } from '@/components/StoreLogo'
 import { CHROME_BAR_BG } from '@/lib/menu/storeChrome'
 import { ProfileMenu } from '../../../Components/ProfileMenu/ProfileMenu'
@@ -78,16 +78,36 @@ const CommonTopBar = ({ searchQuery, onSearchChange }) => {
                 </Flex>
               ) : null}
               {dineIn && subtitle ? (
-                <Text
-                  color="whiteAlpha.700"
-                  lineHeight="15px"
-                  textAlign="left"
-                  fontSize="13px"
-                  mt="2px"
-                  noOfLines={1}
-                >
-                  {subtitle}
-                </Text>
+                <Flex align="center" gap="8px" mt="2px" minW={0} flexWrap="wrap">
+                  <Text
+                    color="whiteAlpha.700"
+                    lineHeight="15px"
+                    textAlign="left"
+                    fontSize="13px"
+                    noOfLines={1}
+                  >
+                    {subtitle}
+                  </Text>
+                  <Text
+                    as="button"
+                    type="button"
+                    color="white"
+                    fontSize="12px"
+                    fontWeight="700"
+                    lineHeight="15px"
+                    textDecoration="underline"
+                    textUnderlineOffset="2px"
+                    flexShrink={0}
+                    aria-label="Switch to delivery or pickup"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      exitTableSessionToWebsite()
+                    }}
+                  >
+                    Order online
+                  </Text>
+                </Flex>
               ) : null}
             </Flex>
           </Flex>

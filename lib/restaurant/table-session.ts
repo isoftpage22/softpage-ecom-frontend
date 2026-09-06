@@ -52,6 +52,18 @@ export function clearTableSession(): void {
   window.localStorage.removeItem(STORAGE_KEY);
 }
 
+/**
+ * Leave QR dine-in and open the live website (delivery / pickup).
+ * Must hard-navigate off `/qr/:token` and `/t/:token` or the scan page
+ * would immediately write the table session back.
+ */
+export function exitTableSessionToWebsite(): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.removeItem(STORAGE_KEY);
+  window.localStorage.removeItem("qrTenantOverride");
+  window.location.replace("/");
+}
+
 export function isDineInSession(session: TableSession | null): session is TableSession & {
   orderType: "dine_in";
 } {

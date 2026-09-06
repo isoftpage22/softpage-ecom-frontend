@@ -9,8 +9,8 @@ import CategoryMenuFab from './Component/CategoryMenuFab'
 import CommonTopBar from '../../Layout/Components/CommonTopBar/CommonTopBar'
 import Footer from '../../Layout/Guest/Components/Footer'
 import { useMenuCatalog } from '../../hooks/useMenuCatalog'
-import { getTableSession, isDineInSession, tableSessionLabel } from '@/lib/restaurant/table-session'
-import { Box, Text } from '@chakra-ui/react'
+import { exitTableSessionToWebsite, getTableSession, isDineInSession, tableSessionLabel } from '@/lib/restaurant/table-session'
+import { Box, Flex, Text } from '@chakra-ui/react'
 import { filterVegOnlyCatalog } from '../../../lib/catalog/options'
 
 const Home = (props) => {
@@ -37,7 +37,21 @@ const Home = (props) => {
     <>
       {dineIn && tableLabel ? (
         <Box bg="var(--brand-secondary, #111)" color="white" px="16px" py="8px">
-          <Text fontSize="13px" fontWeight="600">{tableLabel}</Text>
+          <Flex align="center" justify="space-between" gap="12px">
+            <Text fontSize="13px" fontWeight="600" noOfLines={1}>{tableLabel}</Text>
+            <Text
+              as="button"
+              type="button"
+              fontSize="12px"
+              fontWeight="700"
+              textDecoration="underline"
+              textUnderlineOffset="2px"
+              flexShrink={0}
+              onClick={() => exitTableSessionToWebsite()}
+            >
+              Order online
+            </Text>
+          </Flex>
         </Box>
       ) : null}
       {!hideChrome && <CommonTopBar />}

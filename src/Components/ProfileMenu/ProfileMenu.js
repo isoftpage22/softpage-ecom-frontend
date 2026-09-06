@@ -19,6 +19,7 @@ import {
 import { FaUserCircle } from "react-icons/fa";
 import { useHistory } from "@/src/lib/nav";
 import { clearStorefrontAuth, hasStorefrontToken, STOREFRONT_AUTH_CHANGED } from "@/lib/auth/persistAuth";
+import { getTableSession, isDineInSession, exitTableSessionToWebsite } from "@/lib/restaurant/table-session";
 import { useLogoutMutation, useListAddressesQuery } from "@/store/api/storefrontAuthApi";
 import { getUserInFromLocal, getAdrresFromLocal } from "@/src/utils/CommonFunctions";
 import { customerAddressToLocal } from "@/lib/checkout/addressMapping";
@@ -37,6 +38,7 @@ export function ProfileMenu() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [localAddresses, setLocalAddresses] = useState([]);
+  const [dineIn, setDineIn] = useState(false);
   const history = useHistory();
   const [logout] = useLogoutMutation();
   const { data: serverAddresses } = useListAddressesQuery(undefined, {
@@ -51,6 +53,7 @@ export function ProfileMenu() {
       setName(localUser?.customerName || "");
       setPhone(localUser?.whatsAppNumber || "");
       setLocalAddresses(getAdrresFromLocal());
+      setDineIn(isDineInSession(getTableSession()));
     };
     sync();
     window.addEventListener("storage", sync);
@@ -117,6 +120,24 @@ export function ProfileMenu() {
             </Box>
 
             <VStack align="stretch" spacing={0} mx={-4}>
+              {dineIn ? (
+                <Button
+                  variant="ghost"
+                  justifyContent="flex-start"
+                  borderRadius={0}
+                  h="42px"
+                  px={4}
+                  fontWeight="600"
+                  fontSize="15px"
+                  textTransform="none"
+                  onClick={() => {
+                    setOpen(false);
+                    exitTableSessionToWebsite();
+                  }}
+                >
+                  Order online (delivery / pickup)
+                </Button>
+              ) : null}
               <Button
                 variant="ghost"
                 justifyContent="flex-start"
