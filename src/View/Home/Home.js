@@ -14,8 +14,8 @@ import { Box, Text } from '@chakra-ui/react'
 import { filterVegOnlyCatalog } from '../../../lib/catalog/options'
 
 const Home = (props) => {
-  const { productList, addToCart, addToCartProduct, deleteToCartProduct, toggleUserFormDrawer, usersAddress, emptyOrderPaymentStatuses, hideChrome } = props
-  useMenuCatalog()
+  const { productList, addToCart, addToCartProduct, deleteToCartProduct, toggleUserFormDrawer, usersAddress, emptyOrderPaymentStatuses, hideChrome, initialCatalog } = props
+  useMenuCatalog(initialCatalog)
   const [vegOnly, setVegOnly] = useState(false)
 
   useEffect(() => {
@@ -41,7 +41,7 @@ const Home = (props) => {
         </Box>
       ) : null}
       {!hideChrome && <CommonTopBar />}
-      {!hideChrome && <ProductPromotions />}
+      {!hideChrome && <ProductPromotions initialCatalog={initialCatalog} />}
       {!hideChrome && <CurrentOffers />}
       <ToggleSwitch vegOnly={vegOnly} onVegOnlyChange={setVegOnly} />
       <CategoryWithProducts

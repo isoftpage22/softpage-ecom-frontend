@@ -23,7 +23,7 @@ export function MenuHomeClient({
   return (
     <>
       <CommonTopBar searchQuery={searchQuery} onSearchChange={setSearchQuery} />
-      {!searching && <ProductPromotions />}
+      {!searching && <ProductPromotions initialCatalog={initialCatalog} />}
       {!searching && <CurrentOffers />}
       <Home hideChrome initialCatalog={initialCatalog} searchQuery={debouncedSearch} />
       <Footer />

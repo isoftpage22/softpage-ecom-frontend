@@ -37,6 +37,7 @@ export function menuHref(href?: string | null): string | undefined {
   const trimmed = href.trim();
   if (!trimmed) return undefined;
   if (trimmed === "/products" || trimmed.startsWith("/products?")) return "/";
+  if (trimmed.startsWith("/products/")) return trimmed;
   if (trimmed.startsWith("/categories")) return "/";
   return trimmed;
 }

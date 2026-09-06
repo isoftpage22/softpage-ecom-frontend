@@ -4,6 +4,8 @@ import Card from '../../Components/Card/Card'
 import VegMarker from '../../Components/VegMarker/VegMarker'
 import ProductCustomizationDrawer from '../ProductCustomizationDrawer/ProductCustomizationDrawer'
 import ChooseLastItemDrawer from '../ChooseLastItemDrawer/ChooseLastItemDrawer'
+import { Link } from '../../lib/nav'
+import { productDetailHref } from '../../../lib/catalog/href'
 import {
   productHasOptions,
   cartPayloadFromSelection,
@@ -23,6 +25,7 @@ const ProductCard = (props) => {
   const lastLine = lastCartLineForProduct(addToCart?.products, product?.id)
   const isOutOfStock = isProductOutOfStock(product)
   const dimmed = isOutOfStock ? 0.42 : 1
+  const detailHref = productDetailHref(product)
 
   const handleAdd = () => {
     if (isOutOfStock) return
@@ -61,9 +64,11 @@ const ProductCard = (props) => {
       <Card>
         <Flex direction="column" justify="flex-start" width="62%" pr="16px" gap="6px" opacity={dimmed}>
           <VegMarker isVeg={!!product?.isVeg} mb="2px" />
-          <Text fontWeight="extrabold" variant="solid" maxW="100%" color="gray.700" lineHeight="22px" noOfLines={2}>
-            {product?.productName ?? 'God Knows'}
-          </Text>
+          <Link to={detailHref} href={detailHref} style={{ textDecoration: 'none' }}>
+            <Text fontWeight="extrabold" variant="solid" maxW="100%" color="gray.700" lineHeight="22px" noOfLines={2}>
+              {product?.productName ?? 'God Knows'}
+            </Text>
+          </Link>
           <Flex alignItems="center" pt="2px">
             <Box alignSelf="center">₹</Box>
             <Text fontWeight="extrabold" variant="solid">
@@ -83,21 +88,23 @@ const ProductCard = (props) => {
         </Flex>
         <Spacer />
         <Flex flexDirection="column" alignItems="center" flexShrink={0} ml="12px">
-          <Image
-            alignSelf="center"
-            src={Array.isArray(product?.productImages) && product?.productImages[0]?.productImageUrl}
-            alt={product?.productName || ""}
-            objectFit="cover"
-            width="110px"
-            height="75px"
-            borderRadius="5px"
-            backgroundColor="#e4e1e1"
-            mb="10px"
-            loading="lazy"
-            decoding="async"
-            opacity={dimmed}
-            filter={isOutOfStock ? "grayscale(0.35)" : "none"}
-          />
+          <Link to={detailHref} href={detailHref}>
+            <Image
+              alignSelf="center"
+              src={Array.isArray(product?.productImages) && product?.productImages[0]?.productImageUrl}
+              alt={product?.productName || ""}
+              objectFit="cover"
+              width="110px"
+              height="75px"
+              borderRadius="5px"
+              backgroundColor="#e4e1e1"
+              mb="10px"
+              loading="lazy"
+              decoding="async"
+              opacity={dimmed}
+              filter={isOutOfStock ? "grayscale(0.35)" : "none"}
+            />
+          </Link>
          {isOutOfStock && quantity == 0 ? (
           <Text
             fontSize="12px"
