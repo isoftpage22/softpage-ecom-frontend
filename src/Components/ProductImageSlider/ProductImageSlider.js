@@ -2,9 +2,10 @@
 
 import { Box, Flex } from "@chakra-ui/react";
 import { useRef, useState } from "react";
+import { toCdnImageUrl } from "../../../lib/cdn/imageUrl";
 
 function imageUrl(image) {
-  return image?.productImageUrl || image?.url || "";
+  return toCdnImageUrl(image?.productImageUrl || image?.url || "");
 }
 
 const ProductImageSlider = ({ images = [], alt = "" }) => {

@@ -1,11 +1,12 @@
 import { cache } from "react";
 import { apiOrigin } from "@/lib/api/origin";
 import { mapCatalogToProductList } from "./mapCatalog";
+import { MENU_PAGE_SIZE } from "./menuPaging";
 
 export type MenuCatalog = ReturnType<typeof mapCatalogToProductList>;
 
 const EMPTY_CATALOG: MenuCatalog = { categories: [] };
-const PAGE_SIZE = 100;
+const PAGE_SIZE = MENU_PAGE_SIZE;
 
 const PRODUCT_FIELDS = `
   fragment ProductFields on ItemTypeGql {
@@ -123,7 +124,7 @@ async function graphqlPost<T>(
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ query, variables }),
-      next: { revalidate: 120 },
+      cache: "no-store",
     });
     if (!response.ok) return {};
     return (await response.json()) as GraphqlPayload<T>;
@@ -180,8 +181,10 @@ async function fetchCategories(businessId: number) {
 }
 
 /**
- * Server-side menu catalog for the host tenant. Cached per request via `cache()`
- * and revalidated every 120s so the first HTML includes items.
+ * Server-side menu catalog for the host tenant. Cached per request via `cache()`.
+ * Origin fetch is `no-store` so a Cloudflare HTML miss after purge is fresh.
+ * First page is 50 dishes; remaining pages of 50 are fetched so the HTML includes
+ * the full menu.
  */
 export const fetchMenuCatalog = cache(async (businessId?: number | null): Promise<MenuCatalog> => {
   const id = Number(businessId);

@@ -1,6 +1,7 @@
 "use client";
 
 import { Box, Flex, Image, Text } from "@chakra-ui/react";
+import { toCdnImageUrl } from "@/lib/cdn/imageUrl";
 
 export function StoreLogo({
   src,
@@ -23,7 +24,7 @@ export function StoreLogo({
         boxSize={size}
         flexShrink={0}
       >
-        <Image src={src} alt={name} boxSize={size} objectFit="contain" />
+        <Image src={toCdnImageUrl(src)} alt={name} boxSize={size} objectFit="contain" />
       </Box>
     );
   }
