@@ -18,6 +18,7 @@ import { exitTableSessionToWebsite, getTableSession, isDineInSession, tableSessi
 import { StoreLogo } from '@/components/StoreLogo'
 import { CHROME_BAR_BG } from '@/lib/menu/storeChrome'
 import { ProfileMenu } from '../../../Components/ProfileMenu/ProfileMenu'
+import { clearListingRestore } from '@/lib/menu/listingRestore'
 
 const CommonTopBar = ({ searchQuery, onSearchChange }) => {
   const [internalQuery, setInternalQuery] = useState('')
@@ -30,6 +31,13 @@ const CommonTopBar = ({ searchQuery, onSearchChange }) => {
   const storeLine = storeAddressLabel(tenant?.address || config.address)
   const query = searchQuery ?? internalQuery
   const setQuery = onSearchChange ?? setInternalQuery
+
+  const goHome = () => {
+    clearListingRestore()
+    clearListingRestore('/')
+    if (typeof window !== 'undefined') window.scrollTo(0, 0)
+    history.push('/')
+  }
 
   useEffect(() => {
     const session = getTableSession()
@@ -46,7 +54,7 @@ const CommonTopBar = ({ searchQuery, onSearchChange }) => {
             <Box
               flexShrink={0}
               cursor="pointer"
-              onClick={() => history.push('/')}
+              onClick={goHome}
             >
               <StoreLogo src={config.logo} name={restaurant} />
             </Box>
@@ -59,7 +67,7 @@ const CommonTopBar = ({ searchQuery, onSearchChange }) => {
                 fontWeight="700"
                 noOfLines={1}
                 cursor="pointer"
-                onClick={() => history.push('/')}
+                onClick={goHome}
               >
                 {restaurant}
               </Text>
@@ -117,7 +125,19 @@ const CommonTopBar = ({ searchQuery, onSearchChange }) => {
           </Box>
         </Flex>
       </Box>
-      <Box bg="white" px="12px" py="10px" borderBottom="1px solid" borderColor="gray.100">
+      <Box
+        position="sticky"
+        top="0"
+        zIndex={20}
+        w="100%"
+        bg="white"
+        px="12px"
+        py="10px"
+        borderBottom="1px solid"
+        borderColor="gray.100"
+        boxShadow="0 2px 8px rgba(0,0,0,0.06)"
+        style={{ position: 'sticky', top: 0, zIndex: 20 }}
+      >
         <InputGroup>
           <InputLeftElement pointerEvents="none" h="42px">
             <SearchIcon color="#6B7280" />

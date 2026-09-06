@@ -123,7 +123,7 @@ async function graphqlPost<T>(
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ query, variables }),
-      next: { revalidate: 30 },
+      next: { revalidate: 120 },
     });
     if (!response.ok) return {};
     return (await response.json()) as GraphqlPayload<T>;
@@ -181,7 +181,7 @@ async function fetchCategories(businessId: number) {
 
 /**
  * Server-side menu catalog for the host tenant. Cached per request via `cache()`
- * and revalidated every 30s so the first HTML includes items.
+ * and revalidated every 120s so the first HTML includes items.
  */
 export const fetchMenuCatalog = cache(async (businessId?: number | null): Promise<MenuCatalog> => {
   const id = Number(businessId);

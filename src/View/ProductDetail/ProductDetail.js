@@ -1,12 +1,13 @@
 "use client";
 
-import { Box, Button, Flex, Spacer, Text } from "@chakra-ui/react";
+import { Box, Button, Flex, Text } from "@chakra-ui/react";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "next/navigation";
 import TopBarWithBackButton from "../../Layout/Components/TopBarWithBackButton/TopBarWithBackButton";
 import Footer from "../../Layout/Guest/Components/Footer";
 import VegMarker from "../../Components/VegMarker/VegMarker";
+import QtyStepper from "../../Components/QtyStepper/QtyStepper";
 import ProductImageSlider from "../../Components/ProductImageSlider/ProductImageSlider";
 import ProductCustomizationDrawer from "../../Container/ProductCustomizationDrawer/ProductCustomizationDrawer";
 import ChooseLastItemDrawer from "../../Container/ChooseLastItemDrawer/ChooseLastItemDrawer";
@@ -17,7 +18,7 @@ import {
   useGetProductBySlugQuery,
 } from "@/store/api/productsApi";
 import { mapCatalogItem } from "@/lib/catalog/mapCatalog";
-import { findCatalogProduct } from "@/lib/catalog/href";
+import { findCatalogProduct, looksLikeCatalogItemId } from "@/lib/catalog/href";
 import {
   productHasOptions,
   cartPayloadFromSelection,
@@ -43,18 +44,20 @@ const ProductDetail = () => {
   const addToCart = useSelector((state) => state.shoppingCart.addToCart);
 
   const fromList = findCatalogProduct(productList, slug);
+  const hasCatalogHit = !!fromList;
+  const looksLikeId = looksLikeCatalogItemId(slug);
   const bySlug = useGetProductBySlugQuery(
     { businessId, slug },
-    { skip: !businessId || !slug },
+    { skip: !businessId || !slug || hasCatalogHit || looksLikeId },
   );
   const slugMissed = !bySlug.isLoading && !bySlug.isFetching && !bySlug.data;
   const byId = useGetProductByIdQuery(
     { businessId, id: slug },
-    { skip: !businessId || !slug || !slugMissed },
+    { skip: !businessId || !slug || hasCatalogHit || (!looksLikeId && !slugMissed) },
   );
 
   const remote = bySlug.data || byId.data;
-  const product = remote ? mapCatalogItem(remote) : fromList;
+  const product = fromList || (remote ? mapCatalogItem(remote) : null);
   const loading = !product && (bySlug.isLoading || byId.isLoading);
 
   const [optionsOpen, setOptionsOpen] = useState(false);
@@ -170,42 +173,13 @@ const ProductDetail = () => {
                 Add to cart
               </Button>
             ) : (
-              <Box
-                borderRadius="base"
-                h="40px"
-                maxW="140px"
-                bg="white"
-                border="1px solid #D7D7D7"
-                display="flex"
-                alignItems="center"
-              >
-                <Button
-                  onClick={() => dispatch(deleteToCartProduct(product))}
-                  alignSelf="center"
-                  bg="white"
-                  color="black"
-                  h="15px"
-                  w="20px"
-                  size="xs"
-                >
-                  -
-                </Button>
-                <Spacer />
-                <Text fontWeight="700">{quantity}</Text>
-                <Spacer />
-                <Button
-                  onClick={handlePlus}
-                  isDisabled={isOutOfStock}
-                  alignSelf="center"
-                  bg="white"
-                  color="black"
-                  h="15px"
-                  w="20px"
-                  size="xs"
-                >
-                  +
-                </Button>
-              </Box>
+              <QtyStepper
+                size="md"
+                quantity={quantity}
+                onDecrement={() => dispatch(deleteToCartProduct(product))}
+                onIncrement={handlePlus}
+                incrementDisabled={isOutOfStock}
+              />
             )}
             {hasOptions && !isOutOfStock ? (
               <Text mt="8px" fontSize="12px" color="#787676">

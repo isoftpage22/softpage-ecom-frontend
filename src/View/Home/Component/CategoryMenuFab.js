@@ -101,9 +101,24 @@ const CategoryMenuFab = ({ productList, cartItemCount = 0 }) => {
                 onClick={() => jumpTo(category.categoryName)}
                 bg="white"
               >
-                <Text fontSize="15px" fontWeight="600" textAlign="left">
+              <Flex align="center" gap="12px" minW={0}>
+                {category.categoryImage ? (
+                  <Box
+                    as="img"
+                    src={category.categoryImage}
+                    alt=""
+                    w="40px"
+                    h="40px"
+                    borderRadius="8px"
+                    objectFit="cover"
+                    bg="#eee"
+                    flexShrink={0}
+                  />
+                ) : null}
+                <Text fontSize="15px" fontWeight="600" textAlign="left" noOfLines={2}>
                   {category.categoryName}
                 </Text>
+              </Flex>
                 <Text fontSize="13px" color="#787676">
                   {category.products.length}
                 </Text>

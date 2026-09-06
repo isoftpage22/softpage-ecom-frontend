@@ -7,6 +7,7 @@ import {
   shouldStartRouteLoading,
   startRouteLoading,
 } from "@/src/Store/action/loader";
+import { isProductDetailHref } from "@/lib/catalog/href";
 
 function beginIfNeeded(url) {
   if (shouldStartRouteLoading(url)) startRouteLoading();
@@ -46,8 +47,18 @@ export function useHistory() {
   };
 }
 
+function linkPrefetch(dest, prefetch) {
+  if (prefetch != null) return prefetch;
+  return isProductDetailHref(dest) ? false : undefined;
+}
+
+function withPrefetch(dest, prefetch) {
+  const value = linkPrefetch(dest, prefetch);
+  return value === undefined ? {} : { prefetch: value };
+}
+
 /** Drop-in for react-router-dom `Link` (`to` or `href`). */
-export function Link({ to, href, children, onClick, ...rest }) {
+export function Link({ to, href, children, onClick, prefetch, ...rest }) {
   const dest = to || href || "/";
   return (
     <NextLink
@@ -57,6 +68,7 @@ export function Link({ to, href, children, onClick, ...rest }) {
         onNavClick(event, dest);
       }}
       {...rest}
+      {...withPrefetch(dest, prefetch)}
     >
       {children}
     </NextLink>
@@ -64,7 +76,7 @@ export function Link({ to, href, children, onClick, ...rest }) {
 }
 
 /** Drop-in for react-router-dom `NavLink`. */
-export function NavLink({ to, href, children, onClick, ...rest }) {
+export function NavLink({ to, href, children, onClick, prefetch, ...rest }) {
   const dest = to || href || "/";
   return (
     <NextLink
@@ -74,6 +86,7 @@ export function NavLink({ to, href, children, onClick, ...rest }) {
         onNavClick(event, dest);
       }}
       {...rest}
+      {...withPrefetch(dest, prefetch)}
     >
       {children}
     </NextLink>

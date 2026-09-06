@@ -1,11 +1,13 @@
 import { Box, Flex, Spacer, Text, useDisclosure, Button, Collapse, Image } from '@chakra-ui/react'
 import React, { useState } from 'react'
 import Card from '../../Components/Card/Card'
+import QtyStepper from '../../Components/QtyStepper/QtyStepper'
 import VegMarker from '../../Components/VegMarker/VegMarker'
 import ProductCustomizationDrawer from '../ProductCustomizationDrawer/ProductCustomizationDrawer'
 import ChooseLastItemDrawer from '../ChooseLastItemDrawer/ChooseLastItemDrawer'
 import { Link } from '../../lib/nav'
-import { productDetailHref } from '../../../lib/catalog/href'
+import { productCardImage, productDetailHref } from '../../../lib/catalog/href'
+import { saveListingRestore } from '@/lib/menu/listingRestore'
 import {
   productHasOptions,
   cartPayloadFromSelection,
@@ -26,6 +28,9 @@ const ProductCard = (props) => {
   const isOutOfStock = isProductOutOfStock(product)
   const dimmed = isOutOfStock ? 0.42 : 1
   const detailHref = productDetailHref(product)
+  const rememberListingPosition = () => {
+    saveListingRestore()
+  }
 
   const handleAdd = () => {
     if (isOutOfStock) return
@@ -64,7 +69,7 @@ const ProductCard = (props) => {
       <Card>
         <Flex direction="column" justify="flex-start" width="62%" pr="16px" gap="6px" opacity={dimmed}>
           <VegMarker isVeg={!!product?.isVeg} mb="2px" />
-          <Link to={detailHref} href={detailHref} style={{ textDecoration: 'none' }}>
+          <Link to={detailHref} href={detailHref} onClick={rememberListingPosition} style={{ textDecoration: 'none' }}>
             <Text fontWeight="extrabold" variant="solid" maxW="100%" color="gray.700" lineHeight="22px" noOfLines={2}>
               {product?.productName ?? 'God Knows'}
             </Text>
@@ -88,10 +93,10 @@ const ProductCard = (props) => {
         </Flex>
         <Spacer />
         <Flex flexDirection="column" alignItems="center" flexShrink={0} ml="12px">
-          <Link to={detailHref} href={detailHref}>
+          <Link to={detailHref} href={detailHref} onClick={rememberListingPosition}>
             <Image
               alignSelf="center"
-              src={Array.isArray(product?.productImages) && product?.productImages[0]?.productImageUrl}
+              src={productCardImage(product) || undefined}
               alt={product?.productName || ""}
               objectFit="cover"
               width="110px"
@@ -121,12 +126,13 @@ const ProductCard = (props) => {
          <Button onClick={handleAdd} alignSelf="center" colorScheme="none" size="sm" variant="solid">Add</Button>
 
           :
-          <Box borderRadius="base" alignSelf="center" h="28px" w="70px" bg="white" border="1px solid #D7D7D7" display="flex" alignItems="center" opacity={isOutOfStock ? 0.7 : 1}>
-            < Button onClick={ ()=>deleteToCartProduct(product)}   alignSelf="center" bg="white" color="black" h="15px" w="20px" size="xs">-</Button>
-            <Spacer />
-            <p>{quantity}</p>
-            <Spacer />
-            < Button onClick={handlePlus} isDisabled={isOutOfStock} alignSelf="center" bg="white" color="black" h="15px" w="20px" size="xs">+</Button>
+          <Box alignSelf="center" opacity={isOutOfStock ? 0.7 : 1}>
+            <QtyStepper
+              quantity={quantity}
+              onDecrement={() => deleteToCartProduct(product)}
+              onIncrement={handlePlus}
+              incrementDisabled={isOutOfStock}
+            />
           </Box>}
           {isOutOfStock && quantity > 0 ? (
             <Text mt="4px" fontSize="11px" lineHeight="14px" fontWeight="600" color="#C53030" textAlign="center" textTransform="none">

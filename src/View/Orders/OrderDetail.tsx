@@ -159,10 +159,17 @@ export default function OrderDetail() {
 
   const paidReturn = searchParams?.get?.("paid") === "1";
 
-  const { data: order, isFetching, error } = useGetOrderByIdQuery(
+  const { data: order, isFetching, isSuccess, error } = useGetOrderByIdQuery(
     { businessId, orderId },
-    { skip: !orderId },
+    { skip: !orderId || !businessId },
   );
+
+  useEffect(() => {
+    if (!orderId || isFetching) return;
+    if (error || (isSuccess && !order)) {
+      dispatch(setActiveOrder(null));
+    }
+  }, [orderId, isFetching, isSuccess, order, error, dispatch]);
 
   const confirmedPlacement =
     isServerPaid(order?.paymentStatus) || isCodLikePayment(order?.paymentMethod);
@@ -319,7 +326,12 @@ export default function OrderDetail() {
         ) : isFetching && !order ? (
           <Text>Loading…</Text>
         ) : error || !order ? (
-          <Text color="red.600">Could not load this order.</Text>
+          <Box>
+            <Text color="red.600">Could not load this order.</Text>
+            <Button mt={4} w="100%" variant="outline" onClick={() => history.push("/")}>
+              Back to menu
+            </Button>
+          </Box>
         ) : (
           <>
             <Box bg="white" borderRadius="md" p={4} mb={3} boxShadow="sm">

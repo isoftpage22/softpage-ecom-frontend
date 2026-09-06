@@ -148,6 +148,7 @@ export interface ProductFilters {
 export const productsApi = createApi({
   reducerPath: "productsApi",
   baseQuery: graphqlBaseQuery,
+  keepUnusedDataFor: 5 * 60,
   tagTypes: ["Product", "Products", "Categories", "Collections"],
   endpoints: (builder) => ({
     getProducts: builder.query<ProductsResponse, { businessId: number; filters?: ProductFilters }>({
@@ -204,6 +205,14 @@ export const productsApi = createApi({
           };
         }
         return { data: slimData };
+      },
+      async onQueryStarted({ businessId }, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          seedProductDetailCache(dispatch, businessId, data?.items);
+        } catch {
+          /* catalog hydrate is best-effort */
+        }
       },
       providesTags: (result) =>
         result
@@ -306,6 +315,14 @@ export const productsApi = createApi({
       }),
       transformResponse: (response: { ecommerceBestSellers: Product[] }) =>
         response.ecommerceBestSellers,
+      async onQueryStarted({ businessId }, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          seedProductDetailCache(dispatch, businessId, data);
+        } catch {
+          /* catalog hydrate is best-effort */
+        }
+      },
       providesTags: (result) =>
         result
           ? [
@@ -337,6 +354,33 @@ export const productsApi = createApi({
     }),
   }),
 });
+
+function seedProductDetailCache(
+  dispatch: (action: any) => any,
+  businessId: number,
+  items: Array<Product | null | undefined> | undefined,
+) {
+  if (!Array.isArray(items)) return;
+  for (const item of items) {
+    if (!item?.id) continue;
+    dispatch(
+      productsApi.util.upsertQueryData(
+        "getProductById",
+        { businessId, id: String(item.id) },
+        item,
+      ),
+    );
+    if (item.slug) {
+      dispatch(
+        productsApi.util.upsertQueryData(
+          "getProductBySlug",
+          { businessId, slug: String(item.slug) },
+          item,
+        ),
+      );
+    }
+  }
+}
 
 export const {
   useGetProductsQuery,
