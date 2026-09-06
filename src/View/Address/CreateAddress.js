@@ -312,7 +312,7 @@ const CreateAddress = (props) => {
                 {...fieldStyle}
                 isInvalid={formik.touched.houseNumber && formik.errors.houseNumber}
                 name="houseNumber"
-                placeholder="D7 305"
+                placeholder="D22 305"
                 onChange={(e) => handleDigitsChange(e, 100)}
                 value={formik.values.houseNumber}
               />
@@ -342,7 +342,7 @@ const CreateAddress = (props) => {
                 {...fieldStyle}
                 isInvalid={formik.touched.tower && formik.errors.tower}
                 name="tower"
-                placeholder="D7"
+                placeholder="D22"
                 onChange={(e) => handleDigitsChange(e, 100)}
                 value={formik.values.tower}
               />

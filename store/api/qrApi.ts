@@ -49,6 +49,16 @@ export interface ResolvedQrLink {
   matchedReservation: MatchedReservation | null;
 }
 
+export interface FloorTableResolve {
+  table: {
+    id: string;
+    number: string;
+    name?: string | null;
+  };
+  businessId: number;
+  paymentTiming: "upfront" | "on_close";
+}
+
 export const qrApi = createApi({
   reducerPath: "qrApi",
   baseQuery: fetchBaseQuery({ baseUrl: BASE_URL }),
@@ -59,7 +69,12 @@ export const qrApi = createApi({
       transformResponse: (r: Envelope<ResolvedQrLink>) => unwrap(r),
       providesTags: ["QrLink"],
     }),
+    resolveFloorTable: builder.query<FloorTableResolve, { token: string }>({
+      query: ({ token }) =>
+        `/public/restaurant/tables/by-token/${encodeURIComponent(token)}`,
+      transformResponse: (r: Envelope<FloorTableResolve>) => unwrap(r),
+    }),
   }),
 });
 
-export const { useResolveQrLinkQuery } = qrApi;
+export const { useResolveQrLinkQuery, useResolveFloorTableQuery } = qrApi;

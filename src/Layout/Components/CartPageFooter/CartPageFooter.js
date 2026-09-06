@@ -65,6 +65,7 @@ const CartPageFooter = (props) => {
 
   const tableSession = typeof window !== "undefined" ? getTableSession() : null;
   const dineIn = isDineInSession(tableSession);
+  const payLater = dineIn && tableSession?.paymentTiming !== "upfront";
   const hasAddress = Object.keys(usersAddress || {}).length > 0;
   const canPlace = dineIn || hasAddress;
 
@@ -248,7 +249,9 @@ const CartPageFooter = (props) => {
   const actionLabel = placing
     ? "Placing…"
     : dineIn || hasAddress
-      ? "Place order"
+      ? payLater
+        ? "Place order · pay at table"
+        : "Place order"
       : "Add address";
   const tableLabel = dineIn ? tableSessionLabel(tableSession) : null;
   const totalLabel = `₹${formatRupee(totalCartBill?.totalFinalPriceAmount ?? price)}`;

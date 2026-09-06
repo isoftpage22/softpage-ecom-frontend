@@ -116,7 +116,7 @@ async function runPlaceMenuOrder(
   const sessionId = getGuestSessionId();
   const isDineIn = isDineInSession(opts.tableSession);
   const takeaway = opts.tableSession?.orderType === "takeaway";
-  const payLater = isDineIn && opts.tableSession?.paymentTiming === "on_close";
+  const payLater = isDineIn && opts.tableSession?.paymentTiming !== "upfront";
   const needsDelivery = !isDineIn && !takeaway;
 
   let shippingAddress: Address | undefined;
