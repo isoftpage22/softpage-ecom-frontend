@@ -95,8 +95,9 @@ const UserFormContainer = (props) => {
             countryCode: "+91",
             businessId,
           }).unwrap();
+          // TEMP: still show OTP so 3109 can log the real user in if SMS fails.
           if (!sent?.otpSent) {
-            setFormError(result?.message || "Could not send OTP. Please try again.");
+            setscreen("otp");
             return;
           }
         }

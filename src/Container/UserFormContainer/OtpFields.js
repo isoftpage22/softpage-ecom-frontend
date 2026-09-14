@@ -31,7 +31,8 @@ const OtpFields = (props) => {
     return () => ac.abort();
   }, []);
 
-  const canSubmit = otp.length === 6 && !busy;
+  // TEMP: 3109 is the storefront global OTP bypass (4 digits). Delete `|| otp === "3109"` when removing TEMP_STOREFRONT_OTP_BYPASS.
+  const canSubmit = !busy && (otp.length === 6 || otp === "3109");
 
   return (
     <>
