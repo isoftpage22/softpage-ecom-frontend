@@ -40,6 +40,13 @@ export interface Order {
   lines?: OrderLine[];
   subtotal?: number;
   tax?: number;
+  billCharges?: {
+    itemTax: number;
+    shippingTax: number;
+    gstPercent: number;
+    taxInclusive: boolean;
+    extraCharges: Array<{ name: string; amount: number; gstPercent: number; tax: number }>;
+  } | null;
   discount?: number;
   shippingCost?: number;
   serviceCharge?: number;

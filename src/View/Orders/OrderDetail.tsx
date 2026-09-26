@@ -22,7 +22,7 @@ import {
   useLazyGetOrderTrackingQuery,
   useResumePaymentMutation,
 } from "@/store/api/ordersApi";
-import { addToCartProduct, emptyCartProduct } from "@/src/Store/action/shoppingCart";
+import { addToCartProduct, emptyCartProduct, setActiveOrder } from "@/src/Store/action/shoppingCart";
 import {
   canRepeatOrder,
   canResumeOnlinePayment,
@@ -419,9 +419,7 @@ export default function OrderDetail() {
               {Number(order.discount) > 0 ? (
                 <BillRow label="Discount" value={`- ${money(order.discount, order.currency)}`} />
               ) : null}
-              {Number(order.tax) > 0 ? (
-                <BillRow label="Tax" value={money(order.tax, order.currency)} />
-              ) : null}
+              <TaxesAndOtherChargesBillRow order={order} />
               {Number(order.shippingCost) > 0 ? (
                 <BillRow label="Delivery fee" value={money(order.shippingCost, order.currency)} />
               ) : null}
@@ -460,21 +458,13 @@ export default function OrderDetail() {
               <Box bg="white" borderRadius="md" p={4} mb={3} boxShadow="sm">
                 <Flex justify="space-between" align="center" mb={2} gap={2}>
                   <Text fontWeight="700">Delivery</Text>
-                  <Flex align="center" gap={2} flexWrap="wrap" justify="flex-end">
-                    {displayTracking?.providerLabel || displayTracking?.provider ? (
-                      <Text fontSize="12px" color="gray.600">
-                        {displayTracking.providerLabel || displayTracking.provider}
-                        {displayTracking.booked ? "" : " (quoted)"}
-                      </Text>
-                    ) : null}
-                    {displayTracking?.status ? (
-                      <StatusChip
-                        kind="delivery"
-                        value={displayTracking.status}
-                        label={deliveryStatusLabel(displayTracking.status)}
-                      />
-                    ) : null}
-                  </Flex>
+                  {displayTracking?.status ? (
+                    <StatusChip
+                      kind="delivery"
+                      value={displayTracking.status}
+                      label={deliveryStatusLabel(displayTracking.status)}
+                    />
+                  ) : null}
                 </Flex>
                 {displayTracking?.driverName || displayTracking?.vehicleNumber ? (
                   <Box bg="gray.50" borderRadius="md" p={3} mb={3}>
@@ -494,7 +484,7 @@ export default function OrderDetail() {
                   pickup={displayTracking?.pickup}
                   drop={displayTracking?.drop}
                   live={displayTracking?.live}
-                  provider={displayTracking?.provider}
+                  provider={displayTracking?.provider || displayTracking?.quotedProvider}
                   providerLabel={displayTracking?.providerLabel}
                   booked={displayTracking?.booked}
                   fallbackMessage={deliveryNote || "Looking for a rider…"}
@@ -552,5 +542,70 @@ function BillRow({ label, value }: { label: string; value: string }) {
       </Text>
       <Text fontSize="sm">{value}</Text>
     </Flex>
+  );
+}
+
+function TaxesAndOtherChargesBillRow({ order }: { order: { tax?: number; currency: string; billCharges?: Order["billCharges"] } }) {
+  const [open, setOpen] = useState(false);
+  const charges = order.billCharges;
+  const extras = charges?.extraCharges || [];
+  const amount = charges
+    ? Number(charges.itemTax || 0) +
+      extras.reduce((sum, charge) => sum + Number(charge.amount || 0) + Number(charge.tax || 0), 0) +
+      Number(charges.shippingTax || 0)
+    : Number(order.tax) || 0;
+  if (!(amount > 0)) return null;
+  const lines: Array<{ label: string; amount: number }> = [];
+  if (charges) {
+    if (Number(charges.itemTax) > 0) {
+      lines.push({
+        label: charges.gstPercent === 5 ? "GST (5%) on items" : `GST (${charges.gstPercent}%) on items`,
+        amount: Number(charges.itemTax),
+      });
+    }
+    for (const charge of extras) {
+      const tax = Number(charge.tax) || 0;
+      const amount = Number(charge.amount) || 0;
+      const inclusive = charges.taxInclusive === true;
+      const shown = inclusive ? amount : amount + tax;
+      if (shown > 0) {
+        lines.push({
+          label: tax > 0 ? `${charge.name} (tax inclusive)` : charge.name,
+          amount: shown,
+        });
+      }
+    }
+    if (Number(charges.shippingTax) > 0) {
+      lines.push({ label: `GST (${charges.gstPercent}%) on delivery`, amount: Number(charges.shippingTax) });
+    }
+  }
+  return (
+    <Box position="relative" mb={1}>
+      <Flex justify="space-between" align="center" gap={2}>
+        <Flex align="center" gap={1}>
+          <Text fontSize="sm" color="gray.600">
+            Taxes & other charges
+          </Text>
+          {lines.length > 0 && (
+            <Button size="xs" variant="ghost" minW="auto" h="18px" px={1} onClick={() => setOpen((prev) => !prev)}>
+              i
+            </Button>
+          )}
+        </Flex>
+        <Text fontSize="sm">{money(amount, order.currency)}</Text>
+      </Flex>
+      {open && lines.length > 0 && (
+        <Box mt={1} p={2} border="1px solid #eee" borderRadius="md" bg="white" boxShadow="sm">
+          {lines.map((line) => (
+            <Flex key={`${line.label}-${line.amount}`} justify="space-between" gap={3}>
+              <Text fontSize="xs" color="gray.500">
+                {line.label}
+              </Text>
+              <Text fontSize="xs">{money(line.amount, order.currency)}</Text>
+            </Flex>
+          ))}
+        </Box>
+      )}
+    </Box>
   );
 }

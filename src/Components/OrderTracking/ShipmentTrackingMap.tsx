@@ -5,6 +5,7 @@ import { Box, IconButton, Text } from '@chakra-ui/react';
 import { MdMyLocation } from 'react-icons/md';
 import type { TrackPoint } from './ShipmentTrackingMapInner';
 import { DeliveryPartnerBadge } from './DeliveryPartnerBadge';
+import { deliveryPartnerKind } from './DeliveryPartnerMarks';
 
 const Inner = dynamic(() => import('./ShipmentTrackingMapInner'), {
   ssr: false,
@@ -24,13 +25,12 @@ export function ShipmentTrackingMap(props: {
   refreshingLive?: boolean;
   canRefreshLive?: boolean;
 }) {
-  const badge = (
+  const badge = deliveryPartnerKind(props.provider || props.providerLabel) ? (
     <DeliveryPartnerBadge
       provider={props.provider}
       providerLabel={props.providerLabel}
-      booked={props.booked}
     />
-  );
+  ) : null;
   const liveBtn = props.canRefreshLive && props.onRefreshLive ? (
     <IconButton
       aria-label="Get live location"

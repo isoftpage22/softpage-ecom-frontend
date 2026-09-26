@@ -100,6 +100,18 @@ const MENU_ORDER_DETAIL_FIELDS = gql`
     }
     subtotal
     tax
+    billCharges {
+      itemTax
+      shippingTax
+      gstPercent
+      taxInclusive
+      extraCharges {
+        name
+        amount
+        gstPercent
+        tax
+      }
+    }
     discount
     shippingCost
     serviceCharge

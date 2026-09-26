@@ -150,7 +150,7 @@ const OrderStatus = (props) => {
             pickup={tracking?.pickup}
             drop={tracking?.drop}
             live={tracking?.live}
-            provider={tracking?.provider}
+            provider={tracking?.provider || tracking?.quotedProvider}
             providerLabel={tracking?.providerLabel}
             booked={tracking?.booked}
             fallbackMessage={tracking?.message || 'Looking for a rider…'}

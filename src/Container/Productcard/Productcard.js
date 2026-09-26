@@ -17,6 +17,10 @@ import {
   catalogUnitPrice,
 } from '../../../lib/catalog/options'
 
+function looksLikeHtml(value) {
+  return /<[a-z][\s\S]*>/i.test(String(value || ''))
+}
+
 const ProductCard = (props) => {
   const { product, addToCartProduct, addToCart, quantity, deleteToCartProduct } = props
   const { isOpen, onToggle } = useDisclosure()
@@ -81,9 +85,25 @@ const ProductCard = (props) => {
             </Text>
           </Flex>
           <Collapse startingHeight={20} in={isOpen}>
-            <Text fontSize="12px" lineHeight="18px" w="100%" variant="outline" noOfLines={isOpen ? undefined : 1}>
-             {product?.productDesc}
-            </Text>
+            {looksLikeHtml(product?.productDesc) ? (
+              <Box
+                fontSize="12px"
+                lineHeight="18px"
+                w="100%"
+                color="gray.500"
+                className="store-cms"
+                sx={{
+                  p: { m: 0, fontSize: '12px', lineHeight: '18px' },
+                  ul: { m: 0, pl: '16px', fontSize: '12px', lineHeight: '18px' },
+                  ol: { m: 0, pl: '16px', fontSize: '12px', lineHeight: '18px' },
+                }}
+                dangerouslySetInnerHTML={{ __html: product.productDesc }}
+              />
+            ) : (
+              <Text fontSize="12px" lineHeight="18px" w="100%" variant="outline" noOfLines={isOpen ? undefined : 1}>
+                {product?.productDesc}
+              </Text>
+            )}
           </Collapse>
           {product?.productDesc ? (
           <Text pt="2px" color="black" variant="outline" onClick={onToggle} cursor="pointer">

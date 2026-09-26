@@ -36,7 +36,7 @@ export function ShiprocketMark({ title = 'Shiprocket', ...props }: IconProps) {
 export function deliveryPartnerKind(
   provider?: string | null,
 ): 'porter' | 'shiprocket' | null {
-  const key = String(provider || '').toLowerCase();
+  const key = String(provider || '').toLowerCase().replace(/[\s_-]+/g, '');
   if (!key) return null;
   if (key.includes('porter')) return 'porter';
   if (key.includes('shiprocket')) return 'shiprocket';
