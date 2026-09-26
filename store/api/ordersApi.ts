@@ -104,6 +104,7 @@ const MENU_ORDER_DETAIL_FIELDS = gql`
       itemTax
       shippingTax
       gstPercent
+      deliveryGstPercent
       taxInclusive
       extraCharges {
         name

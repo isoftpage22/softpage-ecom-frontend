@@ -1,3 +1,9 @@
+import {
+  applyExtraChargesForCart,
+  gstOnAmount,
+  taxesAndOtherChargesBreakdown,
+} from "./extraCharges";
+
 function roundPaise(value) {
   return Math.round((Number(value) || 0) * 100) / 100;
 }
@@ -35,7 +41,7 @@ export function estimateMenuTax(lines = []) {
 /**
  * Cart bill for the menu checkout page.
  * Item total follows the local cart immediately; coupon comes from the server.
- * Tax matches the GraphQL cart formula so +/- does not flash a different GST.
+ * Extra charges sit inside Taxes & other charges, same as POS.
  */
 export function buildMenuBill({
   cart = null,
@@ -43,25 +49,54 @@ export function buildMenuBill({
   deliveryFee = 0,
   fallbackSubtotal,
   lines = [],
+  extraCharges = [],
+  origin = "menu",
+  orderType = null,
+  taxInclusive = false,
+  gstPercent = 5,
+  deliveryGstPercent,
+  taxCharges = true,
 } = {}) {
   const hasFallback = fallbackSubtotal != null && fallbackSubtotal !== "";
   const subtotal = roundPaise(
     hasFallback ? Number(fallbackSubtotal) || 0 : Number(cart?.subtotal) || 0,
   );
   const couponDiscount = roundPaise(Number(cart?.discount) || 0);
-  const serverSubtotal = roundPaise(Number(cart?.subtotal) || 0);
-  const serverTax = Number(cart?.tax) || 0;
-  const estimatedTax = estimateMenuTax(lines);
-  const taxAmount = roundPaise(
-    serverTax && serverSubtotal === subtotal
-      ? serverTax
-      : estimatedTax,
-  );
+  const discounted = roundPaise(Math.max(0, subtotal - couponDiscount));
   const shipping = roundPaise(Number(deliveryFee) || 0);
   const tipAmount = roundPaise(Number(tip) || 0);
+  const rate = Number.isFinite(Number(gstPercent)) ? Number(gstPercent) : 5;
+  const deliveryRate = Number.isFinite(Number(deliveryGstPercent))
+    ? Number(deliveryGstPercent)
+    : taxCharges
+      ? rate
+      : 0;
+  const itemTax = gstOnAmount(discounted, rate, taxInclusive);
+  const shippingTax = gstOnAmount(shipping, deliveryRate, taxInclusive);
+  const appliedExtras = applyExtraChargesForCart(extraCharges, {
+    origin,
+    orderType,
+    shippingCost: shipping,
+    taxInclusive,
+  });
+  const extrasAmount = roundPaise(appliedExtras.reduce((sum, charge) => sum + charge.amount, 0));
+  const extrasTax = roundPaise(appliedExtras.reduce((sum, charge) => sum + charge.tax, 0));
+  const extrasTaxAdded = taxInclusive ? 0 : extrasTax;
+  const itemAndDeliveryTax = roundPaise(itemTax + shippingTax);
+  const taxAdded = taxInclusive ? 0 : itemAndDeliveryTax;
+  const taxAmount = roundPaise(itemAndDeliveryTax + extrasTaxAdded);
+  const taxesAndOtherCharges = roundPaise(itemAndDeliveryTax + extrasAmount + extrasTax);
   const totalFinalPriceAmount = roundPaise(
-    Math.max(0, subtotal + taxAmount + shipping + tipAmount - couponDiscount),
+    Math.max(0, discounted + taxAdded + shipping + extrasAmount + extrasTaxAdded + tipAmount),
   );
+  const breakdown = taxesAndOtherChargesBreakdown({
+    itemTax,
+    gstPercent: rate,
+    deliveryGstPercent: deliveryRate,
+    applied: appliedExtras,
+    shippingTax,
+    taxInclusive,
+  });
 
   return {
     qty: cart?.itemCount,
@@ -70,10 +105,15 @@ export function buildMenuBill({
     discountRate: 0,
     discount: couponDiscount,
     couponDiscount,
-    priceAfterDiscount: roundPaise(Math.max(0, subtotal - couponDiscount)),
+    priceAfterDiscount: discounted,
     taxAmount,
-    CGST: Math.round(taxAmount / 2),
-    SGST: Math.round(taxAmount / 2),
+    taxesAndOtherCharges,
+    breakdown,
+    extraCharges: appliedExtras,
+    extrasAmount,
+    extrasTax,
+    CGST: Math.round(itemTax / 2),
+    SGST: Math.round(itemTax / 2),
     tip: tipAmount,
     deliveryFee: shipping,
     totalFinalPriceAmount,

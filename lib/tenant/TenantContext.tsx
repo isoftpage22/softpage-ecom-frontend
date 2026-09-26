@@ -110,6 +110,20 @@ export interface StorefrontConfig {
   capabilities?: StorefrontCapabilities;
   /** Canonical business vertical (restaurant | clinic | salon | ...) for industry-aware wording. */
   vertical?: string | null;
+  tax?: {
+    gstPercent: number;
+    taxInclusive: boolean;
+    deliveryGstPercent: number;
+    taxCharges: boolean;
+  };
+  extraCharges?: Array<{
+    id: string;
+    name: string;
+    amount: number;
+    gstPercent: number;
+    channels: string[];
+  }>;
+  storeOrigin?: "menu" | "storefront";
 }
 
 export interface TenantInfo {
@@ -256,6 +270,8 @@ const DEFAULT_CONFIG: StorefrontConfig = {
   payment: { provider: "razorpay", enabled: true, mode: "platform", keyId: null, codEnabled: true },
   shipping: { enabled: true, source: "platform" },
   capabilities: { onlineOrdering: false, tableReservation: false, bookable: false, bookableStrategies: [] },
+  extraCharges: [],
+  storeOrigin: "menu",
 };
 
 /**
@@ -265,7 +281,7 @@ const DEFAULT_CONFIG: StorefrontConfig = {
  */
 export function useStoreConfig(): StorefrontConfig {
   const tenant = useContext(TenantContext);
-  return tenant?.config ?? DEFAULT_CONFIG;
+  return tenant?.config ? { ...DEFAULT_CONFIG, ...tenant.config } : DEFAULT_CONFIG;
 }
 
 /** One-line store / outlet address for the menu header. */

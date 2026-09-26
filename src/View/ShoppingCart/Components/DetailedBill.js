@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Box, Text, Flex, Spacer, Container, Divider, Spinner } from '@chakra-ui/react'
 import Card from '../../../Components/Card/Card'
 import { formatEtaMinutes } from '@/lib/checkout/useDeliveryQuote'
@@ -26,6 +26,77 @@ function PriceValue({ loading, children, color, fontWeight, lineHeight, muted = 
   )
 }
 
+function TaxesAndOtherChargesRow({ amount, breakdown, loading }) {
+  const [open, setOpen] = useState(false)
+  const rootRef = useRef(null)
+
+  useEffect(() => {
+    if (!open) return
+    const onDoc = (event) => {
+      if (!rootRef.current?.contains(event.target)) setOpen(false)
+    }
+    document.addEventListener('mousedown', onDoc)
+    return () => document.removeEventListener('mousedown', onDoc)
+  }, [open])
+
+  if (!(Number(amount) > 0)) return null
+
+  return (
+    <Box ref={rootRef} position="relative" w="100%">
+      <Flex w="100%" align="center">
+        <Flex align="center" gap="4px" minW={0}>
+          <Text variant="mutedCart">Taxes & other charges</Text>
+          {breakdown?.length > 0 ? (
+            <Box
+              as="button"
+              type="button"
+              onClick={() => setOpen((prev) => !prev)}
+              w="16px"
+              h="16px"
+              borderRadius="full"
+              border="1px solid #C4C4C4"
+              color="#6B7280"
+              fontSize="10px"
+              fontWeight="700"
+              lineHeight="14px"
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+              flexShrink={0}
+              aria-label="Tax and charge details"
+            >
+              i
+            </Box>
+          ) : null}
+        </Flex>
+        <Spacer />
+        <PriceValue loading={loading}>₹{formatRupee(amount)}</PriceValue>
+      </Flex>
+      {open && breakdown?.length > 0 ? (
+        <Box
+          position="absolute"
+          left={0}
+          right={0}
+          zIndex={20}
+          mt="6px"
+          p="10px"
+          bg="white"
+          border="1px solid #E5E7EB"
+          borderRadius="10px"
+          boxShadow="md"
+        >
+          {breakdown.map((line) => (
+            <Flex key={`${line.label}-${line.amount}`} justify="space-between" gap="12px" py="2px">
+              <Text fontSize="11px" color="#6B7280">{line.label}</Text>
+              <Text fontSize="11px" fontWeight="600" color="#111827">₹{formatRupee(line.amount)}</Text>
+            </Flex>
+          ))}
+        </Box>
+      ) : null}
+    </Box>
+  )
+}
+
 const DetailedBill = (props) => {
   const {totalCartBill, showDelivery, hasAddress, quote, totalsSyncing}=props
   const couponDiscount = Number(totalCartBill.couponDiscount || totalCartBill.discount || 0)
@@ -37,6 +108,7 @@ const DetailedBill = (props) => {
   else if (quote?.freeShippingApplied) feeLabel = 'Free'
   else if (feeKnown || Number(totalCartBill.deliveryFee) > 0) feeLabel = `₹${formatRupee(totalCartBill.deliveryFee)}`
   else if (!quote) feeLabel = 'Calculating…'
+  const taxesAmount = totalCartBill.taxesAndOtherCharges ?? totalCartBill.taxAmount
 
   return (
    <Card mb="3px" flexDirection="column" justify="flex-start" alignItems="flex-start">
@@ -69,14 +141,14 @@ const DetailedBill = (props) => {
          <PriceValue loading={totalsSyncing && !quote}>{feeLabel}</PriceValue>
        </Flex>
      ) : null}
-     <Flex>
-       <Text variant="mutedCart">Taxes & Charges</Text>
-     <Spacer/>
-       <PriceValue loading={totalsSyncing}>₹{formatRupee(totalCartBill.taxAmount)}</PriceValue>
-     </Flex> 
+     <TaxesAndOtherChargesRow
+       amount={taxesAmount}
+       breakdown={totalCartBill.breakdown}
+       loading={totalsSyncing}
+     />
      <Flex>
        <Text variant="mutedCart">Tip Amount</Text>
-     <Spacer/>
+       <Spacer/>
        <Text variant="mutedCart">₹{formatRupee(totalCartBill.tip)}</Text>
      </Flex>
      {couponDiscount > 0 ? (

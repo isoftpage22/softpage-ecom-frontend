@@ -44,6 +44,7 @@ export interface Order {
     itemTax: number;
     shippingTax: number;
     gstPercent: number;
+    deliveryGstPercent?: number;
     taxInclusive: boolean;
     extraCharges: Array<{ name: string; amount: number; gstPercent: number; tax: number }>;
   } | null;

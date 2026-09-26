@@ -576,7 +576,9 @@ function TaxesAndOtherChargesBillRow({ order }: { order: { tax?: number; currenc
       }
     }
     if (Number(charges.shippingTax) > 0) {
-      lines.push({ label: `GST (${charges.gstPercent}%) on delivery`, amount: Number(charges.shippingTax) });
+      const deliveryRate =
+        charges.deliveryGstPercent != null ? Number(charges.deliveryGstPercent) : Number(charges.gstPercent);
+      lines.push({ label: `GST (${deliveryRate}%) on delivery`, amount: Number(charges.shippingTax) });
     }
   }
   return (

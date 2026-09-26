@@ -26,7 +26,7 @@ import { useSearchParams } from 'next/navigation'
 import { setActiveOrder } from '../../Store/action/shoppingCart'
 import { getTableSession, isDineInSession, tableSessionLabel, exitTableSessionToWebsite } from '@/lib/restaurant/table-session'
 import { isProductOutOfStock, isVariantOutOfStock } from '../../../lib/catalog/options'
-import { useStoreSlug } from '@/lib/tenant/TenantContext'
+import { useStoreSlug, useStoreConfig } from '@/lib/tenant/TenantContext'
 import { deliveryFeeFromQuote, formatEtaMinutes, useDeliveryQuote } from '@/lib/checkout/useDeliveryQuote'
 
 const ShoppingCart = (props) => {
@@ -36,6 +36,7 @@ const ShoppingCart = (props) => {
   const { addToCart, deleteToCartProduct, addToCartProduct, usersAddress, setLoader } = props
   const tip = useSelector((state) => state.shoppingCart.tip || 0)
   const storeSlug = useStoreSlug()
+  const storeConfig = useStoreConfig()
   const businessId = useBusinessId()
   const businessAppId = useBusinessAppId()
   const dispatch = useDispatch()
@@ -80,6 +81,13 @@ const ShoppingCart = (props) => {
     deliveryFee,
     fallbackSubtotal: price,
     lines: products,
+    extraCharges: storeConfig.extraCharges,
+    origin: storeConfig.storeOrigin || 'menu',
+    orderType: dineIn ? 'dine_in' : tableSession?.orderType,
+    taxInclusive: storeConfig.tax?.taxInclusive === true,
+    gstPercent: storeConfig.tax?.gstPercent,
+    deliveryGstPercent: storeConfig.tax?.deliveryGstPercent,
+    taxCharges: storeConfig.tax?.taxCharges !== false,
   })
   const tableLabel = tableSessionLabel(tableSession)
   const checkoutError = useSelector((state) => state.shoppingCart.checkoutError)
