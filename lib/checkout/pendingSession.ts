@@ -30,3 +30,20 @@ export function getPendingCheckoutSession(): string | null {
 export function clearPendingCheckoutSession(): void {
   setPendingCheckoutSession(null);
 }
+
+/**
+ * Hosted-pay cancel lands on /cart?payment=cancelled. Cleanup must run once
+ * for that visit: Place order writes a new pending session, and repeating
+ * this would abandon the new charge before Razorpay opens.
+ */
+let cartCancelCleanupStarted = false;
+
+export function beginCartCancelCleanup(): boolean {
+  if (cartCancelCleanupStarted) return false;
+  cartCancelCleanupStarted = true;
+  return true;
+}
+
+export function resetCartCancelCleanup(): void {
+  cartCancelCleanupStarted = false;
+}

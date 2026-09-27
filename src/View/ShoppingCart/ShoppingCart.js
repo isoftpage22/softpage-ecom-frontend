@@ -1,15 +1,17 @@
 "use client";
 
 import { Box, Flex, Text } from '@chakra-ui/react'
-import { useEffect, useState } from 'react'
-import { useAbandonCheckoutSessionMutation, useAbandonLockedCartMutation } from '@/store/api/ordersApi'
+import { useEffect, useRef, useState } from 'react'
+import { useAbandonCheckoutSessionMutation } from '@/store/api/ordersApi'
 import { useBusinessId, useBusinessAppId } from '@/lib/tenant/TenantContext'
-import { getGuestSessionId, useGuestSessionId } from '@/lib/cart/session'
+import { useGuestSessionId } from '@/lib/cart/session'
 import { useGetCartQuery } from '@/store/api/cartApi'
 import { useSyncCartPage } from '@/lib/cart/useSyncCartPage'
 import {
   getPendingCheckoutSession,
   clearPendingCheckoutSession,
+  beginCartCancelCleanup,
+  resetCartCancelCleanup,
 } from '@/lib/checkout/pendingSession'
 import { useDispatch, useSelector } from 'react-redux'
 import ItemCardAtCheckout from '../../Container/ItemCardAtCheckout/ItemCardAtCheckout'
@@ -99,39 +101,36 @@ const ShoppingCart = (props) => {
   })
   const extraFooterSpace = checkoutError || hasUnavailableLine
   const [abandonCheckoutSession] = useAbandonCheckoutSessionMutation()
-  const [abandonLockedCart] = useAbandonLockedCartMutation()
   const activeOrder = useSelector((state) => state.shoppingCart.activeOrder)
+  const activeOrderRef = useRef(activeOrder)
+  activeOrderRef.current = activeOrder
+
+  useEffect(() => () => resetCartCancelCleanup(), [])
 
   useEffect(() => {
     if (!paymentCancelled) return
-    const checkoutSessionId = getPendingCheckoutSession() || activeOrder?.checkoutSessionId
+    if (!beginCartCancelCleanup()) return
+    const checkoutSessionId = getPendingCheckoutSession() || activeOrderRef.current?.checkoutSessionId
     dispatch(setActiveOrder(null))
-    if (!businessId) {
-      clearPendingCheckoutSession()
+    if (!checkoutSessionId || !businessId) {
+      if (getPendingCheckoutSession() === checkoutSessionId) {
+        clearPendingCheckoutSession()
+      }
       return
     }
-    const release = checkoutSessionId
-      ? abandonCheckoutSession({
-          businessId,
-          checkoutSessionId,
-          reason: 'Payment cancelled by shopper',
-        }).unwrap()
-      : abandonLockedCart({
-          businessId,
-          businessAppId,
-          sessionId: getGuestSessionId(),
-          reason: 'Payment cancelled by shopper',
-        }).unwrap()
-    release.catch(() => undefined).finally(() => clearPendingCheckoutSession())
-  }, [
-    paymentCancelled,
-    abandonCheckoutSession,
-    abandonLockedCart,
-    businessId,
-    businessAppId,
-    activeOrder,
-    dispatch,
-  ])
+    abandonCheckoutSession({
+      businessId,
+      checkoutSessionId,
+      reason: 'Payment cancelled by shopper',
+    })
+      .unwrap()
+      .catch(() => undefined)
+      .finally(() => {
+        if (getPendingCheckoutSession() === checkoutSessionId) {
+          clearPendingCheckoutSession()
+        }
+      })
+  }, [paymentCancelled, abandonCheckoutSession, businessId, dispatch])
 
   useEffect(() => {
     if ((products || []).length > 0) return

@@ -6,8 +6,7 @@ import { useFormik } from "formik";
 import { AiFillHome } from "react-icons/ai";
 import { MdWork, MdPlace, MdHotel } from 'react-icons/md'
 import ContinueButton from './Components/ContinueButton';
-import { generateUniqueRandomString, getAddressOnBasisOfId, getAdrresFromLocal, getUserInFromLocal } from '../../utils/CommonFunctions';
-import { LOCAL_STORAGE_CUSTOMER_ADDRESS } from '../../utils/constants';
+import { generateUniqueRandomString, getAddressOnBasisOfId, getUserInFromLocal, upsertLocalAddress } from '../../utils/CommonFunctions';
 import { connect } from 'react-redux';
 import { bindActionCreators } from "redux";
 import {saveUsersAddress } from '../../Store/action/addresses';
@@ -63,6 +62,7 @@ const CreateAddress = (props) => {
    const history = useHistory()
   const isEdit  = id?true:false
   const { loggedIn, promptLogin } = useRequireStorefrontAuth(isEdit && id ? `/edit-address/${id}` : "/create-address")
+  const { saveUsersAddress } = props
   const [currentAddres, setCurrentAdrres] = useState(getAddressOnBasisOfId(id))
   const profile = (() => {
     const customer = getUserInFromLocal()
@@ -100,6 +100,7 @@ const CreateAddress = (props) => {
   };
   const [createAddress] = useCreateAddressMutation();
   const [updateAddress] = useUpdateAddressMutation();
+  const savingRef = useRef(false);
 
   const formik = useFormik({
     initialValues: {
@@ -128,12 +129,16 @@ const CreateAddress = (props) => {
     validateOnBlur: true,
     validate: validateOtherType,
     onSubmit: async (values) => {
+      if (savingRef.current) return
+      savingRef.current = true
       setSubmitError('')
       if (!isValidCoordPair(values.latitude, values.longitude)) {
+        savingRef.current = false
         setSubmitError('Set a pin on the map so we can deliver to this address.')
         return
       }
       if (outOfZoneRef.current) {
+        savingRef.current = false
         setSubmitError('This address is outside the restaurant delivery area.')
         return
       }
@@ -150,25 +155,18 @@ const CreateAddress = (props) => {
             await updateAddress({ id: Number(currentAddres.serverId), data: input }).unwrap();
           } else {
             const saved = await createAddress(input).unwrap();
-            if (saved?.id) payload.serverId = saved.id;
+            const serverId = Number(saved?.id || saved?.data?.id)
+            if (Number.isFinite(serverId) && serverId > 0) payload.serverId = serverId;
           }
         }
       } catch (err) {
+        savingRef.current = false
         setSubmitError(rtkErrorMessage(err, 'Could not save address to your profile. It was kept on this device.'));
+        return
       }
-      if (id) {
-        let addresses = getAdrresFromLocal();
-        let index = addresses.findIndex((addKey) => addKey.id == id);
-        if (index >= 0) addresses[index] = payload;
-        else addresses.push(payload);
-        localStorage.setItem(LOCAL_STORAGE_CUSTOMER_ADDRESS, JSON.stringify(addresses));
-        history.replace('/addresses');
-      } else {
-        let address = getAdrresFromLocal();
-        address.push(payload);
-        localStorage.setItem(LOCAL_STORAGE_CUSTOMER_ADDRESS, JSON.stringify(address));
-        history.replace('/addresses');
-      }
+      upsertLocalAddress(payload)
+      saveUsersAddress(payload)
+      history.replace(id ? '/addresses' : '/cart')
     }
   });
 
@@ -432,7 +430,7 @@ const CreateAddress = (props) => {
             </FormControl>
           </Flex>
         </Box>
-        <ContinueButton text="Save Address" isDisabled={outOfZone} onClick={() => formik.handleSubmit()} />
+        <ContinueButton text="Save Address" isDisabled={outOfZone || formik.isSubmitting} onClick={() => formik.handleSubmit()} />
       </form>
       )}
     </>

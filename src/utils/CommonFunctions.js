@@ -1,4 +1,4 @@
-import { CUSTOMER_INFO, LOCAL_STORAGE_CUSTOMER_ADDRESS, STORE_INFO } from "./constants";
+import { CUSTOMER_INFO, LOCAL_STORAGE_CUSTOMER_ADDRESS, SELECTED_CUSTOMER_ADDRESS, STORE_INFO } from "./constants";
 import { buildCheckoutNotes, getTableSession } from "@/lib/restaurant/table-session";
 
 const usedValues = [];
@@ -32,23 +32,79 @@ export function generateUniqueRandomString(length=10) {
 }
 
 // Usage example to generate a unique 10-digit random alphanumeric string
+function addressFingerprint(row = {}) {
+  return [
+    row.houseNumber,
+    row.floor,
+    row.tower,
+    row.societyName,
+    row.pincode || row.postalCode,
+    row.address1 || row.line1,
+  ]
+    .map((part) => String(part || "").trim().toLowerCase())
+    .join("|");
+}
+
+export const persistSelectedAddress = (address) => {
+  if (typeof window === "undefined" || !address || typeof address !== "object") return;
+  try {
+    localStorage.setItem(SELECTED_CUSTOMER_ADDRESS, JSON.stringify(address));
+  } catch {
+    /* ignore */
+  }
+};
+
 export const getAdrresFromLocal = ()=>{
   if (typeof window === "undefined") return [];
   let dataItem =  localStorage.getItem(LOCAL_STORAGE_CUSTOMER_ADDRESS)
     if(dataItem){
-       return JSON.parse(dataItem)
+       try {
+         const parsed = JSON.parse(dataItem)
+         return Array.isArray(parsed) ? parsed : []
+       } catch {
+         return []
+       }
     }
     else{
      return []
     }
  }
+
+export const upsertLocalAddress = (payload) => {
+  const list = getAdrresFromLocal();
+  const fingerprint = addressFingerprint(payload);
+  const index = list.findIndex((row) => {
+    if (payload?.serverId && row?.serverId && Number(row.serverId) === Number(payload.serverId)) return true;
+    if (payload?.id != null && row?.id != null && String(row.id) === String(payload.id)) return true;
+    return addressFingerprint(row) === fingerprint;
+  });
+  if (index >= 0) list[index] = { ...list[index], ...payload };
+  else list.unshift(payload);
+  try {
+    localStorage.setItem(LOCAL_STORAGE_CUSTOMER_ADDRESS, JSON.stringify(list));
+  } catch {
+    /* ignore */
+  }
+  persistSelectedAddress(payload);
+  return list;
+};
+
  export const getCurrentAddres = ()=>{
-    if(getAdrresFromLocal().length>0){
-       return getAdrresFromLocal()[0]
+    if (typeof window !== "undefined") {
+      try {
+        const selected = localStorage.getItem(SELECTED_CUSTOMER_ADDRESS);
+        if (selected) {
+          const parsed = JSON.parse(selected);
+          if (parsed && typeof parsed === "object" && Object.keys(parsed).length > 0) {
+            return parsed;
+          }
+        }
+      } catch {
+        /* fall through */
+      }
     }
-    else{
-     return {}
-    }
+    const list = getAdrresFromLocal();
+    return list[0] || {};
  }
  export const getAddressOnBasisOfId = (id)=>{
   try {

@@ -11,6 +11,11 @@ import {
 import { rtkErrorMessage } from "@/lib/auth/persistAuth";
 import { isCartLockedError } from "@/lib/checkout/cartLock";
 
+function isRetryableCheckoutError(err: unknown): boolean {
+  if (isCartLockedError(err)) return true;
+  return /cart not found or no longer active/i.test(rtkErrorMessage(err, ""));
+}
+
 export type MenuCartProduct = {
   product_id: string | number;
   quantity: number;
@@ -167,29 +172,47 @@ async function runPlaceMenuOrder(
   const notes = buildCheckoutNotes(opts.tableSession, opts.specialInstructions);
   const tip = Math.max(0, Number(opts.tip) || 0);
 
-  return await opts
-    .initiateCheckout({
-      businessId: opts.businessId,
-      cartId: cart.id,
-      shippingRateId: needsDelivery ? LIVE_SHIPPING_RATE_ID : undefined,
-      paymentMethod: payLater ? "cod" : "razorpay",
-      notes,
-      tableId: opts.tableSession?.tableId,
-      channel: isDineIn
-        ? opts.tableSession?.channel
-        : takeaway
+  const startCheckout = () =>
+    opts
+      .initiateCheckout({
+        businessId: opts.businessId,
+        cartId: cart.id,
+        shippingRateId: needsDelivery ? LIVE_SHIPPING_RATE_ID : undefined,
+        paymentMethod: payLater ? "cod" : "razorpay",
+        notes,
+        tableId: opts.tableSession?.tableId,
+        channel: isDineIn
           ? opts.tableSession?.channel
-          : "delivery",
-      orderType: isDineIn
-        ? opts.tableSession?.orderType
-        : takeaway
-          ? "takeaway"
-          : "delivery",
-      reservationId: opts.tableSession?.matchedReservationId,
-      resourceId: opts.tableSession?.resourceId,
-      tip: tip > 0 ? tip : undefined,
-      payLater: payLater || undefined,
-      returnOrigin: typeof window !== "undefined" ? window.location.href : undefined,
-    })
-    .unwrap();
+          : takeaway
+            ? opts.tableSession?.channel
+            : "delivery",
+        orderType: isDineIn
+          ? opts.tableSession?.orderType
+          : takeaway
+            ? "takeaway"
+            : "delivery",
+        reservationId: opts.tableSession?.matchedReservationId,
+        resourceId: opts.tableSession?.resourceId,
+        tip: tip > 0 ? tip : undefined,
+        payLater: payLater || undefined,
+        returnOrigin:
+          typeof window !== "undefined" ? window.location.href : undefined,
+      })
+      .unwrap();
+
+  try {
+    return await startCheckout();
+  } catch (err) {
+    if (!isRetryableCheckoutError(err) || !opts.abandonLockedCart) throw err;
+    await opts
+      .abandonLockedCart({
+        businessId: opts.businessId,
+        businessAppId: opts.businessAppId,
+        sessionId,
+        reason: "Starting a new payment",
+      })
+      .unwrap()
+      .catch(() => undefined);
+    return await startCheckout();
+  }
 }

@@ -4,7 +4,7 @@ import { Box, Button, Flex, Text } from '@chakra-ui/react'
 import { useHistory } from '../../lib/nav';
 import Addresses from './Components/Addresses';
 import './AddressListing.css'
-import { getAdrresFromLocal, getCurrentAddres } from '../../utils/CommonFunctions';
+import { getAdrresFromLocal, getCurrentAddres, persistSelectedAddress } from '../../utils/CommonFunctions';
 import { saveUsersAddress } from '../../Store/action/addresses';
 import { connect } from 'react-redux';
 import { bindActionCreators } from "redux";
@@ -12,6 +12,34 @@ import { useListAddressesQuery } from '@/store/api/storefrontAuthApi';
 import { customerAddressToLocal } from '@/lib/checkout/addressMapping';
 import { LOCAL_STORAGE_CUSTOMER_ADDRESS } from '../../utils/constants';
 import { useRequireStorefrontAuth } from '@/lib/auth/useRequireStorefrontAuth';
+
+function fingerprint(row) {
+  return [
+    row?.houseNumber,
+    row?.floor,
+    row?.tower,
+    row?.societyName,
+    row?.pincode || row?.postalCode,
+    row?.address1 || row?.line1,
+  ]
+    .map((part) => String(part || '').trim().toLowerCase())
+    .join('|')
+}
+
+function dedupeAddresses(list) {
+  const seen = new Set()
+  const out = []
+  for (const row of list || []) {
+    const key = row?.serverId || row?.id
+      ? `id:${row.serverId || row.id}`
+      : `fp:${fingerprint(row)}`
+    if (seen.has(key) || seen.has(`fp:${fingerprint(row)}`)) continue
+    seen.add(key)
+    seen.add(`fp:${fingerprint(row)}`)
+    out.push(row)
+  }
+  return out
+}
 
 const AddressListing = (props) => {
   const { saveUsersAddress } = props
@@ -29,7 +57,7 @@ const AddressListing = (props) => {
         .filter((row) => row.serverId)
         .map((row) => [Number(row.serverId), row]),
     )
-    const mapped = serverAddresses.map((row) => {
+    const mapped = dedupeAddresses(serverAddresses.map((row) => {
       const local = customerAddressToLocal(row)
       const prev = localByServer.get(Number(row.id))
       if (!row.label && prev?.checkbox) local.checkbox = prev.checkbox
@@ -38,14 +66,24 @@ const AddressListing = (props) => {
       if (!row.floor && prev?.floor) local.floor = prev.floor
       if (!row.societyName && prev?.societyName) local.societyName = prev.societyName
       return local
-    })
+    }))
     setAddresses(mapped)
     try {
       localStorage.setItem(LOCAL_STORAGE_CUSTOMER_ADDRESS, JSON.stringify(mapped))
     } catch {
       /* ignore */
     }
-    if (mapped[0]) setSelectedAddress(mapped[0])
+    const current = getCurrentAddres()
+    const currentKey = current?.serverId || current?.id
+    const matched = mapped.find((row) =>
+      (currentKey && String(row.serverId || row.id) === String(currentKey))
+      || fingerprint(row) === fingerprint(current),
+    ) || mapped[0]
+    if (matched) {
+      setSelectedAddress(matched)
+      const idx = mapped.findIndex((row) => row === matched)
+      if (idx >= 0) setSelected(idx)
+    }
   }, [serverAddresses])
 
   return (
@@ -104,8 +142,13 @@ const AddressListing = (props) => {
               flex="1"
               textTransform="none"
               onClick={() => {
-                saveUsersAddress(selectedAddress);
-                history.replace("/cart");
+                const chosen = selectedAddress && Object.keys(selectedAddress).length
+                  ? selectedAddress
+                  : addresses[selected] || addresses[0]
+                if (!chosen) return
+                persistSelectedAddress(chosen)
+                saveUsersAddress(chosen)
+                history.replace("/cart")
               }}
             >
               Use this address
