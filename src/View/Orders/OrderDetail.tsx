@@ -13,8 +13,10 @@ import { useDispatch } from "react-redux";
 import { useParams, useSearchParams } from "next/navigation";
 import TopBarWithBackButton from "@/src/Layout/Components/TopBarWithBackButton/TopBarWithBackButton";
 import { ShipmentTrackingMap } from "@/src/Components/OrderTracking/ShipmentTrackingMap";
+import { RiderAttemptHistory } from "@/src/Components/OrderTracking/RiderAttemptHistory";
 import { useHistory } from "@/src/lib/nav";
-import { useBusinessId, useTenant } from "@/lib/tenant/TenantContext";
+import { useBusinessId, useStoreConfig, useTenant } from "@/lib/tenant/TenantContext";
+import { restaurantPhoneFromConfig, restaurantTelHref } from "@/lib/tenant/restaurantPhone";
 import {
   useConfirmPaymentMutation,
   useGetOrderByIdQuery,
@@ -33,6 +35,8 @@ import {
   canRefreshLiveCourier,
   deliveryStatusLabel,
   isCancelledOrder,
+  isClosedShipment,
+  newestRiderStatus,
   isDeliveryOrder,
   orderStatusLabel,
   paymentStatusLabel,
@@ -135,6 +139,11 @@ function lineExtras(line: OrderLine): string {
 function deliveryCopy(tracking?: OrderTracking | null): string | null {
   if (!tracking) return "Looking for a rider.";
   const status = String(tracking.status || "").toLowerCase();
+  if (tracking.driverName || tracking.driverPhone || tracking.vehicleNumber) {
+    return tracking.message && !/looking for a/i.test(tracking.message)
+      ? tracking.message
+      : null;
+  }
   if (status === "cancelled" || status === "failed") {
     return tracking.message || "Delivery was cancelled.";
   }
@@ -153,6 +162,8 @@ export default function OrderDetail() {
   const toast = useToast();
   const businessId = useBusinessId();
   const tenant = useTenant();
+  const storeConfig = useStoreConfig();
+  const restaurantPhone = restaurantPhoneFromConfig(storeConfig.contact);
   const orderId = typeof params?.orderId === "string" ? params.orderId : "";
   const [paying, setPaying] = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
@@ -194,12 +205,23 @@ export default function OrderDetail() {
   const lines = order?.lines || [];
   const showPayNow = canResumeOnlinePayment(order);
   const showRepeat = canRepeatOrder(order);
-  const deliveryNote = showDelivery ? deliveryCopy(displayTracking) : null;
+  const riderStatus = newestRiderStatus(
+    displayTracking?.attempts,
+    displayTracking?.status || order?.deliveryStatus,
+  );
+  const deliveryNote = showDelivery
+    ? deliveryCopy(
+        displayTracking
+          ? { ...displayTracking, status: riderStatus || displayTracking.status }
+          : null,
+      )
+    : null;
+  const shipmentClosed = isClosedShipment(riderStatus);
   const canRefreshLive = Boolean(
     showDelivery &&
       canRefreshLiveCourier({
         orderStatus: order?.status,
-        deliveryStatus: displayTracking?.status || order?.deliveryStatus,
+        deliveryStatus: riderStatus,
       }),
   );
 
@@ -458,45 +480,67 @@ export default function OrderDetail() {
               <Box bg="white" borderRadius="md" p={4} mb={3} boxShadow="sm">
                 <Flex justify="space-between" align="center" mb={2} gap={2}>
                   <Text fontWeight="700">Delivery</Text>
-                  {displayTracking?.status ? (
+                  {riderStatus ? (
                     <StatusChip
                       kind="delivery"
-                      value={displayTracking.status}
-                      label={deliveryStatusLabel(displayTracking.status)}
+                      value={riderStatus}
+                      label={deliveryStatusLabel(riderStatus)}
                     />
                   ) : null}
                 </Flex>
-                {displayTracking?.driverName || displayTracking?.vehicleNumber ? (
+                {restaurantPhone ? (
+                  <Text fontSize="sm" mb={3}>
+                    <Text as="a" href={restaurantTelHref(restaurantPhone)} color="blue.600">
+                      Call restaurant · {restaurantPhone}
+                    </Text>
+                  </Text>
+                ) : null}
+                {!shipmentClosed && (displayTracking?.driverName || displayTracking?.driverPhone || displayTracking?.vehicleNumber) ? (
                   <Box bg="gray.50" borderRadius="md" p={3} mb={3}>
                     {displayTracking.driverName ? (
                       <Text fontSize="sm">Rider: {displayTracking.driverName}</Text>
                     ) : null}
                     {displayTracking.driverPhone ? (
-                      <Text fontSize="sm">Phone: {displayTracking.driverPhone}</Text>
+                      <Text fontSize="sm">
+                        Phone:{" "}
+                        <Text as="a" href={`tel:${String(displayTracking.driverPhone).replace(/[^\d+]/g, "")}`}>
+                          {displayTracking.driverPhone}
+                        </Text>
+                      </Text>
                     ) : null}
                     {displayTracking.vehicleNumber ? (
                       <Text fontSize="sm">Vehicle: {displayTracking.vehicleNumber}</Text>
                     ) : null}
                   </Box>
                 ) : null}
+                {shipmentClosed ? (
+                  <Text fontSize="sm" color="orange.700" mb={2}>
+                    Tracking cancelled
+                  </Text>
+                ) : null}
                 <ShipmentTrackingMap
-                  current={displayTracking?.current}
-                  pickup={displayTracking?.pickup}
-                  drop={displayTracking?.drop}
-                  live={displayTracking?.live}
+                  current={shipmentClosed ? null : displayTracking?.current}
+                  pickup={shipmentClosed ? null : displayTracking?.pickup}
+                  drop={shipmentClosed ? null : displayTracking?.drop}
+                  live={shipmentClosed ? false : displayTracking?.live}
                   provider={displayTracking?.provider || displayTracking?.quotedProvider}
                   providerLabel={displayTracking?.providerLabel}
                   booked={displayTracking?.booked}
-                  fallbackMessage={deliveryNote || "Looking for a rider…"}
+                  fallbackMessage={
+                    displayTracking?.driverName || displayTracking?.driverPhone
+                      ? "Rider assigned"
+                      : deliveryNote || "Looking for a rider…"
+                  }
                   canRefreshLive={canRefreshLive}
                   refreshingLive={liveFetching}
                   onRefreshLive={refreshLiveLocation}
                 />
-                {deliveryNote && (displayTracking?.current || displayTracking?.pickup || displayTracking?.drop) ? (
+                {deliveryNote && !shipmentClosed && (displayTracking?.current || displayTracking?.pickup || displayTracking?.drop) ? (
                   <Text fontSize="sm" color="gray.600" mt={3}>
                     {deliveryNote}
                   </Text>
                 ) : null}
+                <RiderAttemptHistory attempts={displayTracking?.attempts} />
               </Box>
             ) : null}
 

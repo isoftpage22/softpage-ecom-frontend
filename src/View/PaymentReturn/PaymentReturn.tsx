@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Box, Button, Flex, Text } from "@chakra-ui/react";
 import { useSearchParams } from "next/navigation";
 import { useDispatch } from "react-redux";
@@ -44,8 +44,12 @@ export default function PaymentReturn() {
     return () => clearTimeout(timer);
   }, [sessionId, orderId, failed]);
 
+  const placedRedirectKey = useRef("");
   useEffect(() => {
     if (!orderId) return;
+    const dest = `/orders/${orderId}?paid=1`;
+    if (placedRedirectKey.current === dest) return;
+    placedRedirectKey.current = dest;
     clearPendingCheckoutSession();
     dispatch(emptyCartProduct());
     dispatch(
@@ -56,7 +60,7 @@ export default function PaymentReturn() {
         phase: "completed",
       }),
     );
-    history.replace(`/orders/${orderId}?paid=1`);
+    history.replace(dest);
   }, [dispatch, history, orderId, session?.orderNumber]);
 
   useEffect(() => {

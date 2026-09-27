@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Box, Flex, Text, Image, Grid, GridItem } from '@chakra-ui/react'
 import successImg from '../../Assets/Animations/successfully-done.gif'
 import Cancelled from '../../Assets/Images/Cancelled.svg'
@@ -8,7 +8,8 @@ import { useParams, useSearchParams } from 'next/navigation'
 import { useDispatch } from 'react-redux'
 import { emptyCartProduct, setActiveOrder } from '../../Store/action/shoppingCart'
 import TopBarWithBackButton from '../../Layout/Components/TopBarWithBackButton/TopBarWithBackButton'
-import { useBusinessId } from '@/lib/tenant/TenantContext'
+import { useBusinessId, useStoreConfig } from '@/lib/tenant/TenantContext'
+import { restaurantPhoneFromConfig, restaurantTelHref } from '@/lib/tenant/restaurantPhone'
 import { useGetOrderByIdQuery, useGetOrderTrackingQuery } from '@/store/api/ordersApi'
 import { ShipmentTrackingMap } from '../../Components/OrderTracking/ShipmentTrackingMap'
 import { Button } from '@chakra-ui/react'
@@ -27,6 +28,7 @@ const OrderStatus = (props) => {
   const params = useParams()
   const searchParams = useSearchParams()
   const businessId = useBusinessId()
+  const restaurantPhone = restaurantPhoneFromConfig(useStoreConfig().contact)
   const orderId = typeof params?.orderId === 'string' ? params.orderId : ''
   const { paidHint, cancelled } = paymentReturnFlags(searchParams)
   const { orderCompleteStatus } = props
@@ -61,8 +63,12 @@ const OrderStatus = (props) => {
     return () => clearTimeout(timer)
   }, [awaitingPayment])
 
+  const placedRedirectKey = useRef('')
   useEffect(() => {
     if (!confirmedPlacement || !orderId) return
+    const dest = `/orders/${orderId}${paidHint ? '?paid=1' : ''}`
+    if (placedRedirectKey.current === dest) return
+    placedRedirectKey.current = dest
     dispatch(emptyCartProduct())
     dispatch(
       setActiveOrder({
@@ -71,7 +77,7 @@ const OrderStatus = (props) => {
         phase: 'completed',
       }),
     )
-    history.replace(`/orders/${orderId}${paidHint ? '?paid=1' : ''}`)
+    history.replace(dest)
   }, [confirmedPlacement, dispatch, history, orderId, order?.orderNumber, paidHint])
 
   useEffect(() => {
@@ -133,10 +139,22 @@ const OrderStatus = (props) => {
           </Box>
         )}
 
-        {showDelivery && (tracking?.driverName || tracking?.vehicleNumber) ? (
+        {restaurantPhone ? (
+          <Text fontSize="sm" mb={3}>
+            <Text as="a" href={restaurantTelHref(restaurantPhone)} color="blue.600">
+              Call restaurant · {restaurantPhone}
+            </Text>
+          </Text>
+        ) : null}
+
+        {showDelivery && (tracking?.driverName || tracking?.driverPhone || tracking?.vehicleNumber) ? (
           <Box bg="gray.50" borderRadius="md" p={3} mb={3}>
             {tracking.driverName ? <Text fontSize="sm">Rider: {tracking.driverName}</Text> : null}
-            {tracking.driverPhone ? <Text fontSize="sm">Phone: {tracking.driverPhone}</Text> : null}
+            {tracking.driverPhone ? (
+              <Text fontSize="sm" as="a" href={`tel:${String(tracking.driverPhone).replace(/[^\d+]/g, '')}`}>
+                Phone: {tracking.driverPhone}
+              </Text>
+            ) : null}
             {tracking.vehicleNumber ? <Text fontSize="sm">Vehicle: {tracking.vehicleNumber}</Text> : null}
             {tracking.live ? (
               <Text fontSize="xs" color="orange.600" mt={1}>Live location updating</Text>
@@ -153,7 +171,13 @@ const OrderStatus = (props) => {
             provider={tracking?.provider || tracking?.quotedProvider}
             providerLabel={tracking?.providerLabel}
             booked={tracking?.booked}
-            fallbackMessage={tracking?.message || 'Looking for a rider…'}
+            fallbackMessage={
+              tracking?.driverName || tracking?.driverPhone
+                ? tracking?.message && !/looking for a/i.test(tracking.message)
+                  ? tracking.message
+                  : 'Rider assigned'
+                : tracking?.message || 'Looking for a rider…'
+            }
           />
         ) : null}
 

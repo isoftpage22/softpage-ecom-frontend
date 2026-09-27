@@ -30,11 +30,17 @@ export function PersistMenuCart() {
     } else if (stored) {
       dispatch(hydrateCart(stored));
     }
+    ready.current = true;
+  }, [businessId, dispatch]);
+
+  // After hydration. Doing this in useLayoutEffect updates Redux before the
+  // address bar hydrates, so the server text "Choose delivery address" does
+  // not match the client's "Home".
+  useEffect(() => {
     const address = getCurrentAddres();
     if (address && typeof address === "object" && Object.keys(address).length > 0) {
       dispatch(saveUsersAddress(address));
     }
-    ready.current = true;
   }, [businessId, dispatch]);
 
   useEffect(() => {

@@ -498,6 +498,21 @@ export const ordersApi = createApi({
               drop { lat lng label source at }
               scans { at activity location lat lng }
               message
+              attempts {
+                id
+                provider
+                providerLabel
+                status
+                trackingId
+                trackingUrl
+                driverName
+                driverPhone
+                vehicleNumber
+                reason
+                amount
+                createdAt
+                cancelledAt
+              }
             }
           }
         `,

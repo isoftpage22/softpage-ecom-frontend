@@ -26,7 +26,7 @@ const DELIVERY_STATUS_LABELS: Record<string, string> = {
   pending: "Looking for rider",
   quoted: "Looking for rider",
   created: "Looking for rider",
-  accepted: "Looking for rider",
+  accepted: "Rider assigned",
   assigned: "Rider assigned",
   picked_up: "Picked up",
   in_transit: "On the way",
@@ -71,6 +71,15 @@ export function paymentStatusLabel(value?: string | null): string {
   return PAYMENT_STATUS_LABELS[key] || (value ? String(value) : "Payment");
 }
 
+/** Attempts are oldest-first. The current rider is the last one. */
+export function newestRiderStatus(
+  attempts?: { status?: string | null }[] | null,
+  fallback?: string | null,
+): string {
+  const latest = attempts?.length ? attempts[attempts.length - 1]?.status : "";
+  return String(latest || fallback || "");
+}
+
 export function deliveryStatusLabel(value?: string | null): string {
   const key = normalizeStatus(value);
   return DELIVERY_STATUS_LABELS[key] || "Delivery";
@@ -78,6 +87,12 @@ export function deliveryStatusLabel(value?: string | null): string {
 
 export function isCancelledOrder(status?: string | null): boolean {
   return normalizeStatus(status) === "cancelled";
+}
+
+const SHIPMENT_TRACKING_CLOSED = new Set(["cancelled", "failed", "cancel_failed", "rto"]);
+
+export function isClosedShipment(value?: string | null): boolean {
+  return SHIPMENT_TRACKING_CLOSED.has(normalizeStatus(value));
 }
 
 const LIVE_COURIER_CLOSED = new Set([

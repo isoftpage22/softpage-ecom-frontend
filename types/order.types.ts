@@ -135,6 +135,22 @@ export interface OrderTrackingScan {
   lng?: number;
 }
 
+export interface OrderTrackingAttempt {
+  id: string;
+  provider?: string | null;
+  providerLabel?: string | null;
+  status: string;
+  trackingId?: string | null;
+  trackingUrl?: string | null;
+  driverName?: string | null;
+  driverPhone?: string | null;
+  vehicleNumber?: string | null;
+  reason?: string | null;
+  amount?: number | null;
+  createdAt?: string | null;
+  cancelledAt?: string | null;
+}
+
 export interface OrderTracking {
   orderId: string;
   status: string;
@@ -154,4 +170,5 @@ export interface OrderTracking {
   drop?: OrderTrackingPoint | null;
   scans: OrderTrackingScan[];
   message?: string;
+  attempts?: OrderTrackingAttempt[];
 }

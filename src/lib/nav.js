@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import NextLink from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -27,24 +27,27 @@ function onNavClick(event, dest) {
 /** Drop-in for react-router `useHistory` used by existing Chakra screens. */
 export function useHistory() {
   const router = useRouter();
-  return {
-    push: (url) => {
-      beginIfNeeded(url);
-      return router.push(url);
-    },
-    replace: (url) => {
-      beginIfNeeded(url);
-      return router.replace(url);
-    },
-    goBack: () => {
-      startRouteLoading();
-      return router.back();
-    },
-    back: () => {
-      startRouteLoading();
-      return router.back();
-    },
-  };
+  return useMemo(
+    () => ({
+      push: (url) => {
+        beginIfNeeded(url);
+        return router.push(url);
+      },
+      replace: (url) => {
+        beginIfNeeded(url);
+        return router.replace(url);
+      },
+      goBack: () => {
+        startRouteLoading();
+        return router.back();
+      },
+      back: () => {
+        startRouteLoading();
+        return router.back();
+      },
+    }),
+    [router],
+  );
 }
 
 function linkPrefetch(dest, prefetch) {
