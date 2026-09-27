@@ -34,6 +34,19 @@ const GoogleMap = dynamic(() => import("./GoogleAddressMapInner"), {
 
 const INDIA = { lat: 20.5937, lng: 78.9629 };
 
+function sameFence(a: FenceState | null, b: FenceState | null): boolean {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  return (
+    a.serviceable === b.serviceable &&
+    a.reason === b.reason &&
+    a.distanceKm === b.distanceKm &&
+    a.radiusKm === b.radiusKm &&
+    a.centerLat === b.centerLat &&
+    a.centerLng === b.centerLng
+  );
+}
+
 export type AddressMapValue = {
   line1?: string;
   city?: string;
@@ -88,15 +101,25 @@ export function AddressMapPicker({
   const geocodeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const geocodeGen = useRef(0);
   const valueRef = useRef(value);
+  const onFenceRef = useRef(onFence);
   valueRef.current = value;
+  onFenceRef.current = onFence;
 
   const hasPin = isValidCoordPair(value.lat, value.lng);
   const lat = hasPin ? Number(value.lat) : INDIA.lat;
   const lng = hasPin ? Number(value.lng) : INDIA.lng;
   const useGoogle = googleAvailable && mapsReady && !googleFailed;
   const waitingOnGoogle = googleAvailable && !mapsReady && !googleFailed;
+  const storeAddr = storeConfig?.address;
+  const storeLat =
+    storeAddr && typeof storeAddr === "object" ? Number(storeAddr.latitude) : Number.NaN;
+  const storeLng =
+    storeAddr && typeof storeAddr === "object" ? Number(storeAddr.longitude) : Number.NaN;
+  const fenceLat = fence?.centerLat ?? null;
+  const fenceLng = fence?.centerLng ?? null;
+  const fenceRadius = fence?.radiusKm ?? null;
   const searchNear = useMemo(() => {
-    const fromFence = nearFromCoords(fence?.centerLat, fence?.centerLng, fence?.radiusKm);
+    const fromFence = nearFromCoords(fenceLat, fenceLng, fenceRadius);
     if (fromFence) return fromFence;
     const zone = zones.find(
       (z) =>
@@ -105,14 +128,16 @@ export function AddressMapPicker({
         Number.isFinite(Number(z.centerLng)),
     );
     if (zone) return nearFromCoords(zone.centerLat, zone.centerLng, zone.radiusKm);
-    const storeAddr = storeConfig?.address;
-    if (storeAddr && typeof storeAddr === "object") {
-      const fromStore = nearFromCoords(storeAddr.latitude, storeAddr.longitude);
-      if (fromStore) return fromStore;
-    }
-    if (hasPin) return nearFromCoords(lat, lng, fence?.radiusKm);
+    const fromStore = nearFromCoords(storeLat, storeLng);
+    if (fromStore) return fromStore;
+    if (hasPin) return nearFromCoords(lat, lng, fenceRadius);
     return undefined;
-  }, [fence, zones, storeConfig, hasPin, lat, lng]);
+  }, [fenceLat, fenceLng, fenceRadius, zones, storeLat, storeLng, hasPin, lat, lng]);
+
+  const publishFence = (next: FenceState | null) => {
+    setFence((prev) => (sameFence(prev, next) ? prev : next));
+    onFenceRef.current?.(next);
+  };
 
   useEffect(() => {
     if (wantsGoogle && !googleAvailable) {
@@ -177,8 +202,8 @@ export function AddressMapPicker({
   useEffect(() => {
     const q = query.trim();
     if (q.length < 2) {
-      setHits([]);
-      setCompletedQuery("");
+      setHits((prev) => (prev.length === 0 ? prev : []));
+      setCompletedQuery((prev) => (prev === "" ? prev : ""));
       return;
     }
     const controller = new AbortController();
@@ -220,8 +245,7 @@ export function AddressMapPicker({
 
   useEffect(() => {
     if (!hasPin || !storeSlug) {
-      setFence(null);
-      onFence?.(null);
+      publishFence(null);
       return;
     }
     if (fenceDebounce.current) clearTimeout(fenceDebounce.current);
@@ -233,20 +257,17 @@ export function AddressMapPicker({
         pincode: value.pincode,
       });
       if (!result) {
-        setFence(null);
-        onFence?.(null);
+        publishFence(null);
         return;
       }
-      const next: FenceState = {
+      publishFence({
         serviceable: result.serviceable,
         reason: result.reason,
         distanceKm: result.distanceKm,
         radiusKm: result.radiusKm,
         centerLat: result.centerLat,
         centerLng: result.centerLng,
-      };
-      setFence(next);
-      onFence?.(next);
+      });
     }, 400);
     return () => {
       if (fenceDebounce.current) clearTimeout(fenceDebounce.current);
@@ -327,31 +348,31 @@ export function AddressMapPicker({
       .finally(() => setLocating(false));
   };
 
-  const mapZones: DeliveryAreaZone[] = (() => {
+  const mapZones = useMemo(() => {
     const list = [...zones];
     if (
-      fence?.centerLat != null &&
-      fence?.centerLng != null &&
-      fence?.radiusKm != null &&
-      Number(fence.radiusKm) > 0
+      fenceLat != null &&
+      fenceLng != null &&
+      fenceRadius != null &&
+      Number(fenceRadius) > 0
     ) {
       const exists = list.some(
         (z) =>
           z.type === "radius" &&
-          Number(z.centerLat) === Number(fence.centerLat) &&
-          Number(z.centerLng) === Number(fence.centerLng),
+          Number(z.centerLat) === Number(fenceLat) &&
+          Number(z.centerLng) === Number(fenceLng),
       );
       if (!exists) {
         list.push({
           type: "radius",
-          centerLat: Number(fence.centerLat),
-          centerLng: Number(fence.centerLng),
-          radiusKm: Number(fence.radiusKm),
+          centerLat: Number(fenceLat),
+          centerLng: Number(fenceLng),
+          radiusKm: Number(fenceRadius),
         });
       }
     }
     return list;
-  })();
+  }, [zones, fenceLat, fenceLng, fenceRadius]);
 
   const fenceText = (() => {
     if (!fence) return "";

@@ -1,4 +1,6 @@
 export const PAYMENT_CONFIRM_TIMEOUT_MS = 120_000;
+/** Hosted return page: don't trap the guest on "Confirming payment…" */
+export const PAYMENT_RETURN_TIMEOUT_MS = 25_000;
 
 export function isCodLikePayment(method?: string | null): boolean {
   const value = (method || "").toLowerCase();

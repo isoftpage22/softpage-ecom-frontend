@@ -24,7 +24,6 @@ import {
 } from "@/store/api/ordersApi";
 import {
   clearPendingCheckoutSession,
-  getPendingCheckoutSession,
   setPendingCheckoutSession,
 } from "@/lib/checkout/pendingSession";
 import { catalogStockError, formatCheckoutError } from "@/lib/api/userFacingError";
@@ -101,19 +100,7 @@ const CartPageFooter = (props) => {
     });
     let releasePlacing = true;
     try {
-      const leftoverSessionId = getPendingCheckoutSession();
-      if (leftoverSessionId) {
-        await abandonCheckoutSession({
-          businessId,
-          checkoutSessionId: leftoverSessionId,
-          reason: "Starting a new payment",
-        })
-          .unwrap()
-          .catch(() => undefined);
-        if (getPendingCheckoutSession() === leftoverSessionId) {
-          clearPendingCheckoutSession();
-        }
-      }
+      clearPendingCheckoutSession();
 
       const customer = getUserInFromLocal();
       const result = await placeMenuOrder({

@@ -140,9 +140,10 @@ function mergeGeocodeResults(results: any[] | undefined, best?: any): any {
 }
 
 let sessionToken: any = null;
+let placesLib: any = null;
 
 function placesNs(): any {
-  return window.google?.maps?.places || null;
+  return placesLib || window.google?.maps?.places || null;
 }
 
 function getSessionToken(): any {
@@ -157,17 +158,20 @@ function resetSession(): void {
 }
 
 async function ensurePlaces(): Promise<any> {
+  if (placesLib) return placesLib;
   await loadGoogleMaps();
   const maps = window.google?.maps;
   if (!maps) return null;
-  if (!maps.places && typeof maps.importLibrary === "function") {
+  if (typeof maps.importLibrary === "function") {
     try {
-      await maps.importLibrary("places");
+      placesLib = await maps.importLibrary("places");
     } catch {
-      return maps.places || null;
+      placesLib = maps.places || null;
     }
+  } else {
+    placesLib = maps.places || null;
   }
-  return maps.places || null;
+  return placesLib;
 }
 
 function biasCircle(near?: GeoSearchNear): { center: { lat: number; lng: number }; radius: number } | null {
@@ -227,11 +231,8 @@ async function searchClassicAutocomplete(q: string, near?: GeoSearchNear): Promi
       };
       if (types?.length) req.types = types;
       if (token) req.sessionToken = token;
-      if (origin) {
-        req.location = origin;
-        req.radius = bias?.radius;
-        req.origin = origin;
-      }
+      if (bias) req.locationBias = bias;
+      if (origin) req.origin = origin;
       const maybe = svc.getPlacePredictions(req, (results: any[] | null, status: string) => {
         if (status && status !== "OK" && status !== "ZERO_RESULTS") {
           resolve([]);
@@ -276,20 +277,24 @@ export async function searchGooglePlaces(
   if (query.length < 2) return [];
   const places = await ensurePlaces();
   if (!places) return [];
-  // Classic AutocompleteService uses the Maps JavaScript / Places (legacy)
-  // library. Places API (New) AutocompletePlaces is a separate product and is
-  // often blocked with API_KEY_SERVICE_BLOCKED on keys that already work for maps.
+  // Prefer Places API (New). Classic AutocompleteService is blocked for new
+  // keys and warns on every request even when the constructor still exists.
+  const hasNew =
+    typeof places.AutocompleteSuggestion?.fetchAutocompleteSuggestions === "function";
+  if (hasNew) {
+    try {
+      return (await searchNewAutocomplete(query, near)).slice(0, 8);
+    } catch {
+      /* classic fallback */
+    }
+  }
   try {
     const classic = await searchClassicAutocomplete(query, near);
     if (classic.length) return classic.slice(0, 8);
   } catch {
-    /* new API fallback */
+    /* ignore */
   }
-  try {
-    return (await searchNewAutocomplete(query, near)).slice(0, 8);
-  } catch {
-    return [];
-  }
+  return [];
 }
 
 function toLatLng(loc: any): { lat: number; lng: number } | null {
@@ -355,14 +360,16 @@ export async function resolveGooglePlace(placeId: string): Promise<GeoAddress | 
   if (!placeId) return null;
   const places = await ensurePlaces();
   if (!places) return null;
-  try {
-    const next = await resolveClassicPlace(placeId);
-    if (next) return { ...next, replaceDetails: true };
-  } catch {
-    /* new API fallback */
+  if (places.Place) {
+    try {
+      const next = await resolveNewPlace(placeId);
+      if (next) return { ...next, replaceDetails: true };
+    } catch {
+      /* classic fallback */
+    }
   }
   try {
-    const next = await resolveNewPlace(placeId);
+    const next = await resolveClassicPlace(placeId);
     return next ? { ...next, replaceDetails: true } : null;
   } catch {
     return null;

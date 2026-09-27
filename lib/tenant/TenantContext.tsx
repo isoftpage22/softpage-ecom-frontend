@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { ThemeGlobalConfig, ThemePages } from "@/lib/sections/types";
 
 export interface StorefrontTheme {
@@ -281,7 +281,11 @@ const DEFAULT_CONFIG: StorefrontConfig = {
  */
 export function useStoreConfig(): StorefrontConfig {
   const tenant = useContext(TenantContext);
-  return tenant?.config ? { ...DEFAULT_CONFIG, ...tenant.config } : DEFAULT_CONFIG;
+  const config = tenant?.config;
+  return useMemo(
+    () => (config ? { ...DEFAULT_CONFIG, ...config } : DEFAULT_CONFIG),
+    [config],
+  );
 }
 
 /** One-line store / outlet address for the menu header. */

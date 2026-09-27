@@ -241,22 +241,44 @@ const CreateAddress = (props) => {
             }}
             onFence={(fence) => {
               const next = Boolean(fence && fence.reason === 'out_of_zone')
+              if (outOfZoneRef.current === next) return
               outOfZoneRef.current = next
               setOutOfZone(next)
             }}
             onChange={(addr) => {
-              formik.setFieldValue('address1', addr.line1 || formik.values.address1);
-              formik.setFieldValue('city', addr.city || '');
-              formik.setFieldValue('state', addr.state || '');
-              formik.setFieldValue('pincode', addr.pincode || formik.values.pincode);
-              formik.setFieldValue('country', addr.country || 'India');
-              formik.setFieldValue('latitude', addr.lat);
-              formik.setFieldValue('longitude', addr.lng);
-              if (addr.houseNumber !== undefined) formik.setFieldValue('houseNumber', addr.houseNumber);
-              if (addr.floor !== undefined) formik.setFieldValue('floor', addr.floor);
-              if (addr.tower !== undefined) formik.setFieldValue('tower', addr.tower);
-              if (addr.societyName !== undefined) formik.setFieldValue('societyName', addr.societyName);
-              if (addr.landmark !== undefined) formik.setFieldValue('landmark', addr.landmark);
+              const prev = formik.values
+              const next = {
+                ...prev,
+                address1: addr.line1 || prev.address1,
+                city: addr.city || '',
+                state: addr.state || '',
+                pincode: addr.pincode || prev.pincode,
+                country: addr.country || 'India',
+                latitude: addr.lat,
+                longitude: addr.lng,
+                houseNumber: addr.houseNumber !== undefined ? addr.houseNumber : prev.houseNumber,
+                floor: addr.floor !== undefined ? addr.floor : prev.floor,
+                tower: addr.tower !== undefined ? addr.tower : prev.tower,
+                societyName: addr.societyName !== undefined ? addr.societyName : prev.societyName,
+                landmark: addr.landmark !== undefined ? addr.landmark : prev.landmark,
+              }
+              if (
+                next.address1 === prev.address1 &&
+                next.city === prev.city &&
+                next.state === prev.state &&
+                next.pincode === prev.pincode &&
+                next.country === prev.country &&
+                String(next.latitude) === String(prev.latitude) &&
+                String(next.longitude) === String(prev.longitude) &&
+                next.houseNumber === prev.houseNumber &&
+                next.floor === prev.floor &&
+                next.tower === prev.tower &&
+                next.societyName === prev.societyName &&
+                next.landmark === prev.landmark
+              ) {
+                return
+              }
+              formik.setValues(next)
             }}
           />
           {submitError ? (

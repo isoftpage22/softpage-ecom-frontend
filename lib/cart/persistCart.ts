@@ -72,20 +72,14 @@ export function saveMenuCart(cart: PersistedMenuCart): void {
 
 export function showsOrderBar(activeOrder?: ActiveOrder | null): boolean {
   return (
-    Boolean(activeOrder?.orderId || activeOrder?.checkoutSessionId) &&
+    Boolean(activeOrder?.orderId) &&
     (activeOrder?.phase === "processing" || activeOrder?.phase === "completed")
   );
 }
 
 export function activeOrderHref(activeOrder?: ActiveOrder | null): string | null {
-  if (!activeOrder) return null;
-  if (activeOrder.orderId) {
-    return activeOrder.phase === "processing"
-      ? `/order-status/${activeOrder.orderId}`
-      : `/orders/${activeOrder.orderId}`;
-  }
-  if (activeOrder.checkoutSessionId) {
-    return `/payment-return?session=${activeOrder.checkoutSessionId}`;
-  }
-  return null;
+  if (!activeOrder?.orderId) return null;
+  return activeOrder.phase === "processing"
+    ? `/order-status/${activeOrder.orderId}`
+    : `/orders/${activeOrder.orderId}`;
 }
