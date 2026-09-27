@@ -158,8 +158,8 @@ function SlotBookingFlow({ bookableId }: { bookableId: string }) {
         key: init.razorpayKeyId,
         amount: Math.round(init.amount * 100),
         currency: init.currency || "INR",
-        name: bookable?.name || "Reservation",
-        description: "Reservation cover charge",
+        name: init.checkoutName || bookable?.name || "Reservation",
+        description: init.checkoutDescription || "Reservation cover charge",
         order_id: init.razorpayOrderId,
         prefill: {
           name: me?.profile?.displayName || me?.profile?.firstName || undefined,

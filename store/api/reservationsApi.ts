@@ -95,6 +95,8 @@ export interface DepositInitiateResult {
   razorpayOrderId: string;
   razorpayKeyId: string | null;
   paymentPageUrl?: string;
+  checkoutName?: string;
+  checkoutDescription?: string;
 }
 
 export interface CreateReservationInput {

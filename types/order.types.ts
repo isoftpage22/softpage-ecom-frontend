@@ -103,6 +103,8 @@ export interface CheckoutResult {
   razorpayKeyId?: string;
   paymentRequired: boolean;
   paymentPageUrl?: string;
+  checkoutName?: string;
+  checkoutDescription?: string;
 }
 
 export type CheckoutSessionState = "pending" | "paid" | "failed" | "expired";

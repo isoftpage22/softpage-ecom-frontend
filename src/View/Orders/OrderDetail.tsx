@@ -251,8 +251,8 @@ export default function OrderDetail() {
           key: result.razorpayKeyId,
           amount: Number(result.order?.total || order.total || 0) * 100,
           currency: result.order?.currency || order.currency || "INR",
-          name: tenant?.name || "Softpage",
-          description: `Order #${order.orderNumber}`,
+          name: result.checkoutName || tenant?.name || "Softpage",
+          description: result.checkoutDescription || `Order #${order.orderNumber}`,
           order_id: result.razorpayOrderId,
           prefill: {
             name: customerLocal?.customerName,

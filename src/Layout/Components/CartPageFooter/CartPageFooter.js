@@ -130,8 +130,12 @@ const CartPageFooter = (props) => {
           key: result.razorpayKeyId,
           amount: Number(result.order?.total || 0) * 100,
           currency: result.order?.currency || "INR",
-          name: tenant?.name || "Softpage",
-          description: result.order?.orderNumber ? `Order #${result.order.orderNumber}` : "Order",
+          name: result.checkoutName || tenant?.name || "Softpage",
+          description: result.checkoutDescription
+            ? result.checkoutDescription
+            : result.order?.orderNumber
+              ? `Order #${result.order.orderNumber}`
+              : "Order",
           order_id: result.razorpayOrderId,
           prefill: {
             name: customerLocal?.customerName,

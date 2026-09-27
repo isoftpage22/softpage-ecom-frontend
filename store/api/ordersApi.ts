@@ -241,6 +241,8 @@ export const ordersApi = createApi({
               razorpayKeyId
               paymentRequired
               paymentPageUrl
+              checkoutName
+              checkoutDescription
             }
           }
         `,
@@ -286,6 +288,8 @@ export const ordersApi = createApi({
               razorpayKeyId
               paymentRequired
               paymentPageUrl
+              checkoutName
+              checkoutDescription
             }
           }
         `,
