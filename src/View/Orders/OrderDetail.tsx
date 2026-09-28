@@ -371,7 +371,13 @@ export default function OrderDetail() {
                 <Text fontWeight="800">{money(order.total, order.currency)}</Text>
               </Flex>
               <Flex mt={3} gap={2} flexWrap="wrap">
-                <StatusChip kind="order" value={order.status} label={orderStatusLabel(order.status)} />
+                <StatusChip
+                  kind="order"
+                  value={String(riderStatus).toLowerCase() === "delivered" && order.status !== "cancelled" ? "completed" : order.status}
+                  label={orderStatusLabel(
+                    String(riderStatus).toLowerCase() === "delivered" && order.status !== "cancelled" ? "completed" : order.status,
+                  )}
+                />
                 <StatusChip
                   kind="payment"
                   value={order.paymentStatus}

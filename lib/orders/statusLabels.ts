@@ -72,10 +72,15 @@ export function paymentStatusLabel(value?: string | null): string {
 }
 
 /** Attempts are oldest-first. The current rider is the last one. */
+/** Attempts are oldest-first. A delivered attempt finishes the order, otherwise the last rider wins. */
 export function newestRiderStatus(
   attempts?: { status?: string | null }[] | null,
   fallback?: string | null,
 ): string {
+  const delivered = (attempts || []).find(
+    (row) => String(row?.status || "").trim().toLowerCase() === "delivered",
+  );
+  if (delivered?.status) return String(delivered.status);
   const latest = attempts?.length ? attempts[attempts.length - 1]?.status : "";
   return String(latest || fallback || "");
 }
