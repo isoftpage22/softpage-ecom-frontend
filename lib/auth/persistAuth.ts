@@ -1,4 +1,14 @@
-import { CUSTOMER_INFO } from "@/src/utils/constants";
+import { cancelStorefrontTokenRefresh } from "@/lib/api/graphqlBaseQuery";
+import { ordersApi } from "@/store/api/ordersApi";
+import { reservationsApi } from "@/store/api/reservationsApi";
+import { storefrontAuthApi } from "@/store/api/storefrontAuthApi";
+import { saveUsersAddress } from "@/src/Store/action/addresses";
+import { store } from "@/src/Store";
+import {
+  CUSTOMER_INFO,
+  LOCAL_STORAGE_CUSTOMER_ADDRESS,
+  SELECTED_CUSTOMER_ADDRESS,
+} from "@/src/utils/constants";
 import type { AuthResult } from "@/types/storefront-auth.types";
 
 export { rtkErrorMessage } from "@/lib/api/userFacingError";
@@ -9,6 +19,19 @@ const POST_AUTH_REDIRECT_KEY = "storefrontPostAuthRedirect";
 function notifyStorefrontAuthChanged() {
   if (typeof window === "undefined") return;
   window.dispatchEvent(new Event(STOREFRONT_AUTH_CHANGED));
+}
+
+function clearSavedAddresses() {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(LOCAL_STORAGE_CUSTOMER_ADDRESS);
+  localStorage.removeItem(SELECTED_CUSTOMER_ADDRESS);
+  store.dispatch(saveUsersAddress({}));
+}
+
+function resetCustomerCaches() {
+  store.dispatch(storefrontAuthApi.util.resetApiState());
+  store.dispatch(ordersApi.util.resetApiState());
+  store.dispatch(reservationsApi.util.resetApiState());
 }
 
 export function setPostAuthRedirect(path: string) {
@@ -29,6 +52,10 @@ export function persistStorefrontAuth(
   formValues?: { customerName?: string; whatsAppNumber?: string },
 ) {
   if (typeof window === "undefined") return;
+  const hadSession = Boolean(
+    localStorage.getItem("accessToken") || localStorage.getItem("refreshToken"),
+  );
+  if (hadSession) clearSavedAddresses();
   const tokens = result?.tokens;
   if (tokens?.accessToken) {
     localStorage.setItem("accessToken", tokens.accessToken);
@@ -55,6 +82,7 @@ export function persistStorefrontAuth(
       countryCode: 91,
     }),
   );
+  resetCustomerCaches();
   notifyStorefrontAuthChanged();
 }
 
@@ -70,9 +98,12 @@ export function isStorefrontLoggedIn(): boolean {
 
 export function clearStorefrontAuth(): void {
   if (typeof window === "undefined") return;
+  cancelStorefrontTokenRefresh();
   localStorage.removeItem("accessToken");
   localStorage.removeItem("refreshToken");
   localStorage.removeItem(CUSTOMER_INFO);
+  clearSavedAddresses();
+  resetCustomerCaches();
   notifyStorefrontAuthChanged();
 }
 

@@ -1,14 +1,16 @@
 
+const BUTTON_BG = "var(--sp-color-brand-primary, black)"
+
 const filledBlack = {
-  bg: "black",
-  color: "white",
+  bg: BUTTON_BG,
+  color: "var(--sp-color-text-on-brand, white)",
   _hover: {
-    bg: "black",
-    _disabled: { bg: "black", color: "white" },
+    bg: BUTTON_BG,
+    _disabled: { bg: BUTTON_BG, color: "var(--sp-color-text-on-brand, white)" },
   },
-  _active: { bg: "black" },
-  _disabled: { bg: "black", color: "white", opacity: 0.85, cursor: "not-allowed" },
-  _loading: { bg: "black", color: "white", opacity: 1 },
+  _active: { bg: BUTTON_BG },
+  _disabled: { bg: BUTTON_BG, color: "var(--sp-color-text-on-brand, white)", opacity: 0.85, cursor: "not-allowed" },
+  _loading: { bg: BUTTON_BG, color: "var(--sp-color-text-on-brand, white)", opacity: 1 },
 }
 
 export  const Button = {

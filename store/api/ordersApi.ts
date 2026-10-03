@@ -484,6 +484,8 @@ export const ordersApi = createApi({
               status
               provider
               providerLabel
+              providerLogoUrl
+              statusLabel
               booked
               quotedProvider
               trackingId
@@ -502,6 +504,8 @@ export const ordersApi = createApi({
                 id
                 provider
                 providerLabel
+                providerLogoUrl
+                statusLabel
                 status
                 trackingId
                 trackingUrl

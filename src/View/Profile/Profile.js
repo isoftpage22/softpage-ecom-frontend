@@ -4,9 +4,8 @@ import { useEffect, useState } from "react";
 import { Box, Button, Text, VStack } from "@chakra-ui/react";
 import TopBarWithBackButton from "@/src/Layout/Components/TopBarWithBackButton/TopBarWithBackButton";
 import { useGetMeQuery, useLogoutMutation, useListAddressesQuery } from "@/store/api/storefrontAuthApi";
-import { hasStorefrontToken, clearStorefrontAuth } from "@/lib/auth/persistAuth";
+import { hasStorefrontToken, clearStorefrontAuth, STOREFRONT_AUTH_CHANGED } from "@/lib/auth/persistAuth";
 import { useHistory } from "@/src/lib/nav";
-import { getUserInFromLocal, getAdrresFromLocal } from "@/src/utils/CommonFunctions";
 import { customerAddressToLocal } from "@/lib/checkout/addressMapping";
 
 function addressTitle(row) {
@@ -19,36 +18,38 @@ function addressLine(row) {
 
 export default function ProfileView() {
   const [loggedIn, setLoggedIn] = useState(false);
-  const [localUser, setLocalUser] = useState(null);
-  const [localAddresses, setLocalAddresses] = useState([]);
   const { data, isFetching } = useGetMeQuery(undefined, { skip: !loggedIn });
-  const { data: serverAddresses } = useListAddressesQuery(undefined, { skip: !loggedIn });
+  const { data: serverAddresses, isFetching: addressesLoading } = useListAddressesQuery(undefined, {
+    skip: !loggedIn,
+  });
   const history = useHistory();
   const [logout] = useLogoutMutation();
 
   useEffect(() => {
-    setLoggedIn(hasStorefrontToken());
-    const local = getUserInFromLocal();
-    setLocalUser(Array.isArray(local) ? null : local);
-    setLocalAddresses(getAdrresFromLocal());
+    const sync = () => setLoggedIn(hasStorefrontToken());
+    sync();
+    window.addEventListener(STOREFRONT_AUTH_CHANGED, sync);
+    return () => window.removeEventListener(STOREFRONT_AUTH_CHANGED, sync);
   }, []);
 
-  const profile = data?.profile;
-  const identity = data?.identity;
-  const name =
-    profile?.fullName ||
-    profile?.displayName ||
-    [profile?.firstName, profile?.lastName].filter(Boolean).join(" ") ||
-    localUser?.customerName ||
-    "Guest";
-  const phone = identity?.phone || profile?.phone || localUser?.whatsAppNumber || "";
-  const email = identity?.email || profile?.email || "";
-  const addresses =
-    loggedIn && serverAddresses?.length
-      ? serverAddresses.map((row) => customerAddressToLocal(row))
-      : localAddresses;
+  const profile = loggedIn ? data?.profile : null;
+  const identity = loggedIn ? data?.identity : null;
+  const name = !loggedIn
+    ? "Guest"
+    : isFetching && !profile
+      ? "…"
+      : profile?.fullName ||
+        profile?.displayName ||
+        [profile?.firstName, profile?.lastName].filter(Boolean).join(" ") ||
+        "Guest";
+  const phone = loggedIn ? identity?.phone || profile?.phone || "" : "";
+  const email = loggedIn ? identity?.email || profile?.email || "" : "";
+  const addresses = loggedIn
+    ? (serverAddresses || []).map((row) => customerAddressToLocal(row))
+    : [];
 
   const onLogout = async () => {
+    setLoggedIn(false);
     const refreshToken = typeof window !== "undefined" ? localStorage.getItem("refreshToken") : null;
     try {
       if (refreshToken) await logout({ refreshToken }).unwrap();
@@ -76,7 +77,11 @@ export default function ProfileView() {
         <Text mt={6} mb={2} fontSize="12px" fontWeight="700" letterSpacing="0.04em" color="gray.500">
           ADDRESSES
         </Text>
-        {addresses.length === 0 ? (
+        {loggedIn && addressesLoading && addresses.length === 0 ? (
+          <Text fontSize="14px" color="gray.600">
+            Loading addresses…
+          </Text>
+        ) : addresses.length === 0 ? (
           <Text fontSize="14px" color="gray.600">
             No saved addresses yet.
           </Text>

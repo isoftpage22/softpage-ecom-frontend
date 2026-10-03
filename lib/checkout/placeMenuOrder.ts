@@ -1,7 +1,7 @@
 import type { Address, AddToCartInput } from "@/types/cart.types";
 import type { CheckoutResult } from "@/types/order.types";
 import { getGuestSessionId } from "@/lib/cart/session";
-import { LIVE_SHIPPING_RATE_ID } from "@/lib/logisticsApi";
+import { currentShippingRateId } from "@/lib/logisticsApi";
 import { localAddressToCheckout, type LocalMenuAddress } from "@/lib/checkout/addressMapping";
 import {
   buildCheckoutNotes,
@@ -177,7 +177,7 @@ async function runPlaceMenuOrder(
       .initiateCheckout({
         businessId: opts.businessId,
         cartId: cart.id,
-        shippingRateId: needsDelivery ? LIVE_SHIPPING_RATE_ID : undefined,
+        shippingRateId: needsDelivery ? currentShippingRateId() : undefined,
         paymentMethod: payLater ? "cod" : "razorpay",
         notes,
         tableId: opts.tableSession?.tableId,

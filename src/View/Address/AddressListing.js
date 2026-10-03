@@ -12,6 +12,7 @@ import { useListAddressesQuery } from '@/store/api/storefrontAuthApi';
 import { customerAddressToLocal } from '@/lib/checkout/addressMapping';
 import { LOCAL_STORAGE_CUSTOMER_ADDRESS } from '../../utils/constants';
 import { useRequireStorefrontAuth } from '@/lib/auth/useRequireStorefrontAuth';
+import { hasStorefrontToken, STOREFRONT_AUTH_CHANGED } from '@/lib/auth/persistAuth';
 
 function fingerprint(row) {
   return [
@@ -48,10 +49,38 @@ const AddressListing = (props) => {
   const [addresses, setAddresses] = useState(getAdrresFromLocal())
   const [selectedAddress, setSelectedAddress] = useState(getCurrentAddres())
   const { loggedIn, promptLogin } = useRequireStorefrontAuth("/addresses")
-  const { data: serverAddresses } = useListAddressesQuery(undefined, { skip: !loggedIn })
+  const { data: serverAddresses, isSuccess } = useListAddressesQuery(undefined, { skip: !loggedIn })
 
   useEffect(() => {
-    if (!serverAddresses?.length) return
+    const sync = () => {
+      if (!hasStorefrontToken()) {
+        setAddresses([])
+        setSelectedAddress({})
+        return
+      }
+      setAddresses(getAdrresFromLocal())
+      setSelectedAddress(getCurrentAddres())
+    }
+    window.addEventListener(STOREFRONT_AUTH_CHANGED, sync)
+    return () => window.removeEventListener(STOREFRONT_AUTH_CHANGED, sync)
+  }, [])
+
+  useEffect(() => {
+    if (!loggedIn) {
+      setAddresses([])
+      return
+    }
+    if (!isSuccess) return
+    if (!serverAddresses?.length) {
+      const localOnly = getAdrresFromLocal().filter((row) => !row.serverId)
+      setAddresses(localOnly)
+      try {
+        localStorage.setItem(LOCAL_STORAGE_CUSTOMER_ADDRESS, JSON.stringify(localOnly))
+      } catch {
+        /* ignore */
+      }
+      return
+    }
     const localByServer = new Map(
       getAdrresFromLocal()
         .filter((row) => row.serverId)
@@ -84,7 +113,7 @@ const AddressListing = (props) => {
       const idx = mapped.findIndex((row) => row === matched)
       if (idx >= 0) setSelected(idx)
     }
-  }, [serverAddresses])
+  }, [loggedIn, isSuccess, serverAddresses])
 
   return (
     <>

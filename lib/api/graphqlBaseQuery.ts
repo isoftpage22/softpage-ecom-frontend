@@ -26,10 +26,18 @@ export interface GraphQLResponse<T = unknown> {
 }
 
 let isRefreshing = false;
+let refreshGeneration = 0;
 let failedQueue: Array<{
   resolve: (token: string) => void;
   reject: (error: unknown) => void;
 }> = [];
+
+/** Drop an in-flight token refresh so logout cannot be undone by a late write. */
+export function cancelStorefrontTokenRefresh(): void {
+  refreshGeneration += 1;
+  isRefreshing = false;
+  processQueue(new Error("Signed out"), null);
+}
 
 function processQueue(error: Error | null, token: string | null): void {
   failedQueue.forEach(({ resolve, reject }) => {
@@ -58,6 +66,7 @@ function storefrontBusinessId(): number {
 
 async function refreshAccessToken(): Promise<string | null> {
   if (typeof window === "undefined") return null;
+  const generation = refreshGeneration;
   const refreshToken = localStorage.getItem("refreshToken");
   if (!refreshToken) return null;
 
@@ -68,6 +77,7 @@ async function refreshAccessToken(): Promise<string | null> {
       body: JSON.stringify({ refreshToken, businessId: storefrontBusinessId() }),
     });
 
+    if (generation !== refreshGeneration) return null;
     if (!response.ok) {
       return null;
     }
@@ -75,6 +85,7 @@ async function refreshAccessToken(): Promise<string | null> {
     const json = await response.json();
     const payload = json?.data && typeof json.data === "object" ? json.data : json;
     const tokens = payload?.tokens || payload;
+    if (generation !== refreshGeneration) return null;
     if (tokens?.accessToken) {
       localStorage.setItem("accessToken", tokens.accessToken);
       if (tokens.refreshToken) {

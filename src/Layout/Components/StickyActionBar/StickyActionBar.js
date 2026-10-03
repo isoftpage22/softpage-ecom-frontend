@@ -39,6 +39,7 @@ export default function StickyActionBar({
       position="fixed"
       left="0"
       right="0"
+      maxW="100%"
       bottom="calc(16px + env(safe-area-inset-bottom, 0px))"
       zIndex={30}
       px="16px"
@@ -122,7 +123,7 @@ export default function StickyActionBar({
           minW="124px"
           px="18px"
           borderRadius="16px"
-          bg="#111"
+          bg="var(--sp-color-brand-primary, #111)"
           color="white"
           boxShadow={CTA_RAISED}
           fontSize="14px"

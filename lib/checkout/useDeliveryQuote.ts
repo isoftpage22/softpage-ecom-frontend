@@ -8,6 +8,56 @@ function pin6(raw?: string | number | null) {
   return String(raw || "").replace(/\D/g, "").slice(0, 6);
 }
 
+export type QuoteLine = {
+  quantity?: number;
+  item?: {
+    weight?: number | null;
+    length?: number | null;
+    width?: number | null;
+    height?: number | null;
+  } | null;
+};
+
+/** Summed weight and the largest side, matching the checkout quote. */
+export function cartPackageMetrics(lines?: QuoteLine[] | null): {
+  weightKg?: number;
+  lengthCm?: number;
+  widthCm?: number;
+  heightCm?: number;
+} {
+  let weightKg = 0;
+  let lengthCm = 0;
+  let widthCm = 0;
+  let heightCm = 0;
+  for (const line of lines || []) {
+    const item = line.item;
+    if (!item) continue;
+    const qty = Number(line.quantity) || 1;
+    const weight = Number(item.weight);
+    if (Number.isFinite(weight) && weight > 0) weightKg += weight * qty;
+    const length = Number(item.length);
+    const width = Number(item.width);
+    const height = Number(item.height);
+    if (Number.isFinite(length) && length > 0) lengthCm = Math.max(lengthCm, length);
+    if (Number.isFinite(width) && width > 0) widthCm = Math.max(widthCm, width);
+    if (Number.isFinite(height) && height > 0) heightCm = Math.max(heightCm, height);
+  }
+  return {
+    ...(weightKg > 0 ? { weightKg } : {}),
+    ...(lengthCm > 0 ? { lengthCm } : {}),
+    ...(widthCm > 0 ? { widthCm } : {}),
+    ...(heightCm > 0 ? { heightCm } : {}),
+  };
+}
+
+/** Live quote label: how soon the vehicle reaches the store. */
+export function formatPickupEta(etaMinutes: number | null | undefined): string | null {
+  if (etaMinutes == null || !Number.isFinite(Number(etaMinutes))) return null;
+  const n = Math.round(Number(etaMinutes));
+  if (n < 1) return null;
+  return `Pickup in ${n} min`;
+}
+
 /** Short label for the address bar, e.g. `~25 min`. */
 export function formatEtaMinutes(etaMinutes: number | null | undefined): string | null {
   if (etaMinutes == null || !Number.isFinite(Number(etaMinutes))) return null;
@@ -32,6 +82,7 @@ export function useDeliveryQuote(opts: {
   lat?: unknown;
   lng?: unknown;
   orderValue?: number;
+  lines?: QuoteLine[] | null;
   enabled?: boolean;
 }): { quote: ServiceabilityQuote | null; loading: boolean } {
   const [quote, setQuote] = useState<ServiceabilityQuote | null>(null);
@@ -44,6 +95,8 @@ export function useDeliveryQuote(opts: {
   const hasCoords = lat != null && lng != null;
   const enabled = opts.enabled !== false;
   const orderValue = Number(opts.orderValue) || 0;
+  const pkg = cartPackageMetrics(opts.lines);
+  const pkgKey = `${pkg.weightKg ?? ""}|${pkg.lengthCm ?? ""}|${pkg.widthCm ?? ""}|${pkg.heightCm ?? ""}`;
 
   useEffect(() => {
     if (!enabled || !store || (!hasPin && !hasCoords)) {
@@ -61,6 +114,10 @@ export function useDeliveryQuote(opts: {
           lat,
           lng,
           orderValue,
+          weightKg: pkg.weightKg,
+          lengthCm: pkg.lengthCm,
+          widthCm: pkg.widthCm,
+          heightCm: pkg.heightCm,
         });
         if (!cancelled) setQuote(data);
       } finally {
@@ -71,7 +128,7 @@ export function useDeliveryQuote(opts: {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [enabled, store, pin, hasPin, hasCoords, lat, lng, orderValue]);
+  }, [enabled, store, pin, hasPin, hasCoords, lat, lng, orderValue, pkgKey]);
 
   return { quote, loading };
 }

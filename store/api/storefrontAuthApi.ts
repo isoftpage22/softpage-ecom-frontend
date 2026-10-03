@@ -130,7 +130,6 @@ export const storefrontAuthApi = createApi({
     logout: builder.mutation<{ success: boolean }, { refreshToken: string }>({
       query: (body) => ({ url: "/storefront/auth/logout", method: "POST", body }),
       transformResponse: unwrap,
-      invalidatesTags: ["Me", "Addresses"],
     }),
   }),
 });

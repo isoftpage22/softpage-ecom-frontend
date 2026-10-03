@@ -24,14 +24,14 @@ const ContinueButton = (props) => {
           w="100%"
           maxW="520px"
           h="48px"
-          bg="var(--brand-secondary, #111)"
+          bg="var(--sp-color-brand-primary, var(--brand-secondary, #111))"
           color="white"
           borderRadius="12px"
           fontSize="15px"
           fontWeight="700"
           textTransform="none"
           letterSpacing="0"
-          _hover={{ bg: "var(--brand-secondary, #111)" }}
+          _hover={{ bg: "var(--sp-color-brand-primary, var(--brand-secondary, #111))" }}
           _disabled={{ opacity: 0.45, cursor: "not-allowed" }}
         >
           {text}

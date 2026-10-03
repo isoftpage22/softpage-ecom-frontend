@@ -57,26 +57,33 @@ const ShoppingCart = (props) => {
   }, [])
   const dineIn = isDineInSession(tableSession)
   const hasAddress = Object.keys(usersAddress || {}).length > 0
-  const { quote } = useDeliveryQuote({
-    store: storeSlug,
-    pincode: usersAddress?.pincode || usersAddress?.customerPincode,
-    lat: usersAddress?.latitude,
-    lng: usersAddress?.longitude,
-    orderValue: price,
-    enabled: !dineIn && hasAddress,
-  })
-  const quotedFee = deliveryFeeFromQuote(quote)
   const sessionId = useGuestSessionId()
   const { syncing: totalsSyncing } = useSyncCartPage()
   const { data: serverCart } = useGetCartQuery(
     { businessId, businessAppId, sessionId },
     { skip: !businessId || !businessAppId || !sessionId },
   )
+  const { quote } = useDeliveryQuote({
+    store: storeSlug,
+    pincode: usersAddress?.pincode || usersAddress?.customerPincode,
+    lat: usersAddress?.latitude,
+    lng: usersAddress?.longitude,
+    orderValue: price,
+    lines: serverCart?.items,
+    enabled: !dineIn && hasAddress,
+  })
+  const quotedFee = deliveryFeeFromQuote(quote)
+  const feeLocked = !dineIn && Boolean(quote?.shippingRateId) && serverCart?.selectedShippingRateId === quote.shippingRateId && Number.isFinite(Number(serverCart?.shippingCost))
   const deliveryFee = dineIn
     ? 0
-    : quotedFee != null
-      ? quotedFee
-      : Number(serverCart?.shippingCost) || 0
+    : feeLocked
+      ? Number(serverCart.shippingCost)
+      : quotedFee != null
+        ? quotedFee
+        : Number(serverCart?.shippingCost) || 0
+  const customerEtaLabel = feeLocked
+    ? formatEtaMinutes(serverCart?.quotedCustomerEtaMinutes)
+    : null
   const totalCartBill = buildMenuBill({
     cart: serverCart,
     tip,
@@ -180,10 +187,21 @@ const ShoppingCart = (props) => {
               </Box>
             ) : null}
             {!dineIn && hasAddress && (
-              <TopAddressBarContainer etaLabel={formatEtaMinutes(quote?.etaMinutes ?? quote?.winner?.etaMinutes)} />
+              <TopAddressBarContainer etaLabel={customerEtaLabel} />
             )}
             <TopBarWithBackButton backTo={paymentCancelled ? "/" : undefined} />
-            <Box bg="#f4f4f5" pb={extraFooterSpace ? "calc(220px + env(safe-area-inset-bottom, 0px))" : "calc(140px + env(safe-area-inset-bottom, 0px))"} >
+            <Flex
+              direction={{ base: "column", lg: "row" }}
+              align={{ base: "stretch", lg: "flex-start" }}
+              gap={{ lg: "20px" }}
+              bg="#f4f4f5"
+              w="100%"
+              maxW="100%"
+              overflow="hidden"
+              px={{ lg: "20px" }}
+              pb={extraFooterSpace ? "calc(220px + env(safe-area-inset-bottom, 0px))" : { base: "calc(140px + env(safe-area-inset-bottom, 0px))", lg: "32px" }}
+            >
+              <Box flex="1" minW={0} w="100%">
               {
                 addToCart.products.map((product, index) => {
                   return <ItemCardAtCheckout key={product.lineKey || product.product_id || index} quantity={product.quantity} addToCart={addToCart} product={product} addToCartProduct={addToCartProduct} deleteToCartProduct={deleteToCartProduct} />
@@ -193,15 +211,19 @@ const ShoppingCart = (props) => {
               <SpecialInstructions />
               <MoneyTip />
               <DiscountCoupons cart={serverCart} />
+              </Box>
+              <Box w={{ base: "100%", lg: "380px" }} minW={0} flexShrink={0} position={{ lg: "sticky" }} top={{ lg: "16px" }}>
               <DetailedBill
                 qty={qty}
                 totalCartBill={totalCartBill}
                 showDelivery={!dineIn}
                 hasAddress={hasAddress}
                 quote={quote}
+                etaLabel={customerEtaLabel}
                 totalsSyncing={totalsSyncing}
               />
-            </Box>
+              </Box>
+            </Flex>
             <Footer {...props} usersAddress={usersAddress} isShoppingCart={true} totalCartBill={totalCartBill} totalsSyncing={totalsSyncing} hideVisual />
           </>
           : null}

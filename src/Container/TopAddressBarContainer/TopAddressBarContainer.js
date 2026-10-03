@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Flex, Text, Icon, Box } from '@chakra-ui/react'
 import { HiLocationMarker } from "react-icons/hi";
 import { ChevronDownIcon } from '@chakra-ui/icons'
@@ -7,10 +7,18 @@ import { Link } from '../../lib/nav';
 
 function useAddressLabel(etaLabel) {
   const address = useSelector((state) => state.address.address) || {}
-  const hasAddress = Object.keys(address).length > 0
-  const type = address.checkbox || address.label || address.addressType || 'Home'
+  // Saved address lives in localStorage and is copied into Redux after the
+  // layout mounts. Reading it on the first render mismatches the server HTML
+  // ("Choose delivery address") once the layout hydrates before this bar.
+  const [ready, setReady] = useState(false)
+  useEffect(() => {
+    setReady(true)
+  }, [])
+  const visible = ready ? address : {}
+  const hasAddress = Object.keys(visible).length > 0
+  const type = visible.checkbox || visible.label || visible.addressType || 'Home'
   const maxLen = etaLabel ? 22 : 28
-  const line = address.address1 || address.line1 || 'Choose delivery address'
+  const line = visible.address1 || visible.line1 || 'Choose delivery address'
   const short = String(line).length > maxLen ? `${String(line).slice(0, maxLen)}…` : line
   const title = hasAddress ? `${String(type).toUpperCase()}, ${short}` : short
   return { hasAddress, type, short, title }
@@ -41,24 +49,24 @@ const TopAddressBarContainer = ({ etaLabel, variant = 'bar' }) => {
   }
 
   return (
-    <Box>
+    <Box overflow="hidden" maxW="100%">
       <Link to="/addresses">
-        <Flex justify="space-evenly" bg="black" h={30} w="100%" align="center" px={2}>
-          <Icon boxSize={5} color="white" as={HiLocationMarker} />
+        <Flex bg="var(--sp-color-surface-chrome, var(--brand-secondary, #111111))" minH="30px" w="100%" maxW="100%" align="center" px={2} gap="6px" overflow="hidden">
+          <Icon boxSize={5} color="white" as={HiLocationMarker} flexShrink={0} />
           {hasAddress ? (
-            <Text alignSelf="center" fontSize={12} color="white" fontWeight="700" textTransform="uppercase">
+            <Text alignSelf="center" fontSize={12} color="white" fontWeight="700" textTransform="uppercase" flexShrink={0}>
               {type},
             </Text>
           ) : null}
-          <Text alignSelf="center" fontSize={14} color="white" noOfLines={1} flex="1" px={1}>
+          <Text alignSelf="center" fontSize={14} color="white" noOfLines={1} flex="1" minW={0}>
             {short}
           </Text>
           {etaLabel ? (
-            <Text alignSelf="center" fontSize={12} color="white" whiteSpace="nowrap" pr={1}>
-             Delivery in {etaLabel}
+            <Text alignSelf="center" fontSize="11px" color="white" whiteSpace="nowrap" flexShrink={0}>
+              {etaLabel}
             </Text>
           ) : null}
-          <ChevronDownIcon boxSize={6} color="white" />
+          <ChevronDownIcon boxSize={6} color="white" flexShrink={0} />
         </Flex>
       </Link>
     </Box>

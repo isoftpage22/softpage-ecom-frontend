@@ -16,7 +16,6 @@ import TopAddressBarContainer from '../../../Container/TopAddressBarContainer/To
 import { storeAddressLabel, useStoreConfig, useTenant } from '@/lib/tenant/TenantContext'
 import { exitTableSessionToWebsite, getTableSession, isDineInSession, tableSessionLabel } from '@/lib/restaurant/table-session'
 import { StoreLogo } from '@/components/StoreLogo'
-import { CHROME_BAR_BG } from '@/lib/menu/storeChrome'
 import { ProfileMenu } from '../../../Components/ProfileMenu/ProfileMenu'
 import { clearListingRestore } from '@/lib/menu/listingRestore'
 
@@ -47,7 +46,7 @@ const CommonTopBar = ({ searchQuery, onSearchChange }) => {
 
   return (
     <>
-      <Box bg={CHROME_BAR_BG}>
+      <Box bg="var(--sp-section-surface, var(--brand-secondary, #111111))">
         {!dineIn ? <TopAddressBarContainer /> : null}
         <Flex px="10px" py="8px" minH="72px" alignItems="center">
           <Flex alignItems="center" minW={0} flex="1" mr="8px">
@@ -60,10 +59,12 @@ const CommonTopBar = ({ searchQuery, onSearchChange }) => {
             </Box>
             <Flex direction="column" justifyContent="center" ml="8px" minW={0} flex="1">
               <Text
-                color="white"
+                data-sp-title
+                color="var(--sp-section-text, white)"
                 lineHeight="16px"
                 textAlign="left"
-                fontSize="16px"
+                fontSize="calc(16px * var(--sp-section-scale, 1))"
+                fontFamily="var(--sp-section-font, inherit)"
                 fontWeight="700"
                 noOfLines={1}
                 cursor="pointer"
@@ -131,14 +132,14 @@ const CommonTopBar = ({ searchQuery, onSearchChange }) => {
         zIndex={20}
         w="100%"
         bg="white"
-        px="12px"
+        px={{ base: "12px", lg: "24px" }}
         py="10px"
         borderBottom="1px solid"
         borderColor="gray.100"
         boxShadow="0 2px 8px rgba(0,0,0,0.06)"
         style={{ position: 'sticky', top: 0, zIndex: 20 }}
       >
-        <InputGroup>
+        <InputGroup maxW={{ lg: "720px" }} mx={{ lg: "auto" }}>
           <InputLeftElement pointerEvents="none" h="42px">
             <SearchIcon color="#6B7280" />
           </InputLeftElement>

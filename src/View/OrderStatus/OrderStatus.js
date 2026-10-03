@@ -170,6 +170,7 @@ const OrderStatus = (props) => {
             live={tracking?.live}
             provider={tracking?.provider || tracking?.quotedProvider}
             providerLabel={tracking?.providerLabel}
+            providerLogoUrl={tracking?.providerLogoUrl}
             booked={tracking?.booked}
             fallbackMessage={
               tracking?.driverName || tracking?.driverPhone

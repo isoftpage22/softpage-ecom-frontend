@@ -15,6 +15,7 @@ import { toggleUserFormDrawer } from "../../../Store/action/modalsNDrawers";
 import { setLoader } from "../../../Store/action/loader";
 import { hasStorefrontToken, setPostAuthRedirect } from "@/lib/auth/persistAuth";
 import { placeMenuOrder } from "@/lib/checkout/placeMenuOrder";
+import { isThemePreview } from "@/lib/theme-engine/previewSession";
 import { useReplaceCartLinesMutation } from "@/store/api/cartApi";
 import {
   useAbandonCheckoutSessionMutation,
@@ -93,6 +94,17 @@ const CartPageFooter = (props) => {
 
   const placeOrder = async () => {
     if (placing || stockBlocking) return;
+    if (isThemePreview()) {
+      dispatch(
+        setCartCheckoutError({
+          title: "Preview",
+          message: "This is a preview. Ordering and payment are turned off.",
+          itemNames: [],
+          kind: "generic",
+        }),
+      );
+      return;
+    }
     dispatch(setCartCheckoutError(null));
     flushSync(() => {
       setPlacing(true);
@@ -116,6 +128,34 @@ const CartPageFooter = (props) => {
         initiateCheckout,
         abandonLockedCart,
       });
+
+      const shownTotal = Number(totalCartBill?.totalFinalPriceAmount);
+      const chargedTotal = Number(result.amount ?? result.order?.total);
+      if (
+        result.paymentRequired &&
+        Number.isFinite(shownTotal) &&
+        Number.isFinite(chargedTotal) &&
+        Math.abs(shownTotal - chargedTotal) > 1
+      ) {
+        if (result.checkoutSessionId && businessId) {
+          abandonCheckoutSession({
+            businessId,
+            checkoutSessionId: result.checkoutSessionId,
+            reason: "Delivery fee changed before payment",
+          })
+            .unwrap()
+            .catch(() => undefined);
+        }
+        dispatch(
+          setCartCheckoutError({
+            title: "Delivery fee updated",
+            message: `A fresh courier quote changed the bill to ₹${formatRupee(chargedTotal)}. Review it, then place the order again.`,
+            itemNames: [],
+            kind: "generic",
+          }),
+        );
+        return;
+      }
 
       if (result.paymentRequired && result.paymentPageUrl) {
         dispatch(

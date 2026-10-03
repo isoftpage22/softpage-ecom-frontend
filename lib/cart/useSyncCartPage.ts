@@ -13,7 +13,7 @@ import {
 } from "@/store/api/cartApi";
 import { lineToAddToCartInput, type MenuCartProduct } from "@/lib/checkout/placeMenuOrder";
 import { localAddressToCheckout, type LocalMenuAddress } from "@/lib/checkout/addressMapping";
-import { LIVE_SHIPPING_RATE_ID } from "@/lib/logisticsApi";
+import { currentShippingRateId } from "@/lib/logisticsApi";
 import { getTableSession, isDineInSession } from "@/lib/restaurant/table-session";
 import { getUserInFromLocal } from "@/src/utils/CommonFunctions";
 import { useDebouncedValue } from "@/src/hooks/useDebouncedValue";
@@ -136,7 +136,7 @@ export function useSyncCartPage() {
             const shipped = await setShippingRate({
               businessId,
               cartId: cart.id,
-              shippingRateId: LIVE_SHIPPING_RATE_ID,
+              shippingRateId: currentShippingRateId(),
             }).unwrap();
             writeCartCache(shipped);
           } catch {

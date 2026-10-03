@@ -1,5 +1,6 @@
 import { resolveTenant } from "@/lib/tenant/resolveTenant";
 import { fetchMenuCatalog } from "@/lib/catalog/fetchMenuCatalog";
+import { fetchEnginePage } from "@/lib/theme-engine/fetchEnginePage";
 import { MenuHomeClient } from "./MenuHomeClient";
 
 /**
@@ -10,5 +11,8 @@ import { MenuHomeClient } from "./MenuHomeClient";
 export default async function MenuHomePage() {
   const tenant = await resolveTenant();
   const initialCatalog = await fetchMenuCatalog(tenant?.businessId);
-  return <MenuHomeClient initialCatalog={initialCatalog} />;
+  const engine = tenant?.businessId
+    ? await fetchEnginePage(tenant.businessId, "menu", "/")
+    : null;
+  return <MenuHomeClient initialCatalog={initialCatalog} engine={engine} />;
 }

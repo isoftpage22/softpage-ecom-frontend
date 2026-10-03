@@ -1,38 +1,38 @@
 'use client';
 
-import { Box } from '@chakra-ui/react';
-import {
-  deliveryPartnerKind,
-  PorterMark,
-  ShiprocketMark,
-} from './DeliveryPartnerMarks';
+import { Box, HStack, Text } from '@chakra-ui/react';
 
 export function DeliveryPartnerBadge({
   provider,
   providerLabel,
+  providerLogoUrl,
 }: {
   provider?: string | null;
   providerLabel?: string | null;
+  providerLogoUrl?: string | null;
   booked?: boolean;
 }) {
-  const kind = deliveryPartnerKind(provider || providerLabel);
-  if (!kind) return null;
-
-  const label = kind === 'porter' ? 'Porter' : 'Shiprocket';
+  const label = providerLabel || provider;
+  if (!label && !providerLogoUrl) return null;
 
   return (
     <Box
       bg="white"
       border="1px solid #e2e8f0"
       borderRadius="10px"
-      p="3px"
+      px="6px"
+      py="4px"
       boxShadow="0 1px 4px rgba(15, 23, 42, 0.12)"
-      lineHeight="0"
-      aria-label={label}
-      title={label}
+      aria-label={label || undefined}
+      title={label || undefined}
     >
-      {kind === 'porter' ? <PorterMark width={28} height={28} title={label} /> : null}
-      {kind === 'shiprocket' ? <ShiprocketMark width={28} height={28} title={label} /> : null}
+      <HStack spacing="6px">
+        {providerLogoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={providerLogoUrl} alt="" width={16} height={16} style={{ borderRadius: 4 }} />
+        ) : null}
+        {label ? <Text fontSize="10px" fontWeight="700" lineHeight="1.2">{label}</Text> : null}
+      </HStack>
     </Box>
   );
 }

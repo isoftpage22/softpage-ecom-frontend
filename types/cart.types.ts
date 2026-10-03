@@ -26,6 +26,13 @@ export interface CartItem {
   totalPrice: number;
   tax: number;
   notes?: string;
+  item?: {
+    id: string;
+    weight?: number | null;
+    length?: number | null;
+    width?: number | null;
+    height?: number | null;
+  } | null;
 }
 
 export interface Address {
@@ -61,6 +68,8 @@ export interface Cart {
   discount: number;
   shippingCost: number;
   selectedShippingRateId?: string | null;
+  /** Prep plus the ride from the store. Locked with shippingCost. */
+  quotedCustomerEtaMinutes?: number | null;
   total: number;
   currency: string;
   appliedCoupon?: {

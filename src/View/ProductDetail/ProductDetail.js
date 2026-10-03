@@ -123,9 +123,11 @@ const ProductDetail = () => {
   return (
     <>
       <TopBarWithBackButton headerText={product.productName} />
-      <Box bg={CHROME_SURFACE} color={CHROME_TEXT} pb="24px">
-        <ProductImageSlider images={product.productImages} alt={product.productName} />
-        <Box px="16px" pt="16px">
+      <Flex direction={{ base: "column", lg: "row" }} align="flex-start" bg={CHROME_SURFACE} color={CHROME_TEXT} pb="24px" maxW={{ lg: "1100px" }} mx="auto">
+        <Box w={{ base: "100%", lg: "46%" }} flexShrink={0}>
+          <ProductImageSlider images={product.productImages} alt={product.productName} />
+        </Box>
+        <Box px="16px" pt="16px" flex="1" minW={0}>
           <Flex align="center" gap="8px" mb="6px">
             <VegMarker isVeg={!!product.isVeg} />
             <Text fontSize="20px" fontWeight="800" lineHeight="26px" noOfLines={3}>
@@ -188,7 +190,7 @@ const ProductDetail = () => {
             ) : null}
           </Box>
         </Box>
-      </Box>
+      </Flex>
       <Footer />
       <ProductCustomizationDrawer
         product={product}

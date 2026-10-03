@@ -15,6 +15,13 @@ const CART_FIELDS = gql`
       totalPrice
       tax
       notes
+      item {
+        id
+        weight
+        length
+        width
+        height
+      }
     }
     itemCount
     subtotal
@@ -22,6 +29,7 @@ const CART_FIELDS = gql`
     discount
     shippingCost
     selectedShippingRateId
+    quotedCustomerEtaMinutes
     total
     currency
     appliedCoupon {

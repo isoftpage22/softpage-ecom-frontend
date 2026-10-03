@@ -42,16 +42,22 @@ const CategoryMenuFab = ({ productList, cartItemCount = 0 }) => {
         type="button"
         aria-label={open ? 'Close menu' : 'Open menu'}
         onClick={() => setOpen((value) => !value)}
+        display={{ base: "flex", lg: "none" }}
         position="fixed"
-        right="16px"
-        bottom={liftForBar ? "calc(112px + env(safe-area-inset-bottom, 0px))" : "24px"}
+        left="var(--sp-menu-fab-left, auto)"
+        right="var(--sp-menu-fab-right, 16px)"
+        top="var(--sp-menu-fab-top, auto)"
+        bottom={liftForBar ? "var(--sp-menu-fab-bottom-lift, calc(112px + env(safe-area-inset-bottom, 0px)))" : "var(--sp-menu-fab-bottom, 24px)"}
+        transform="var(--sp-menu-fab-x, none)"
         zIndex={1100}
         direction="column"
         align="center"
         justify="center"
         w="64px"
         h="64px"
-        bg="brand.700"
+        data-sp-id="menu-icon"
+        data-sp-menu-fab
+        bg="var(--sp-menu-fab, var(--sp-section-accent, var(--sp-color-brand-accent, hsl(var(--brand-700)))))"
         color="white"
         borderRadius="12px"
         boxShadow="0 4px 16px rgba(0,0,0,0.28)"

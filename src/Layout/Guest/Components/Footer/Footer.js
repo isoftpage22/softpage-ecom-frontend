@@ -23,13 +23,15 @@ const Footer = (props) => {
         return price;
     });
     const currentYear = new Date().getFullYear();
-    const pages = config.pages || []
+    const pages = Array.isArray(props.pages) && props.pages.length ? props.pages : (config.pages || [])
+    const social = props.social && Object.keys(props.social).length ? props.social : config.social
+    const contact = props.contact?.phone || props.contact?.email ? props.contact : config.contact
     const legal = pages.filter((p) => p.group === 'legal')
     const company = pages.filter((p) => p.group === 'company')
-    const contactHref = config.contact?.phone
-        ? `tel:${config.contact.phone}`
-        : config.contact?.email
-            ? `mailto:${config.contact.email}`
+    const contactHref = contact?.phone
+        ? `tel:${contact.phone}`
+        : contact?.email
+            ? `mailto:${contact.email}`
             : null
     const topLinks = [
         ...legal.map((p) => ({ name: p.title, href: `/pages/${p.slug}`, external: false })),
@@ -40,8 +42,8 @@ const Footer = (props) => {
     ]
     const bottomLinks = company.filter((p) => p.slug !== 'contact-us').map((p) => ({ name: p.title, href: `/pages/${p.slug}` }))
     const socialLinks = SOCIAL_KEYS
-        .filter((key) => config.social?.[key])
-        .map((key) => ({ name: key.charAt(0).toUpperCase() + key.slice(1), href: config.social[key] }))
+        .filter((key) => social?.[key])
+        .map((key) => ({ name: key.charAt(0).toUpperCase() + key.slice(1), href: social[key] }))
 
     const activeOrder = useSelector((state) => state.shoppingCart.activeOrder)
     const stickyOrder = showsOrderBar(activeOrder)
@@ -106,7 +108,9 @@ const Footer = (props) => {
                 ) : null}
                 <Text textColor="#9ea6b9" mb="5px">© {currentYear} {config.name || 'Store'}</Text>
             </Flex>
-            {cartBar}
+            {isShoppingCart ? cartBar : (
+                <Box display={{ base: "block", lg: "none" }}>{cartBar}</Box>
+            )}
         </Fragment>
     );
 }

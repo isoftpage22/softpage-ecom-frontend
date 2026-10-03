@@ -6,6 +6,7 @@ const DrawerComp = (props) => {
     placement,
     onClose,
     height,
+    maxW,
     borderTopRightRadius,
     borderTopLeftRadius,
     children,
@@ -13,6 +14,7 @@ const DrawerComp = (props) => {
     bg,
     color,
   } = props;
+  const side = placement === "left" || placement === "right";
   return (
     <Drawer scrollBehavior="inside" placement={placement} onClose={onClose} isOpen={toggleDrawer}>
       <DrawerOverlay bg="blackAlpha.700" />
@@ -22,10 +24,11 @@ const DrawerComp = (props) => {
         display="flex"
         flexDirection="column"
         overflow={height && height !== "auto" ? "hidden" : undefined}
-        h={height}
-        maxH={height && height !== "auto" ? height : undefined}
-        borderTopRightRadius={borderTopRightRadius}
-        borderTopLeftRadius={borderTopLeftRadius}
+        h={side ? "100%" : height}
+        maxH={side ? "100%" : height && height !== "auto" ? height : undefined}
+        maxW={side ? maxW || "440px" : "100%"}
+        borderTopRightRadius={side ? 0 : borderTopRightRadius}
+        borderTopLeftRadius={side ? 0 : borderTopLeftRadius}
       >
         {children}
       </DrawerContent>

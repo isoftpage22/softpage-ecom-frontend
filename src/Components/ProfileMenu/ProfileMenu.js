@@ -21,7 +21,7 @@ import { useHistory } from "@/src/lib/nav";
 import { clearStorefrontAuth, hasStorefrontToken, STOREFRONT_AUTH_CHANGED } from "@/lib/auth/persistAuth";
 import { getTableSession, isDineInSession, exitTableSessionToWebsite } from "@/lib/restaurant/table-session";
 import { useLogoutMutation, useListAddressesQuery } from "@/store/api/storefrontAuthApi";
-import { getUserInFromLocal, getAdrresFromLocal } from "@/src/utils/CommonFunctions";
+import { getUserInFromLocal } from "@/src/utils/CommonFunctions";
 import { customerAddressToLocal } from "@/lib/checkout/addressMapping";
 
 function addressTitle(row) {
@@ -37,11 +37,10 @@ export function ProfileMenu() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [localAddresses, setLocalAddresses] = useState([]);
   const [dineIn, setDineIn] = useState(false);
   const history = useHistory();
   const [logout] = useLogoutMutation();
-  const { data: serverAddresses } = useListAddressesQuery(undefined, {
+  const { data: serverAddresses, isFetching: addressesLoading } = useListAddressesQuery(undefined, {
     skip: !open || !loggedIn,
   });
 
@@ -52,7 +51,6 @@ export function ProfileMenu() {
       const localUser = Array.isArray(customer) ? null : customer;
       setName(localUser?.customerName || "");
       setPhone(localUser?.whatsAppNumber || "");
-      setLocalAddresses(getAdrresFromLocal());
       setDineIn(isDineInSession(getTableSession()));
     };
     sync();
@@ -64,10 +62,9 @@ export function ProfileMenu() {
     };
   }, [open]);
 
-  const addresses =
-    loggedIn && serverAddresses?.length
-      ? serverAddresses.map((row) => customerAddressToLocal(row))
-      : localAddresses;
+  const addresses = loggedIn
+    ? (serverAddresses || []).map((row) => customerAddressToLocal(row))
+    : [];
 
   const go = (path) => {
     setOpen(false);
@@ -75,6 +72,9 @@ export function ProfileMenu() {
   };
 
   const onLogout = async () => {
+    setLoggedIn(false);
+    setName("");
+    setPhone("");
     const refreshToken = localStorage.getItem("refreshToken");
     try {
       if (refreshToken) await logout({ refreshToken }).unwrap();
@@ -82,9 +82,6 @@ export function ProfileMenu() {
       /* still clear locally */
     }
     clearStorefrontAuth();
-    setLoggedIn(false);
-    setName("");
-    setPhone("");
     setOpen(false);
     window.setTimeout(() => history.push("/"), 280);
   };
@@ -194,7 +191,11 @@ export function ProfileMenu() {
                 Add
               </Button>
             </Flex>
-            {addresses.length === 0 ? (
+            {loggedIn && addressesLoading && addresses.length === 0 ? (
+              <Text fontSize="13px" color="gray.500">
+                Loading addresses…
+              </Text>
+            ) : addresses.length === 0 ? (
               <Text fontSize="13px" color="gray.500">
                 No saved addresses yet.
               </Text>

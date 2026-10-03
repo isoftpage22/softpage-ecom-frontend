@@ -6,7 +6,7 @@ import VegMarker from '../../Components/VegMarker/VegMarker'
 import ProductCustomizationDrawer from '../ProductCustomizationDrawer/ProductCustomizationDrawer'
 import ChooseLastItemDrawer from '../ChooseLastItemDrawer/ChooseLastItemDrawer'
 import { Link } from '../../lib/nav'
-import { productCardImage, productDetailHref } from '../../../lib/catalog/href'
+import { DEFAULT_PRODUCT_IMAGE, productCardImage, productDetailHref } from '../../../lib/catalog/href'
 import { saveListingRestore } from '@/lib/menu/listingRestore'
 import {
   productHasOptions,
@@ -70,11 +70,19 @@ const ProductCard = (props) => {
 
   return (
     <>
-      <Card>
-        <Flex direction="column" justify="flex-start" width="62%" pr="16px" gap="6px" opacity={dimmed}>
+      <Card
+        flexDirection={{ base: "row", lg: "column" }}
+        alignItems={{ lg: "stretch" }}
+        h={{ lg: "100%" }}
+        p={{ lg: "12px" }}
+        borderBottom={{ lg: "none" }}
+        border={{ lg: "1px solid #EEE" }}
+        borderRadius={{ lg: "12px" }}
+      >
+        <Flex direction="column" justify="flex-start" width={{ base: "62%", lg: "100%" }} pr={{ base: "16px", lg: "0" }} pt={{ lg: "10px" }} gap="6px" opacity={dimmed} order={{ lg: 2 }}>
           <VegMarker isVeg={!!product?.isVeg} mb="2px" />
           <Link to={detailHref} href={detailHref} onClick={rememberListingPosition} style={{ textDecoration: 'none' }}>
-            <Text fontWeight="extrabold" variant="solid" maxW="100%" color="gray.700" lineHeight="22px" noOfLines={2}>
+            <Text data-sp-title fontWeight="extrabold" variant="solid" maxW="100%" color="var(--sp-section-text, var(--chakra-colors-gray-700))" fontFamily="var(--sp-section-font, inherit)" fontSize="calc(1rem * var(--sp-section-scale, 1))" lineHeight="22px" noOfLines={2}>
               {product?.productName ?? 'God Knows'}
             </Text>
           </Link>
@@ -111,16 +119,16 @@ const ProductCard = (props) => {
           </Text>
           ) : null}
         </Flex>
-        <Spacer />
-        <Flex flexDirection="column" alignItems="center" flexShrink={0} ml="12px">
+        <Spacer display={{ lg: "none" }} />
+        <Flex flexDirection="column" alignItems={{ base: "center", lg: "stretch" }} flexShrink={0} ml={{ base: "12px", lg: "0" }} order={{ lg: 1 }}>
           <Link to={detailHref} href={detailHref} onClick={rememberListingPosition}>
             <Image
               alignSelf="center"
-              src={productCardImage(product) || undefined}
+              src={productCardImage(product) || DEFAULT_PRODUCT_IMAGE}
               alt={product?.productName || ""}
               objectFit="cover"
-              width="110px"
-              height="75px"
+              width={{ base: "110px", lg: "100%" }}
+              height={{ base: "75px", lg: "150px" }}
               borderRadius="5px"
               backgroundColor="#e4e1e1"
               mb="10px"

@@ -1,7 +1,17 @@
 import { apiOrigin } from "@/lib/api/origin";
 
-/** Synthetic rate id. Checkout re-quotes live; a client amount is never trusted. */
-export const LIVE_SHIPPING_RATE_ID = "platform-orchestrated";
+/** The backend's live-delivery rate id, used until a quote has loaded on this page. */
+const DEFAULT_SHIPPING_RATE_ID = "platform-orchestrated";
+
+let quotedShippingRateId = "";
+
+export function rememberShippingRateId(id?: string | null) {
+  if (id) quotedShippingRateId = id;
+}
+
+export function currentShippingRateId() {
+  return quotedShippingRateId || DEFAULT_SHIPPING_RATE_ID;
+}
 
 export type ServiceabilityQuote = {
   serviceable: boolean;
@@ -15,7 +25,13 @@ export type ServiceabilityQuote = {
   centerLat?: number | null;
   centerLng?: number | null;
   winner: { provider: string; amount: number | null; etaMinutes: number | null } | null;
+  /** How soon the winning vehicle reaches the store. */
+  pickupEtaMinutes?: number | null;
   shippingCharge?: number | null;
+  shippingRateId?: string | null;
+  providerLabel?: string | null;
+  providerLogoUrl?: string | null;
+  statusLabel?: string | null;
   currency?: string;
   rateLabel?: string | null;
   /** True when a merchant free-shipping threshold zeroed the buyer charge. */
@@ -47,6 +63,9 @@ export async function fetchShippingQuote(opts: {
   isCod?: boolean;
   orderValue?: number;
   weightKg?: number;
+  lengthCm?: number;
+  widthCm?: number;
+  heightCm?: number;
   country?: string;
 }): Promise<ServiceabilityQuote | null> {
   const store = opts.store.trim();
@@ -63,12 +82,17 @@ export async function fetchShippingQuote(opts: {
         isCod: Boolean(opts.isCod),
         orderValue: opts.orderValue,
         weightKg: opts.weightKg,
+        lengthCm: opts.lengthCm,
+        widthCm: opts.widthCm,
+        heightCm: opts.heightCm,
         country: opts.country,
       }),
     },
   );
   if (!res.ok) return null;
-  return unwrap<ServiceabilityQuote>(await res.json());
+  const quote = unwrap<ServiceabilityQuote>(await res.json());
+  rememberShippingRateId(quote?.shippingRateId);
+  return quote;
 }
 
 export async function fetchDeliveryArea(store: string): Promise<DeliveryAreaZone[]> {

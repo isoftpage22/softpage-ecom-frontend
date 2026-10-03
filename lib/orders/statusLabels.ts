@@ -23,6 +23,7 @@ const PAYMENT_STATUS_LABELS: Record<string, string> = {
 
 const DELIVERY_STATUS_LABELS: Record<string, string> = {
   awaiting_kitchen: "Waiting on kitchen",
+  payment_required: "Payment required",
   pending: "Looking for rider",
   quoted: "Looking for rider",
   created: "Looking for rider",
@@ -85,7 +86,8 @@ export function newestRiderStatus(
   return String(latest || fallback || "");
 }
 
-export function deliveryStatusLabel(value?: string | null): string {
+export function deliveryStatusLabel(value?: string | null, fromApi?: string | null): string {
+  if (fromApi) return fromApi;
   const key = normalizeStatus(value);
   return DELIVERY_STATUS_LABELS[key] || "Delivery";
 }

@@ -139,6 +139,8 @@ export interface OrderTrackingAttempt {
   id: string;
   provider?: string | null;
   providerLabel?: string | null;
+  providerLogoUrl?: string | null;
+  statusLabel?: string | null;
   status: string;
   trackingId?: string | null;
   trackingUrl?: string | null;
@@ -156,6 +158,8 @@ export interface OrderTracking {
   status: string;
   provider?: string;
   providerLabel?: string;
+  providerLogoUrl?: string | null;
+  statusLabel?: string | null;
   booked?: boolean;
   quotedProvider?: string;
   trackingId?: string;

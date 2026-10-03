@@ -3,8 +3,8 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Box, Text, Flex, Spacer, Container, Divider, Spinner } from '@chakra-ui/react'
 import Card from '../../../Components/Card/Card'
-import { formatEtaMinutes } from '@/lib/checkout/useDeliveryQuote'
 import { formatRupee } from '../../../utils/getdetailedBill'
+import { formatPickupEta } from '@/lib/checkout/useDeliveryQuote'
 
 function PriceValue({ loading, children, color, fontWeight, lineHeight, muted = true }) {
   return (
@@ -44,8 +44,8 @@ function TaxesAndOtherChargesRow({ amount, breakdown, loading }) {
   return (
     <Box ref={rootRef} position="relative" w="100%">
       <Flex w="100%" align="center">
-        <Flex align="center" gap="4px" minW={0}>
-          <Text variant="mutedCart">Taxes & other charges</Text>
+        <Flex align="center" gap="4px" minW={0} flex="1">
+          <Text variant="mutedCart" noOfLines={1}>Taxes & other charges</Text>
           {breakdown?.length > 0 ? (
             <Box
               as="button"
@@ -98,9 +98,9 @@ function TaxesAndOtherChargesRow({ amount, breakdown, loading }) {
 }
 
 const DetailedBill = (props) => {
-  const {totalCartBill, showDelivery, hasAddress, quote, totalsSyncing}=props
+  const {totalCartBill, showDelivery, hasAddress, quote, totalsSyncing, etaLabel: lockedEta}=props
   const couponDiscount = Number(totalCartBill.couponDiscount || totalCartBill.discount || 0)
-  const etaLabel = formatEtaMinutes(quote?.etaMinutes ?? quote?.winner?.etaMinutes)
+  const etaLabel = lockedEta || formatPickupEta(quote?.pickupEtaMinutes)
   const feeKnown = quote?.serviceable && (quote.freeShippingApplied || quote.shippingCharge != null || quote.winner?.amount != null)
   let feeLabel = '—'
   if (!hasAddress) feeLabel = 'Add address'

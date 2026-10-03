@@ -11,6 +11,7 @@ import { PersistMenuCart } from "@/src/hooks/PersistMenuCart";
 import { StoreAvailabilityGate } from "@/components/StoreAvailabilityGate";
 import { MenuAuthChrome } from "@/components/MenuAuthChrome";
 import { TenantThemeVars } from "@/components/TenantThemeVars";
+import { MenuDesktopFrame } from "@/components/MenuDesktopFrame";
 
 export async function generateMetadata(): Promise<Metadata> {
   const tenant = await resolveTenant();
@@ -60,7 +61,9 @@ export default async function MenuLayout({
       <PersistStoreInfo />
       <PersistMenuCart />
       <MenuAuthChrome />
-      <StoreAvailabilityGate>{children}</StoreAvailabilityGate>
+      <StoreAvailabilityGate>
+        <MenuDesktopFrame>{children}</MenuDesktopFrame>
+      </StoreAvailabilityGate>
       </TenantProvider>
     </>
   );

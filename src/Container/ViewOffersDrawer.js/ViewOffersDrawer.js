@@ -105,6 +105,10 @@ const ViewOffersDrawer = ({ toggleDrawer, setToggleDrawer, offers = [] }) => {
                     letterSpacing="0.04em"
                     flexShrink={0}
                     onClick={() => {
+                      if (offer.href === '#offers') {
+                        window.dispatchEvent(new CustomEvent('sp:open-offers'))
+                        return
+                      }
                       close()
                       history.push(offer.href)
                     }}

@@ -42,7 +42,7 @@ export function RiderAttemptHistory({
       <Box border="1px solid" borderColor="gray.200" borderRadius="md" p={3}>
         <Text fontSize="sm" fontWeight="700">
           {partner ? `${partner} · ` : ""}
-          {deliveryStatusLabel(latest.status)}
+          {deliveryStatusLabel(latest.status, latest.statusLabel)}
         </Text>
         {when ? (
           <Text fontSize="xs" color="gray.500" mt={1}>

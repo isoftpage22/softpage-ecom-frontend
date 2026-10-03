@@ -60,7 +60,8 @@ const overrides = {
     global: {
       body: {
         fontFamily: MENU_SANS,
-        color: "var(--brand-on-surface, var(--brand-text, #171717))",
+        color: "var(--sp-color-text-primary, var(--brand-on-surface, var(--brand-text, #171717)))",
+        background: "var(--sp-color-surface-page, var(--brand-background, #fff))",
       },
       "input, textarea, select": {
         color: "var(--brand-on-surface, #1A1A1A)",

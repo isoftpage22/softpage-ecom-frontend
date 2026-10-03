@@ -3,6 +3,7 @@
 import { Box, Flex } from "@chakra-ui/react";
 import { useRef, useState } from "react";
 import { toCdnImageUrl } from "../../../lib/cdn/imageUrl";
+import { DEFAULT_PRODUCT_IMAGE } from "../../../lib/catalog/href";
 
 function imageUrl(image) {
   return toCdnImageUrl(image?.productImageUrl || image?.url || "");
@@ -26,7 +27,11 @@ const ProductImageSlider = ({ images = [], alt = "" }) => {
   };
 
   if (!urls.length) {
-    return <Box w="100%" h="280px" bg="#E4E1E1" />;
+    return (
+      <Box w="100%" h="280px" bg="#E4E1E1">
+        <img src={DEFAULT_PRODUCT_IMAGE} alt={alt} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+      </Box>
+    );
   }
 
   return (

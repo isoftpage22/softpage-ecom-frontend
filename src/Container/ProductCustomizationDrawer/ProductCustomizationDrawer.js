@@ -10,6 +10,7 @@ import {
 } from "@chakra-ui/react"
 import { ArrowBackIcon } from "@chakra-ui/icons"
 import DrawerComp from "../../Components/DrawerComp/DrawerComp"
+import { useDesktopMenu } from "../../hooks/useDesktopMenu"
 import VegMarker from "../../Components/VegMarker/VegMarker"
 import { defaultAddonSelections, variantUnitPrice, isProductOutOfStock, isVariantOutOfStock } from "../../../lib/catalog/options"
 
@@ -23,6 +24,7 @@ const selectionHint = (group) =>
       : `Choose ${group.minSelections}–${group.maxSelections}`
 
 const ProductCustomizationDrawer = ({ product, isOpen, onClose, onConfirm, initialSelection = null }) => {
+  const desktop = useDesktopMenu()
   const [selectedVariant, setSelectedVariant] = useState(null)
   const [selectedAddons, setSelectedAddons] = useState([])
   const [selectedCombos, setSelectedCombos] = useState([])
@@ -212,19 +214,20 @@ const ProductCustomizationDrawer = ({ product, isOpen, onClose, onConfirm, initi
 
   return (
     <DrawerComp
-      placement="bottom"
+      placement={desktop ? "right" : "bottom"}
       bg="black"
-      height="85vh"
-      borderTopRightRadius="30px"
-      borderTopLeftRadius="30px"
+      height={desktop ? "100%" : "85vh"}
+      maxW="440px"
+      borderTopRightRadius={desktop ? "0" : "30px"}
+      borderTopLeftRadius={desktop ? "0" : "30px"}
       toggleDrawer={!!isOpen}
       onClose={onClose}
     >
       <DrawerHeader
         bg="#444"
         flexShrink={0}
-        borderTopRightRadius="30px"
-        borderTopLeftRadius="30px"
+        borderTopRightRadius={desktop ? "0" : "30px"}
+        borderTopLeftRadius={desktop ? "0" : "30px"}
         borderBottomWidth="1px"
         py="12px"
         px="16px"
@@ -436,7 +439,7 @@ const ProductCustomizationDrawer = ({ product, isOpen, onClose, onConfirm, initi
           minH="48px"
           px="16px"
           py="0"
-          bg="#111"
+          bg="var(--sp-color-brand-primary, #111)"
           color="white"
           borderRadius="12px"
           fontSize="15px"
@@ -445,8 +448,8 @@ const ProductCustomizationDrawer = ({ product, isOpen, onClose, onConfirm, initi
           letterSpacing="0"
           onClick={handleConfirm}
           isDisabled={cannotAdd}
-          _hover={{ bg: "#111" }}
-          _active={{ bg: "#000" }}
+          _hover={{ bg: "var(--sp-color-brand-primary, #111)" }}
+          _active={{ bg: "var(--sp-color-brand-primary, #000)" }}
           _disabled={{ opacity: 0.45, cursor: "not-allowed" }}
         >
           {cannotAdd ? (

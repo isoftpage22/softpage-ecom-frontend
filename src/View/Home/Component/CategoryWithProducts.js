@@ -44,7 +44,7 @@ const CategoryWithProducts = (props) => {
         productsWithCategories.map((prodCateg) => {
           if (!Array.isArray(prodCateg.products) || prodCateg.products.length === 0) return null
           return (
-          <Box key={prodCateg.categoryName} id={categoryAnchorId(prodCateg.categoryName)} scrollMarginTop="72px">
+          <Box key={prodCateg.categoryName} id={categoryAnchorId(prodCateg.categoryName)} scrollMarginTop={{ base: "72px", lg: "88px" }}>
             <Flex align="center" gap="12px" pt="28px" pb="12px" px="6%">
               {/* {prodCateg.categoryImage ? (
                 <Image
@@ -57,10 +57,17 @@ const CategoryWithProducts = (props) => {
                   bg="#eee"
                 />
               ) : null} */}
-              <Text fontSize="22px" fontWeight="700" lineHeight="28px">
+              <Text data-sp-title fontSize="var(--sp-section-heading, 22px)" fontFamily="var(--sp-section-font, inherit)" color="var(--sp-section-text, inherit)" fontWeight="700" lineHeight="28px">
                 {prodCateg.categoryName}
               </Text>
             </Flex>
+             <Box
+               display={{ base: "block", lg: "grid" }}
+               gridTemplateColumns={{ lg: "repeat(2, minmax(0, 1fr))" }}
+               gap={{ lg: "12px" }}
+               px={{ lg: "12px" }}
+               pb={{ lg: "8px" }}
+             >
              {
                 prodCateg.products.map((product) => {
                   const quantity = qtyForProduct(addToCart?.products, product.id)
@@ -74,6 +81,7 @@ const CategoryWithProducts = (props) => {
                     />
                })
              }
+             </Box>
           </Box>
           )
         })

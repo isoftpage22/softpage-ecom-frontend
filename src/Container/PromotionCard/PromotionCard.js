@@ -35,7 +35,21 @@ const PromotionCard = ({ image, href, heading, loading = "lazy" }) => {
             maxHeight: "100%",
           }}
         />
-      ) : null}
+      ) : (
+        <Box
+          bg="#2a2a2a"
+          color="white"
+          w="100%"
+          h="100%"
+          display="flex"
+          alignItems="flex-end"
+          p="12px"
+          fontSize="14px"
+          fontWeight="700"
+        >
+          {heading || "Recommended"}
+        </Box>
+      )}
     </Box>
   )
   if (!href) return card

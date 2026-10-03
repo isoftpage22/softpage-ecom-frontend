@@ -531,6 +531,7 @@ export default function OrderDetail() {
                   live={shipmentClosed ? false : displayTracking?.live}
                   provider={displayTracking?.provider || displayTracking?.quotedProvider}
                   providerLabel={displayTracking?.providerLabel}
+                  providerLogoUrl={displayTracking?.providerLogoUrl}
                   booked={displayTracking?.booked}
                   fallbackMessage={
                     displayTracking?.driverName || displayTracking?.driverPhone
