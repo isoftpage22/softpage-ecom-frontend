@@ -265,6 +265,50 @@ function buttonHref(content: Record<string, unknown>) {
   return textField(content.ctaHref);
 }
 
+const SOCIAL_LABELS: Record<string, string> = {
+  facebook: "Facebook",
+  instagram: "Instagram",
+  twitter: "Twitter",
+  youtube: "YouTube",
+  linkedin: "LinkedIn",
+  whatsapp: "WhatsApp",
+  telegram: "Telegram",
+};
+
+function socialEntries(section: Section) {
+  const social = (section.resolved?.social || section.resolved?.links || {}) as Record<string, unknown>;
+  return Object.entries(social).filter((entry): entry is [string, string] => typeof entry[1] === "string" && entry[1].trim().length > 0);
+}
+
+function SocialLinks({ section }: { section: Section }) {
+  const links = socialEntries(section);
+  return (
+    <section style={{ padding: "var(--sp-space-md, 1rem)" }}>
+      <strong data-sp-title style={{ fontSize: "var(--sp-section-heading, 1.25rem)" }}>{textOf(section) || "Follow us"}</strong>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 12 }}>
+        {links.map(([key, href]) => (
+          <a key={key} href={href} style={{ color: "var(--sp-color-brand-primary, #111)", fontWeight: 600, textDecoration: "none" }}>{SOCIAL_LABELS[key] || key}</a>
+        ))}
+        {links.length === 0 && <span style={{ opacity: 0.65 }}>Add links on the Social Links tab in Store settings.</span>}
+      </div>
+    </section>
+  );
+}
+
+function ProductDetail({ section }: { section: Section }) {
+  const raw = section.resolved?.product;
+  const product = (Array.isArray(raw) ? raw[0] : raw) as { name?: string; image?: string; price?: string | number; description?: string; metaDescription?: string } | undefined;
+  return (
+    <section style={{ padding: "var(--sp-space-md, 1rem)" }}>
+      {product?.image ? <img src={product.image} alt="" style={{ width: "100%", maxHeight: 280, objectFit: "cover", borderRadius: 12 }} /> : <div style={{ height: 180, borderRadius: 12, background: "rgba(0,0,0,0.06)" }} />}
+      <h1 data-sp-title style={{ fontSize: "var(--sp-section-heading, 1.5rem)", margin: "0.75rem 0 0" }}>{product?.name || "Product"}</h1>
+      {product?.price != null && String(product.price) !== "" && <p style={{ margin: "0.35rem 0 0", color: "var(--sp-color-brand-primary, #111)", fontWeight: 700 }}>{String(product.price)}</p>}
+      {(product?.description || product?.metaDescription) && <p style={{ margin: "0.5rem 0 0" }}>{product.description || product.metaDescription}</p>}
+      <button type="button" style={{ display: "block", width: "100%", marginTop: 16, padding: "12px 16px", border: 0, borderRadius: 8, background: "var(--sp-color-brand-primary, #111)", color: "#fff", fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>Add to cart</button>
+    </section>
+  );
+}
+
 function GenericSection({ section }: { section: Section }) {
   const content = section.content || {};
   const heading = textOf(section);
@@ -280,7 +324,7 @@ function GenericSection({ section }: { section: Section }) {
       {image && <img src={image} alt="" style={{ width: "100%", height: 140, objectFit: "cover", borderRadius: 12, marginBottom: 12 }} />}
       <strong data-sp-title style={{ fontSize: "var(--sp-section-heading, 1.25rem)" }}>{heading}</strong>
       {sub && <p style={{ margin: "0.35rem 0 0", opacity: 0.8 }}>{sub}</p>}
-      {body && <p style={{ margin: "0.5rem 0 0", whiteSpace: "pre-wrap" }}>{body}</p>}
+      {body && (body.includes("<") ? <div style={{ marginTop: "0.5rem" }} dangerouslySetInnerHTML={{ __html: body }} /> : <p style={{ margin: "0.5rem 0 0", whiteSpace: "pre-wrap" }}>{body}</p>)}
       {buttonLabel && href && (
         <a
           href={href}
@@ -398,6 +442,10 @@ export function ThemeEngineView({
           node = <Home hideChrome initialCatalog={initialCatalog} searchQuery={searchQuery} reserveLook={reserveLook} boundProductIds={arrangedMenu ? undefined : boundProductIds} arrangedMenu={arrangedMenu} arrangedProducts={arrangedMenu ? catalogProducts : undefined} menuStrategy={arrangedMenu ? undefined : menuBinding?.strategy} />;
         } else if (key === "reservation-cta") {
           return null;
+        } else if (key === "social-links") {
+          node = <SocialLinks section={section} />;
+        } else if (key === "product-detail") {
+          node = <ProductDetail section={section} />;
         } else if (key === "footer") {
           node = <MenuChrome store={section.resolved as { pages?: unknown; social?: unknown; contact?: unknown } | undefined} />;
         } else if (key === "sticky-cart-bar" || key === "cart-summary" || key === "order-status-tracker") {

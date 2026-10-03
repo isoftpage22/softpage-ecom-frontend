@@ -40,7 +40,8 @@ export function MenuHomeClient({
   useEffect(() => {
     const token = new URLSearchParams(window.location.search).get("sp_preview");
     if (!token || !businessId) return;
-    const query = new URLSearchParams({ businessId: String(businessId), app: "menu", route: "/", previewToken: token });
+    const params = new URLSearchParams(window.location.search);
+    const query = new URLSearchParams({ businessId: String(businessId), app: "menu", route: params.get("sp_route") || "/", previewToken: token });
     const report = (message: string) => {
       if (window.parent !== window) window.parent.postMessage({ type: "sp:preview:error", message }, "*");
     };
