@@ -1,5 +1,5 @@
 import { Box, Text } from "@chakra-ui/react";
-import React, { Fragment, useMemo, useState } from "react";
+import React, { Fragment, useEffect, useMemo, useState } from "react";
 import { flushSync } from "react-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from "../../../lib/nav";
@@ -14,12 +14,11 @@ import { emptyCartProduct, setCartCheckoutError, setActiveOrder } from "../../..
 import { toggleUserFormDrawer } from "../../../Store/action/modalsNDrawers";
 import { setLoader } from "../../../Store/action/loader";
 import { hasStorefrontToken, setPostAuthRedirect } from "@/lib/auth/persistAuth";
-import { placeMenuOrder } from "@/lib/checkout/placeMenuOrder";
+import { PaymentInProgressError, placeMenuOrder } from "@/lib/checkout/placeMenuOrder";
 import { isThemePreview } from "@/lib/theme-engine/previewSession";
-import { useReplaceCartLinesMutation } from "@/store/api/cartApi";
+import { cartApi, useReplaceCartLinesMutation } from "@/store/api/cartApi";
 import {
-  useAbandonCheckoutSessionMutation,
-  useAbandonLockedCartMutation,
+  useCancelCheckoutSessionMutation,
   useConfirmPaymentMutation,
   useInitiateCheckoutMutation,
 } from "@/store/api/ordersApi";
@@ -69,8 +68,17 @@ const CartPageFooter = (props) => {
   const [replaceCartLines] = useReplaceCartLinesMutation();
   const [initiateCheckout] = useInitiateCheckoutMutation();
   const [confirmPayment] = useConfirmPaymentMutation();
-  const [abandonCheckoutSession] = useAbandonCheckoutSessionMutation();
-  const [abandonLockedCart] = useAbandonLockedCartMutation();
+  const [cancelCheckoutSession] = useCancelCheckoutSessionMutation();
+
+  useEffect(() => {
+    const onPageShow = (event) => {
+      if (!event.persisted) return;
+      setPlacing(false);
+      dispatch(setLoader(false));
+    };
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, [dispatch]);
 
   const tableSession = typeof window !== "undefined" ? getTableSession() : null;
   const dineIn = isDineInSession(tableSession);
@@ -126,7 +134,6 @@ const CartPageFooter = (props) => {
         specialInstructions: specialInstructions || "",
         replaceCartLines,
         initiateCheckout,
-        abandonLockedCart,
       });
 
       const shownTotal = Number(totalCartBill?.totalFinalPriceAmount);
@@ -138,7 +145,7 @@ const CartPageFooter = (props) => {
         Math.abs(shownTotal - chargedTotal) > 1
       ) {
         if (result.checkoutSessionId && businessId) {
-          abandonCheckoutSession({
+          cancelCheckoutSession({
             businessId,
             checkoutSessionId: result.checkoutSessionId,
             reason: "Delivery fee changed before payment",
@@ -167,6 +174,7 @@ const CartPageFooter = (props) => {
           }),
         );
         setPendingCheckoutSession(result.checkoutSessionId);
+        dispatch(setLoader({ isloading: true, message: "Redirecting to payment…" }));
         window.location.replace(result.paymentPageUrl);
         releasePlacing = false;
         return;
@@ -216,28 +224,56 @@ const CartPageFooter = (props) => {
             setPlacing(false);
             dispatch(setLoader(false));
             const sessionId = result.checkoutSessionId;
-            if (sessionId) {
-              abandonCheckoutSession({
-                businessId,
-                checkoutSessionId: sessionId,
-                reason: "Payment cancelled by shopper",
-              })
-                .unwrap()
-                .catch(() => undefined);
+            if (!sessionId || !businessId) {
+              dispatch(setActiveOrder(null));
+              dispatch(
+                setCartCheckoutError({
+                  title: "Payment cancelled",
+                  message: "Your cart is still here. You can try paying again.",
+                  itemNames: [],
+                  kind: "generic",
+                }),
+              );
+              return;
             }
-            dispatch(setActiveOrder(null));
-            dispatch(
-              setCartCheckoutError({
-                title: "Payment cancelled",
-                message: "Your cart is still here. You can try paying again.",
-                itemNames: [],
-                kind: "generic",
-              }),
-            );
+            cancelCheckoutSession({
+              businessId,
+              checkoutSessionId: sessionId,
+              reason: "Payment cancelled by shopper",
+            })
+              .unwrap()
+              .then((outcome) => {
+                if (outcome?.outcome === "paid" && outcome.orderId) {
+                  dispatch(emptyCartProduct());
+                  dispatch(setCartCheckoutError(null));
+                  history.replace(`/orders/${outcome.orderId}?paid=1`);
+                  return;
+                }
+                if (outcome?.outcome === "processing") {
+                  dispatch(cartApi.util.invalidateTags(["Cart"]));
+                  return;
+                }
+                dispatch(setActiveOrder(null));
+                dispatch(
+                  setCartCheckoutError({
+                    title: "Payment cancelled",
+                    message: "Your cart is still here. You can try paying again.",
+                    itemNames: [],
+                    kind: "generic",
+                  }),
+                );
+              })
+              .catch(() => {
+                dispatch(cartApi.util.invalidateTags(["Cart"]));
+              });
           },
           onFailed: (message) => {
             setPlacing(false);
             dispatch(setLoader(false));
+            if (result.checkoutSessionId) {
+              dispatch(cartApi.util.invalidateTags(["Cart"]));
+              return;
+            }
             dispatch(
               setCartCheckoutError({
                 title: "Payment failed",
@@ -278,6 +314,10 @@ const CartPageFooter = (props) => {
       }
       history.replace(orderId ? `/orders/${orderId}` : "/orders");
     } catch (err) {
+      if (err instanceof PaymentInProgressError) {
+        dispatch(cartApi.util.invalidateTags(["Cart"]));
+        return;
+      }
       dispatch(setCartCheckoutError(formatCheckoutError(err, "Could not place order")));
     } finally {
       if (releasePlacing) {

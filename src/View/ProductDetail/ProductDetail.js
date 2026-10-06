@@ -35,7 +35,7 @@ function looksLikeHtml(value) {
   return /<[a-z][\s\S]*>/i.test(String(value || ""));
 }
 
-const ProductDetail = () => {
+const ProductDetail = ({ embedded = false } = {}) => {
   const params = useParams();
   const slug = typeof params?.slug === "string" ? params.slug : "";
   const businessId = useBusinessId();
@@ -128,9 +128,20 @@ const ProductDetail = () => {
           <ProductImageSlider images={product.productImages} alt={product.productName} />
         </Box>
         <Box px="16px" pt="16px" flex="1" minW={0}>
+          <Flex as="nav" aria-label="Breadcrumb" align="center" gap="6px" mb="10px" fontSize="12px" color="#6b7280" flexWrap="wrap">
+            <Link to="/" href="/" style={{ color: "inherit" }}>Home</Link>
+            {product.categoryName ? (
+              <>
+                <Text as="span">/</Text>
+                <Text as="span">{product.categoryName}</Text>
+              </>
+            ) : null}
+            <Text as="span">/</Text>
+            <Text as="span">{product.productName}</Text>
+          </Flex>
           <Flex align="center" gap="8px" mb="6px">
             <VegMarker isVeg={!!product.isVeg} />
-            <Text fontSize="20px" fontWeight="800" lineHeight="26px" noOfLines={3}>
+            <Text as="h1" fontSize="20px" fontWeight="800" lineHeight="26px" noOfLines={3}>
               {product.productName}
             </Text>
           </Flex>
@@ -191,7 +202,7 @@ const ProductDetail = () => {
           </Box>
         </Box>
       </Flex>
-      <Footer />
+      {embedded ? null : <Footer />}
       <ProductCustomizationDrawer
         product={product}
         isOpen={optionsOpen}

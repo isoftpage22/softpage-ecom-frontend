@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { resolveTenant } from "@/lib/tenant/resolveTenant";
 import { TenantProvider } from "@/lib/tenant/TenantContext";
 import {
@@ -61,9 +62,11 @@ export default async function MenuLayout({
       <PersistStoreInfo />
       <PersistMenuCart />
       <MenuAuthChrome />
-      <StoreAvailabilityGate>
-        <MenuDesktopFrame>{children}</MenuDesktopFrame>
-      </StoreAvailabilityGate>
+      <Suspense fallback={<MenuDesktopFrame>{children}</MenuDesktopFrame>}>
+        <StoreAvailabilityGate>
+          <MenuDesktopFrame>{children}</MenuDesktopFrame>
+        </StoreAvailabilityGate>
+      </Suspense>
       </TenantProvider>
     </>
   );

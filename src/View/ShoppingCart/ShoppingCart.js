@@ -2,7 +2,8 @@
 
 import { Box, Flex, Text } from '@chakra-ui/react'
 import { useEffect, useRef, useState } from 'react'
-import { useAbandonCheckoutSessionMutation } from '@/store/api/ordersApi'
+import { usePaymentInProgress } from '@/lib/checkout/usePaymentInProgress'
+import PaymentInProgress from '../../Layout/Components/PaymentInProgress/PaymentInProgress'
 import { useBusinessId, useBusinessAppId } from '@/lib/tenant/TenantContext'
 import { useGuestSessionId } from '@/lib/cart/session'
 import { useGetCartQuery } from '@/store/api/cartApi'
@@ -58,7 +59,8 @@ const ShoppingCart = (props) => {
   const dineIn = isDineInSession(tableSession)
   const hasAddress = Object.keys(usersAddress || {}).length > 0
   const sessionId = useGuestSessionId()
-  const { syncing: totalsSyncing } = useSyncCartPage()
+  const payment = usePaymentInProgress()
+  const { syncing: totalsSyncing } = useSyncCartPage({ paused: payment.showGate })
   const { data: serverCart } = useGetCartQuery(
     { businessId, businessAppId, sessionId },
     { skip: !businessId || !businessAppId || !sessionId },
@@ -107,12 +109,15 @@ const ShoppingCart = (props) => {
     return isProductOutOfStock(line?.product) || isVariantOutOfStock(selectedVariant, line?.product)
   })
   const extraFooterSpace = checkoutError || hasUnavailableLine
-  const [abandonCheckoutSession] = useAbandonCheckoutSessionMutation()
   const activeOrder = useSelector((state) => state.shoppingCart.activeOrder)
   const activeOrderRef = useRef(activeOrder)
   activeOrderRef.current = activeOrder
 
   useEffect(() => () => resetCartCancelCleanup(), [])
+
+  useEffect(() => {
+    setLoader?.(false)
+  }, [setLoader])
 
   useEffect(() => {
     if (!paymentCancelled) return
@@ -125,21 +130,11 @@ const ShoppingCart = (props) => {
       }
       return
     }
-    abandonCheckoutSession({
-      businessId,
-      checkoutSessionId,
-      reason: 'Payment cancelled by shopper',
-    })
-      .unwrap()
-      .catch(() => undefined)
-      .finally(() => {
-        if (getPendingCheckoutSession() === checkoutSessionId) {
-          clearPendingCheckoutSession()
-        }
-      })
-  }, [paymentCancelled, abandonCheckoutSession, businessId, dispatch])
+    void payment.cancelPayment(checkoutSessionId)
+  }, [paymentCancelled, payment.cancelPayment, businessId, dispatch])
 
   useEffect(() => {
+    if (payment.showGate) return
     if ((products || []).length > 0) return
     if (paymentCancelled) {
       history.replace('/')
@@ -154,17 +149,32 @@ const ShoppingCart = (props) => {
       return
     }
     history.replace('/')
-  }, [products, activeOrder, history, paymentCancelled])
+  }, [products, activeOrder, history, paymentCancelled, payment.showGate])
+
+  const hideGateForCancel = paymentCancelled && !payment.bankConfirming
+  if (payment.showGate && !hideGateForCancel) {
+    return (
+      <PaymentInProgress
+        amount={payment.amount}
+        currency={payment.currency}
+        busy={payment.busy}
+        bankConfirming={payment.bankConfirming}
+        notice={payment.notice}
+        onContinue={() => { void payment.continuePayment() }}
+        onCancel={() => { void payment.cancelPayment() }}
+      />
+    )
+  }
 
   return (
     <>
       {
         addToCart.products.length > 0 ?
           <>
-            {paymentCancelled ? (
+            {payment.notice ? (
               <Box bg="#FFF5F5" borderBottom="1px solid #FEB2B2" px="16px" py="10px">
-                <Text fontSize="13px" fontWeight="700" color="#9B2C2C">Payment cancelled</Text>
-                <Text fontSize="13px" color="#742A2A">Your cart is still here. You can try paying again.</Text>
+                <Text fontSize="13px" fontWeight="700" color="#9B2C2C">Payment</Text>
+                <Text fontSize="13px" color="#742A2A">{payment.notice}</Text>
               </Box>
             ) : null}
             {dineIn && tableLabel ? (
@@ -189,7 +199,7 @@ const ShoppingCart = (props) => {
             {!dineIn && hasAddress && (
               <TopAddressBarContainer etaLabel={customerEtaLabel} />
             )}
-            <TopBarWithBackButton backTo={paymentCancelled ? "/" : undefined} />
+            <TopBarWithBackButton backTo={payment.notice || paymentCancelled ? "/" : undefined} />
             <Flex
               direction={{ base: "column", lg: "row" }}
               align={{ base: "stretch", lg: "flex-start" }}

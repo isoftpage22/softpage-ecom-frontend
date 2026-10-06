@@ -1,7 +1,15 @@
+import type { Metadata } from "next";
 import { resolveTenant } from "@/lib/tenant/resolveTenant";
 import { fetchMenuCatalog } from "@/lib/catalog/fetchMenuCatalog";
 import { fetchEnginePage } from "@/lib/theme-engine/fetchEnginePage";
+import { metadataFromEngine } from "@/lib/theme-engine/metadata";
 import { MenuHomeClient } from "./MenuHomeClient";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const tenant = await resolveTenant();
+  const engine = tenant?.businessId ? await fetchEnginePage(tenant.businessId, "menu", "/") : null;
+  return metadataFromEngine(engine, "/");
+}
 
 /**
  * Server Component: catalog is in the first HTML. Header/banners still render

@@ -61,6 +61,9 @@ export interface Address {
 export interface Cart {
   id: string;
   status: string;
+  /** Set while status is `locked`: the checkout session holding this cart. */
+  activeCheckoutSessionId?: string | null;
+  lockedUntil?: string | null;
   items: CartItem[];
   itemCount: number;
   subtotal: number;

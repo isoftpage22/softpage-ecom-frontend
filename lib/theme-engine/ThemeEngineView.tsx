@@ -1,8 +1,10 @@
 "use client";
 
 import { Component, useEffect, useState, type ReactNode } from "react";
+import { useParams } from "next/navigation";
 import { useSelector } from "react-redux";
 import Home from "@/src/View/Home";
+import MenuProductDetail from "@/src/View/ProductDetail/ProductDetail";
 import CommonTopBar from "@/src/Layout/Components/CommonTopBar/CommonTopBar";
 import ProductPromotions from "@/src/View/Home/Component/ProductPromotions";
 import CurrentOffers from "@/src/View/Home/Component/CurrentOffers";
@@ -55,6 +57,10 @@ function offerWash(theme?: string, opacity?: number) {
 function offerImageOpacity(opacity?: number) {
   if (opacity == null) return "0.28";
   return String(Math.max(0.08, 0.1 + (1 - Math.min(1, Math.max(0, opacity))) * 0.35));
+}
+
+function stripOrderCss(css: string) {
+  return css.replace(/order\s*:\s*[^;}]+;?/g, "");
 }
 
 export function lookCssVars(style?: Section["style"]): Record<string, string> {
@@ -215,8 +221,15 @@ export type EnginePage = {
   layoutCss?: string;
   jsonLd?: unknown[];
   regions?: { header?: Section[]; footer?: Section[] };
-  page?: { sections?: Section[]; title?: string } | null;
-  seo?: { title?: string };
+  page?: { key?: string; sections?: Section[]; title?: string } | null;
+  seo?: {
+    title?: string;
+    description?: string;
+    canonical?: string;
+    keywords?: string[];
+    robots?: { index?: boolean; follow?: boolean };
+    openGraph?: { title?: string; description?: string; images?: string[] };
+  };
 };
 
 function widgetKey(section: Section) {
@@ -295,13 +308,26 @@ function SocialLinks({ section }: { section: Section }) {
   );
 }
 
-function ProductDetail({ section }: { section: Section }) {
+function EngineProductDetail({ section }: { section: Section }) {
+  const params = useParams();
+  const slug = typeof params?.slug === "string" ? params.slug : "";
+  if (slug && slug !== "preview") return <MenuProductDetail embedded />;
+  return <PreviewProductDetail section={section} />;
+}
+
+function PreviewProductDetail({ section }: { section: Section }) {
   const raw = section.resolved?.product;
-  const product = (Array.isArray(raw) ? raw[0] : raw) as { name?: string; image?: string; price?: string | number; description?: string; metaDescription?: string } | undefined;
+  const product = (Array.isArray(raw) ? raw[0] : raw) as { name?: string; image?: string; price?: string | number; description?: string; metaDescription?: string; categoryName?: string } | undefined;
+  const name = product?.name || "Product";
   return (
     <section style={{ padding: "var(--sp-space-md, 1rem)" }}>
-      {product?.image ? <img src={product.image} alt="" style={{ width: "100%", maxHeight: 280, objectFit: "cover", borderRadius: 12 }} /> : <div style={{ height: 180, borderRadius: 12, background: "rgba(0,0,0,0.06)" }} />}
-      <h1 data-sp-title style={{ fontSize: "var(--sp-section-heading, 1.5rem)", margin: "0.75rem 0 0" }}>{product?.name || "Product"}</h1>
+      <nav aria-label="Breadcrumb" style={{ fontSize: 13, marginBottom: 8 }}>
+        <a href="/">Home</a>
+        {product?.categoryName ? <span> / {product.categoryName}</span> : null}
+        <span> / {name}</span>
+      </nav>
+      {product?.image ? <img src={product.image} alt={name} style={{ width: "100%", maxHeight: 280, objectFit: "cover", borderRadius: 12 }} /> : <div style={{ height: 180, borderRadius: 12, background: "rgba(0,0,0,0.06)" }} />}
+      <h1 data-sp-title style={{ fontSize: "var(--sp-section-heading, 1.5rem)", margin: "0.75rem 0 0" }}>{name}</h1>
       {product?.price != null && String(product.price) !== "" && <p style={{ margin: "0.35rem 0 0", color: "var(--sp-color-brand-primary, #111)", fontWeight: 700 }}>{String(product.price)}</p>}
       {(product?.description || product?.metaDescription) && <p style={{ margin: "0.5rem 0 0" }}>{product.description || product.metaDescription}</p>}
       <button type="button" style={{ display: "block", width: "100%", marginTop: 16, padding: "12px 16px", border: 0, borderRadius: 8, background: "var(--sp-color-brand-primary, #111)", color: "#fff", fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>Add to cart</button>
@@ -317,7 +343,7 @@ function GenericSection({ section }: { section: Section }) {
   const image = textField(content.backgroundImage) || textField(content.image);
   const buttonLabel = textField(content.ctaLabel);
   const href = buttonHref(content);
-  const faqs = (Array.isArray(content.items) ? content.items : []) as Array<{ question?: string; answer?: string }>;
+  const faqs = (Array.isArray(content.items) ? content.items : []) as Array<{ question?: string; answer?: string; q?: string; a?: string }>;
   const items = itemsOf(section) as Array<{ id?: string; name?: string; title?: string; image?: string; imageUrl?: string; comment?: string; subtitle?: string; answer?: string }>;
   return (
     <section style={{ padding: "var(--sp-space-md, 1rem)", background: "var(--sp-color-surface-card, #fff)", color: "var(--sp-color-text-primary, #111)", borderRadius: "var(--sp-radius-md, 0.5rem)", overflow: "hidden" }}>
@@ -341,9 +367,9 @@ function GenericSection({ section }: { section: Section }) {
       {faqs.length > 0 && (
         <div style={{ marginTop: 12 }}>
           {faqs.map((item, index) => (
-            <div key={`${item.question || "q"}-${index}`} style={{ padding: "0.55rem 0", borderTop: "1px solid rgba(0,0,0,0.08)" }}>
-              <div style={{ fontWeight: 600 }}>{item.question}</div>
-              {item.answer && <div style={{ marginTop: 4, opacity: 0.75 }}>{item.answer}</div>}
+            <div key={`${item.question || item.q || "q"}-${index}`} style={{ padding: "0.55rem 0", borderTop: "1px solid rgba(0,0,0,0.08)" }}>
+              <div style={{ fontWeight: 600 }}>{item.question || item.q}</div>
+              {(item.answer || item.a) && <div style={{ marginTop: 4, opacity: 0.75 }}>{item.answer || item.a}</div>}
             </div>
           ))}
         </div>
@@ -378,7 +404,12 @@ export function ThemeEngineView({
   searchQuery: string;
   onSearchChange: (value: string) => void;
 }) {
-  const sections = [...(engine.regions?.header || []), ...(engine.page?.sections || []), ...(engine.regions?.footer || [])];
+  const productPage = engine.page?.key === "product";
+  const sections = [
+    ...(productPage ? [] : engine.regions?.header || []),
+    ...(engine.page?.sections || []),
+    ...(engine.regions?.footer || []),
+  ];
   const used = { header: false, catalog: false };
   const headerLook = mergeLooks(...sections.filter((item) => ["top-bar", "store-header", "search-bar"].includes(widgetKey(item))).map((item) => item.style));
   const catalogLook = mergeLooks(...sections.filter((item) => ["category-nav", "menu-catalog"].includes(widgetKey(item))).map((item) => item.style));
@@ -400,17 +431,18 @@ export function ThemeEngineView({
   );
   return (
     <div className="sp-theme-root" style={{ display: "flex", flexDirection: "column", background: "var(--sp-color-surface-page, #fff)", color: "var(--sp-color-text-primary, #111)", fontSize: "calc(1rem * var(--sp-type-scale, 1))" }}>
-      <style dangerouslySetInnerHTML={{ __html: `${engine.tokensCss || ""}\n${engine.layoutCss || ""}` }} />
-      {sections.map((section, index) => {
+      <style dangerouslySetInnerHTML={{ __html: `${engine.tokensCss || ""}\n${stripOrderCss(engine.layoutCss || "")}` }} />
+      {sections.map((section) => {
         const key = widgetKey(section);
         if (!key) return null;
         let node: ReactNode = null;
         let look = section.style;
         if (key === "top-bar" || key === "store-header" || key === "search-bar") {
+          if (productPage) return null;
           if (used.header) return null;
           used.header = true;
           look = headerLook;
-          node = <CommonTopBar searchQuery={searchQuery} onSearchChange={onSearchChange} />;
+          node = <CommonTopBar searchQuery={searchQuery} onSearchChange={onSearchChange} asHeading={engine.page?.key === "home"} />;
         } else if (key === "product-rail") {
           node = (
             <ProductPromotions
@@ -445,7 +477,7 @@ export function ThemeEngineView({
         } else if (key === "social-links") {
           node = <SocialLinks section={section} />;
         } else if (key === "product-detail") {
-          node = <ProductDetail section={section} />;
+          node = <EngineProductDetail section={section} />;
         } else if (key === "footer") {
           node = <MenuChrome store={section.resolved as { pages?: unknown; social?: unknown; contact?: unknown } | undefined} />;
         } else if (key === "sticky-cart-bar" || key === "cart-summary" || key === "order-status-tracker") {
@@ -457,7 +489,7 @@ export function ThemeEngineView({
         }
         return (
           <WidgetBoundary key={section.id} id={section.id}>
-            <div className={`sp-${section.id}`} data-sp-id={section.id} data-sp-catalog={key === "category-nav" || key === "menu-catalog" ? "1" : undefined} style={{ order: index, ...lookCssVars(look) }}>
+            <div className={`sp-${section.id}`} data-sp-id={section.id} data-sp-catalog={key === "category-nav" || key === "menu-catalog" ? "1" : undefined} style={lookCssVars(look)}>
               {node}
             </div>
           </WidgetBoundary>

@@ -19,7 +19,7 @@ import { StoreLogo } from '@/components/StoreLogo'
 import { ProfileMenu } from '../../../Components/ProfileMenu/ProfileMenu'
 import { clearListingRestore } from '@/lib/menu/listingRestore'
 
-const CommonTopBar = ({ searchQuery, onSearchChange }) => {
+const CommonTopBar = ({ searchQuery, onSearchChange, asHeading = false }) => {
   const [internalQuery, setInternalQuery] = useState('')
   const [subtitle, setSubtitle] = useState('')
   const [dineIn, setDineIn] = useState(false)
@@ -59,6 +59,7 @@ const CommonTopBar = ({ searchQuery, onSearchChange }) => {
             </Box>
             <Flex direction="column" justifyContent="center" ml="8px" minW={0} flex="1">
               <Text
+                as={asHeading ? "h1" : "p"}
                 data-sp-title
                 color="var(--sp-section-text, white)"
                 lineHeight="16px"

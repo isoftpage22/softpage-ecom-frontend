@@ -46,7 +46,7 @@ function checkoutShippingAddress(usersAddress: LocalMenuAddress | Record<string,
  * Cart-page only: copy Redux lines onto the GraphQL cart so bill, tax, coupon,
  * and platform shipping follow +/-. Home/product pages stay local.
  */
-export function useSyncCartPage() {
+export function useSyncCartPage(options?: { paused?: boolean }) {
   const dispatch = useDispatch();
   const businessId = useBusinessId();
   const businessAppId = useBusinessAppId();
@@ -71,10 +71,6 @@ export function useSyncCartPage() {
   const lastSynced = useRef("");
   const [pending, setPending] = useState(false);
 
-  useLayoutEffect(() => {
-    if (signature !== lastSynced.current) setPending(true);
-  }, [signature]);
-
   const { data: serverCart } = useGetCartQuery(
     { businessId, businessAppId, sessionId },
     { skip: !businessId || !businessAppId || !sessionId },
@@ -94,7 +90,21 @@ export function useSyncCartPage() {
     );
   };
 
+  const paused = options?.paused === true || serverCart?.status === "locked";
+
+  useLayoutEffect(() => {
+    if (paused) {
+      setPending(false);
+      return;
+    }
+    if (signature !== lastSynced.current) setPending(true);
+  }, [paused, signature]);
+
   useEffect(() => {
+    if (paused) {
+      setPending(false);
+      return;
+    }
     if (!businessId || !businessAppId || !sessionId) {
       setPending(false);
       return;
@@ -161,6 +171,7 @@ export function useSyncCartPage() {
     // here re-runs the effect and can leave `pending` stuck true.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
+    paused,
     debouncedSignature,
     businessId,
     businessAppId,

@@ -20,6 +20,8 @@ import { useGetAvailableCouponsQuery } from '@/store/api/promotionsApi'
 import { useApplyCouponMutation, useGetCartQuery, useReplaceCartLinesMutation } from '@/store/api/cartApi'
 import { lineToAddToCartInput } from '@/lib/checkout/placeMenuOrder'
 import { useSyncCartPage } from '@/lib/cart/useSyncCartPage'
+import { usePaymentInProgress } from '@/lib/checkout/usePaymentInProgress'
+import PaymentInProgress from '../../Layout/Components/PaymentInProgress/PaymentInProgress'
 import { rtkErrorMessage } from '@/lib/auth/persistAuth'
 
 function discountParts(coupon) {
@@ -198,7 +200,8 @@ const ListOfCoupons = () => {
   const businessId = useBusinessId()
   const businessAppId = useBusinessAppId()
   const sessionId = useGuestSessionId()
-  useSyncCartPage()
+  const payment = usePaymentInProgress()
+  useSyncCartPage({ paused: payment.showGate })
   const { data: cart } = useGetCartQuery(
     { businessId, businessAppId, sessionId },
     { skip: !businessId || !businessAppId || !sessionId },
@@ -263,6 +266,20 @@ const ListOfCoupons = () => {
   }
 
   const list = coupons || []
+
+  if (payment.showGate) {
+    return (
+      <PaymentInProgress
+        amount={payment.amount}
+        currency={payment.currency}
+        busy={payment.busy}
+        bankConfirming={payment.bankConfirming}
+        notice={payment.notice}
+        onContinue={() => { void payment.continuePayment() }}
+        onCancel={() => { void payment.cancelPayment() }}
+      />
+    )
+  }
 
   return (
     <Box minH="100vh" bg="#f4f4f5">

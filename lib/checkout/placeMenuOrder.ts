@@ -11,9 +11,11 @@ import {
 import { rtkErrorMessage } from "@/lib/auth/persistAuth";
 import { isCartLockedError } from "@/lib/checkout/cartLock";
 
-function isRetryableCheckoutError(err: unknown): boolean {
-  if (isCartLockedError(err)) return true;
-  return /cart not found or no longer active/i.test(rtkErrorMessage(err, ""));
+export class PaymentInProgressError extends Error {
+  constructor() {
+    super("A payment is already in progress for this cart.");
+    this.name = "PaymentInProgressError";
+  }
 }
 
 export type MenuCartProduct = {
@@ -94,19 +96,13 @@ export async function placeMenuOrder(opts: {
     },
     CheckoutResult
   >;
-  abandonLockedCart?: MutateFn<
-    {
-      businessId: number;
-      businessAppId: number;
-      sessionId?: string;
-      reason?: string;
-    },
-    boolean
-  >;
 }): Promise<CheckoutResult> {
   try {
     return await runPlaceMenuOrder(opts);
   } catch (err) {
+    if (err instanceof PaymentInProgressError || isCartLockedError(err)) {
+      throw new PaymentInProgressError();
+    }
     throw new Error(rtkErrorMessage(err, "Could not place order"));
   }
 }
@@ -152,17 +148,8 @@ async function runPlaceMenuOrder(
   try {
     cart = await replaceLines();
   } catch (err) {
-    if (!isCartLockedError(err) || !opts.abandonLockedCart) throw err;
-    await opts
-      .abandonLockedCart({
-        businessId: opts.businessId,
-        businessAppId: opts.businessAppId,
-        sessionId,
-        reason: "Payment cancelled",
-      })
-      .unwrap()
-      .catch(() => undefined);
-    cart = await replaceLines();
+    if (isCartLockedError(err)) throw new PaymentInProgressError();
+    throw err;
   }
 
   if (!cart?.id) {
@@ -203,16 +190,7 @@ async function runPlaceMenuOrder(
   try {
     return await startCheckout();
   } catch (err) {
-    if (!isRetryableCheckoutError(err) || !opts.abandonLockedCart) throw err;
-    await opts
-      .abandonLockedCart({
-        businessId: opts.businessId,
-        businessAppId: opts.businessAppId,
-        sessionId,
-        reason: "Starting a new payment",
-      })
-      .unwrap()
-      .catch(() => undefined);
-    return await startCheckout();
+    if (isCartLockedError(err)) throw new PaymentInProgressError();
+    throw err;
   }
 }

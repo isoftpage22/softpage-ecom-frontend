@@ -107,6 +107,14 @@ export interface CheckoutResult {
   checkoutDescription?: string;
 }
 
+export type CheckoutSessionCancelOutcome = "cancelled" | "paid" | "processing";
+
+export interface CheckoutSessionCancelResult {
+  outcome: CheckoutSessionCancelOutcome;
+  orderId?: string | null;
+  orderNumber?: string | null;
+}
+
 export type CheckoutSessionState = "pending" | "paid" | "failed" | "expired";
 
 export interface CheckoutSessionStatus {

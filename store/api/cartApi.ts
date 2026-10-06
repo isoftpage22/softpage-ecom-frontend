@@ -6,6 +6,8 @@ const CART_FIELDS = gql`
   fragment MenuCartFields on CartTypeGql {
     id
     status
+    activeCheckoutSessionId
+    lockedUntil
     items {
       id
       itemId

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState, type ReactNode } from "react";
 import { useBusinessId } from "@/lib/tenant/TenantContext";
 import { apiOrigin } from "@/lib/api/origin";
 import Home from "@/src/View/Home";
@@ -18,9 +18,11 @@ import { PreviewBridge, ThemeEngineView, type EnginePage } from "@/lib/theme-eng
 export function MenuHomeClient({
   initialCatalog,
   engine = null,
+  fallback = null,
 }: {
   initialCatalog: { categories: unknown[] };
   engine?: EnginePage | null;
+  fallback?: ReactNode;
 }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [previewEngine, setPreviewEngine] = useState<EnginePage | null>(null);
@@ -78,13 +80,17 @@ export function MenuHomeClient({
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
         />
+      ) : fallback ? (
+        fallback
       ) : (
-        <CommonTopBar searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+        <>
+          <CommonTopBar searchQuery={searchQuery} onSearchChange={setSearchQuery} asHeading />
+          {!searching && <ProductPromotions initialCatalog={initialCatalog} />}
+          {!searching && <CurrentOffers />}
+          <Home hideChrome initialCatalog={initialCatalog} searchQuery={searchQuery} />
+          <Footer />
+        </>
       )}
-      {!activeEngine?.enabled && !searching && <ProductPromotions initialCatalog={initialCatalog} />}
-      {!activeEngine?.enabled && !searching && <CurrentOffers />}
-      {!activeEngine?.enabled && <Home hideChrome initialCatalog={initialCatalog} searchQuery={searchQuery} />}
-      {!activeEngine?.enabled && <Footer />}
     </>
   );
 }
