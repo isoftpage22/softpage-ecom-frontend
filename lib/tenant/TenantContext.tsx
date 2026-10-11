@@ -90,6 +90,8 @@ export interface StorefrontConfig {
   favicon?: string | null;
   /** Open Graph / social share image when available. */
   shareImage?: string | null;
+  /** Google Search Console verification content for this store. */
+  googleSiteVerification?: string | null;
   currency: string;
   theme: StorefrontTheme;
   social: StorefrontSocial;
@@ -234,6 +236,7 @@ const DEFAULT_CONFIG: StorefrontConfig = {
   logo: null,
   favicon: null,
   shareImage: null,
+  googleSiteVerification: null,
   currency: "INR",
   theme: {
     primary: "#3B82F6",

@@ -20,7 +20,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const iconUrl =
     tenant?.config?.favicon || tenant?.config?.logo || tenant?.logo || undefined;
   const shareImage = tenant?.config?.shareImage || undefined;
-  if (!name && !iconUrl) return {};
+  const google = tenant?.config?.googleSiteVerification || undefined;
+  if (!name && !iconUrl && !google) return {};
   return {
     title: name ? { default: name, template: `%s | ${name}` } : undefined,
     description: tenant?.config?.description || undefined,
@@ -32,6 +33,7 @@ export async function generateMetadata(): Promise<Metadata> {
         }
       : undefined,
     openGraph: shareImage ? { images: [{ url: shareImage }] } : undefined,
+    verification: google ? { google } : undefined,
   };
 }
 
