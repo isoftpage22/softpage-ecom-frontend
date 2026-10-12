@@ -15,6 +15,8 @@ import { toggleUserFormDrawer } from "../../../Store/action/modalsNDrawers";
 import { setLoader } from "../../../Store/action/loader";
 import { hasStorefrontToken, setPostAuthRedirect } from "@/lib/auth/persistAuth";
 import { PaymentInProgressError, placeMenuOrder } from "@/lib/checkout/placeMenuOrder";
+import { isCartLockedError } from "@/lib/checkout/cartLock";
+import { useCartUnlock } from "@/lib/checkout/useCartUnlock";
 import { isThemePreview } from "@/lib/theme-engine/previewSession";
 import { cartApi, useReplaceCartLinesMutation } from "@/store/api/cartApi";
 import {
@@ -22,10 +24,7 @@ import {
   useConfirmPaymentMutation,
   useInitiateCheckoutMutation,
 } from "@/store/api/ordersApi";
-import {
-  clearPendingCheckoutSession,
-  setPendingCheckoutSession,
-} from "@/lib/checkout/pendingSession";
+import { setPendingCheckoutSession } from "@/lib/checkout/pendingSession";
 import { catalogStockError, formatCheckoutError } from "@/lib/api/userFacingError";
 import { isProductOutOfStock, isVariantOutOfStock } from "@/lib/catalog/options";
 import { openRazorpayCheckout } from "@/lib/payments/loadRazorpay";
@@ -69,6 +68,7 @@ const CartPageFooter = (props) => {
   const [initiateCheckout] = useInitiateCheckoutMutation();
   const [confirmPayment] = useConfirmPaymentMutation();
   const [cancelCheckoutSession] = useCancelCheckoutSessionMutation();
+  const withCartUnlock = useCartUnlock();
 
   useEffect(() => {
     const onPageShow = (event) => {
@@ -120,21 +120,21 @@ const CartPageFooter = (props) => {
     });
     let releasePlacing = true;
     try {
-      clearPendingCheckoutSession();
-
       const customer = getUserInFromLocal();
-      const result = await placeMenuOrder({
-        businessId,
-        businessAppId,
-        products: addToCart?.products || [],
-        tableSession,
-        usersAddress,
-        customer: Array.isArray(customer) ? {} : customer,
-        tip: tip || totalCartBill?.tip || 0,
-        specialInstructions: specialInstructions || "",
-        replaceCartLines,
-        initiateCheckout,
-      });
+      const result = await withCartUnlock(() =>
+        placeMenuOrder({
+          businessId,
+          businessAppId,
+          products: addToCart?.products || [],
+          tableSession,
+          usersAddress,
+          customer: Array.isArray(customer) ? {} : customer,
+          tip: tip || totalCartBill?.tip || 0,
+          specialInstructions: specialInstructions || "",
+          replaceCartLines,
+          initiateCheckout,
+        }),
+      );
 
       const shownTotal = Number(totalCartBill?.totalFinalPriceAmount);
       const chargedTotal = Number(result.amount ?? result.order?.total);
@@ -314,7 +314,7 @@ const CartPageFooter = (props) => {
       }
       history.replace(orderId ? `/orders/${orderId}` : "/orders");
     } catch (err) {
-      if (err instanceof PaymentInProgressError) {
+      if (err instanceof PaymentInProgressError || isCartLockedError(err)) {
         dispatch(cartApi.util.invalidateTags(["Cart"]));
         return;
       }

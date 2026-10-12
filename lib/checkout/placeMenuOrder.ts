@@ -100,9 +100,8 @@ export async function placeMenuOrder(opts: {
   try {
     return await runPlaceMenuOrder(opts);
   } catch (err) {
-    if (err instanceof PaymentInProgressError || isCartLockedError(err)) {
-      throw new PaymentInProgressError();
-    }
+    if (isCartLockedError(err)) throw err;
+    if (err instanceof PaymentInProgressError) throw err;
     throw new Error(rtkErrorMessage(err, "Could not place order"));
   }
 }
@@ -144,13 +143,7 @@ async function runPlaceMenuOrder(
       })
       .unwrap();
 
-  let cart: { id: string };
-  try {
-    cart = await replaceLines();
-  } catch (err) {
-    if (isCartLockedError(err)) throw new PaymentInProgressError();
-    throw err;
-  }
+  const cart = await replaceLines();
 
   if (!cart?.id) {
     throw new Error("Could not create cart");
@@ -187,10 +180,5 @@ async function runPlaceMenuOrder(
       })
       .unwrap();
 
-  try {
-    return await startCheckout();
-  } catch (err) {
-    if (isCartLockedError(err)) throw new PaymentInProgressError();
-    throw err;
-  }
+  return await startCheckout();
 }

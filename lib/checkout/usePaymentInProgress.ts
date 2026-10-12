@@ -32,42 +32,43 @@ export function usePaymentInProgress() {
   const businessId = useBusinessId();
   const businessAppId = useBusinessAppId();
   const sessionId = useGuestSessionId();
-  const [hint, setHint] = useState<string | null>(null);
+  const [hint, setHint] = useState<string | null>(() =>
+    typeof window === "undefined" ? null : getPendingCheckoutSession(),
+  );
   const [busy, setBusy] = useState<PaymentBusy>(null);
   const [bankConfirming, setBankConfirming] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const redirected = useRef(false);
 
-  useEffect(() => {
-    setHint(getPendingCheckoutSession());
-  }, []);
-
   const {
     data: cart,
-    isLoading,
-    isUninitialized,
     refetch,
+    isUninitialized,
   } = useGetCartQuery(
     { businessId, businessAppId, sessionId },
     { skip: !businessId || !businessAppId || !sessionId },
   );
 
+  const refreshCart = useCallback(() => {
+    if (isUninitialized) return;
+    void refetch();
+  }, [isUninitialized, refetch]);
+
   useEffect(() => {
     const onPageShow = () => {
       setHint(getPendingCheckoutSession());
-      void refetch();
+      refreshCart();
     };
     window.addEventListener("pageshow", onPageShow);
     return () => window.removeEventListener("pageshow", onPageShow);
-  }, [refetch]);
+  }, [refreshCart]);
 
   const locked = cart?.status === "locked";
-  const waitingForCart = !cart && (isLoading || isUninitialized);
-  const showGate = Boolean(locked) || (Boolean(hint) && waitingForCart);
-  const checkoutSessionId =
-    cart?.activeCheckoutSessionId ||
-    (locked || waitingForCart ? hint : null) ||
-    null;
+  // A pending session means Place order already started a charge. Show the
+  // gate on the first paint after Back — do not wait for cart.status, which
+  // is often still "active" from the RTK cache and lets cart sync 409.
+  const showGate = Boolean(locked) || Boolean(hint);
+  const checkoutSessionId = cart?.activeCheckoutSessionId || hint || null;
 
   const { data: paymentSession } = useCheckoutSessionStatusQuery(
     { businessId, checkoutSessionId: checkoutSessionId || "" },
@@ -117,8 +118,8 @@ export function usePaymentInProgress() {
     setBankConfirming(false);
     dispatch(setActiveOrder(null));
     setNotice("Payment not completed. Your cart is still here.");
-    void refetch();
-  }, [checkoutSessionId, dispatch, paymentSession?.status, refetch]);
+    refreshCart();
+  }, [checkoutSessionId, dispatch, paymentSession?.status, refreshCart]);
 
   const applyCancelResult = useCallback(
     (result: CheckoutSessionCancelResult) => {
@@ -136,9 +137,9 @@ export function usePaymentInProgress() {
       setBankConfirming(false);
       dispatch(setActiveOrder(null));
       setNotice("Payment cancelled. Your cart is still here. You can try paying again.");
-      void refetch();
+      refreshCart();
     },
-    [dispatch, goToOrder, refetch],
+    [dispatch, goToOrder, refreshCart],
   );
 
   const cancelPayment = useCallback(

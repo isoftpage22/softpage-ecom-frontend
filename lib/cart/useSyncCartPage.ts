@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import type { ThunkDispatch, UnknownAction } from "@reduxjs/toolkit";
 import { useDispatch, useSelector } from "react-redux";
 import { useBusinessAppId, useBusinessId } from "@/lib/tenant/TenantContext";
 import { useGuestSessionId } from "@/lib/cart/session";
@@ -17,6 +18,7 @@ import { currentShippingRateId } from "@/lib/logisticsApi";
 import { getTableSession, isDineInSession } from "@/lib/restaurant/table-session";
 import { getUserInFromLocal } from "@/src/utils/CommonFunctions";
 import { useDebouncedValue } from "@/src/hooks/useDebouncedValue";
+import { useCartUnlock } from "@/lib/checkout/useCartUnlock";
 import type { Cart } from "@/types/cart.types";
 
 type LocalLine = MenuCartProduct & {
@@ -47,7 +49,7 @@ function checkoutShippingAddress(usersAddress: LocalMenuAddress | Record<string,
  * and platform shipping follow +/-. Home/product pages stay local.
  */
 export function useSyncCartPage(options?: { paused?: boolean }) {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<ThunkDispatch<any, unknown, UnknownAction>>();
   const businessId = useBusinessId();
   const businessAppId = useBusinessAppId();
   const sessionId = useGuestSessionId();
@@ -78,6 +80,7 @@ export function useSyncCartPage(options?: { paused?: boolean }) {
   const [replaceCartLines, replaceState] = useReplaceCartLinesMutation();
   const [setShippingRate, shippingState] = useSetShippingRateMutation();
   const [clearCart] = useClearCartMutation();
+  const withCartUnlock = useCartUnlock();
 
   const writeCartCache = (cart: Cart | null | undefined) => {
     if (!cart || !businessId || !businessAppId || !sessionId) return;
@@ -121,7 +124,9 @@ export function useSyncCartPage(options?: { paused?: boolean }) {
         if (!products.length) {
           if (serverCart?.id) {
             try {
-              await clearCart({ businessId, cartId: serverCart.id }).unwrap();
+              await withCartUnlock(() =>
+                clearCart({ businessId, cartId: serverCart.id }).unwrap(),
+              );
             } catch {
               /* page is leaving */
             }
@@ -130,15 +135,17 @@ export function useSyncCartPage(options?: { paused?: boolean }) {
         }
 
         const shippingAddress = checkoutShippingAddress(usersAddress);
-        const cart = await replaceCartLines({
-          businessId,
-          businessAppId,
-          sessionId,
-          input: {
-            lines: products.map((line) => lineToAddToCartInput(line)),
-            ...(shippingAddress ? { shippingAddress } : {}),
-          },
-        }).unwrap();
+        const cart = await withCartUnlock(() =>
+          replaceCartLines({
+            businessId,
+            businessAppId,
+            sessionId,
+            input: {
+              lines: products.map((line) => lineToAddToCartInput(line)),
+              ...(shippingAddress ? { shippingAddress } : {}),
+            },
+          }).unwrap(),
+        );
         writeCartCache(cart);
 
         if (shippingAddress && cart?.id) {
@@ -179,6 +186,7 @@ export function useSyncCartPage(options?: { paused?: boolean }) {
     replaceCartLines,
     setShippingRate,
     clearCart,
+    withCartUnlock,
   ]);
 
   return {
