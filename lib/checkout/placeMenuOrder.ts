@@ -71,6 +71,8 @@ export async function placeMenuOrder(opts: {
   customer?: { customerName?: string; whatsAppNumber?: string };
   tip?: number;
   specialInstructions?: string;
+  /** Signed token from the store's WhatsApp chat link; the order is then confirmed there. */
+  waSession?: string;
   replaceCartLines: MutateFn<
     {
       businessId: number;
@@ -95,7 +97,8 @@ export async function placeMenuOrder(opts: {
       tip?: number;
       payLater?: boolean;
       returnOrigin?: string;
-    attributionJson?: string;
+      attributionJson?: string;
+      waSession?: string;
     },
     CheckoutResult
   >;
@@ -188,6 +191,7 @@ async function runPlaceMenuOrder(
         returnOrigin:
           typeof window !== "undefined" ? window.location.href : undefined,
         attributionJson: attributionJson(),
+        waSession: isDineIn ? undefined : opts.waSession,
       })
       .unwrap();
 
