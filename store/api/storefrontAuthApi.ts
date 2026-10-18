@@ -29,7 +29,6 @@ export const storefrontAuthApi = createApi({
         const token = localStorage.getItem("accessToken");
         if (token) headers.set("Authorization", `Bearer ${token}`);
       }
-      headers.set("Content-Type", "application/json");
       return headers;
     },
   }),
@@ -96,6 +95,30 @@ export const storefrontAuthApi = createApi({
       providesTags: ["Me"],
     }),
 
+    updateProfile: builder.mutation<
+      StorefrontMe,
+      {
+        firstName?: string;
+        lastName?: string;
+        displayName?: string;
+        email?: string;
+      }
+    >({
+      query: (body) => ({ url: "/storefront/auth/me", method: "PUT", body }),
+      transformResponse: unwrap,
+      invalidatesTags: ["Me"],
+    }),
+
+    uploadAvatar: builder.mutation<StorefrontMe, File>({
+      query: (file) => {
+        const body = new FormData();
+        body.append("file", file);
+        return { url: "/storefront/auth/me/avatar", method: "POST", body };
+      },
+      transformResponse: unwrap,
+      invalidatesTags: ["Me"],
+    }),
+
     listAddresses: builder.query<CustomerAddress[], void>({
       query: () => ({ url: "/storefront/auth/addresses", method: "GET" }),
       transformResponse: unwrap,
@@ -147,4 +170,6 @@ export const {
   useLogoutMutation,
   useGetMeQuery,
   useLazyGetMeQuery,
+  useUpdateProfileMutation,
+  useUploadAvatarMutation,
 } = storefrontAuthApi;

@@ -9,7 +9,7 @@ import {
   LOCAL_STORAGE_CUSTOMER_ADDRESS,
   SELECTED_CUSTOMER_ADDRESS,
 } from "@/src/utils/constants";
-import type { AuthResult } from "@/types/storefront-auth.types";
+import type { AuthResult, StorefrontProfile } from "@/types/storefront-auth.types";
 
 export { rtkErrorMessage } from "@/lib/api/userFacingError";
 
@@ -83,6 +83,40 @@ export function persistStorefrontAuth(
     }),
   );
   resetCustomerCaches();
+  notifyStorefrontAuthChanged();
+}
+
+/** Keep the drawer name and photo in step with this shop's profile. */
+export function rememberCustomerProfile(
+  profile: Pick<
+    StorefrontProfile,
+    "displayName" | "fullName" | "firstName" | "lastName" | "phone" | "avatarUrl"
+  >,
+) {
+  if (typeof window === "undefined") return;
+  let existing: Record<string, unknown> = {};
+  try {
+    existing = JSON.parse(localStorage.getItem(CUSTOMER_INFO) || "{}") || {};
+  } catch {
+    existing = {};
+  }
+  const name =
+    profile.fullName ||
+    profile.displayName ||
+    [profile.firstName, profile.lastName].filter(Boolean).join(" ") ||
+    String(existing.customerName || "");
+  const phone = String(profile.phone || existing.whatsAppNumber || "")
+    .replace(/\D/g, "")
+    .slice(-10);
+  localStorage.setItem(
+    CUSTOMER_INFO,
+    JSON.stringify({
+      ...existing,
+      customerName: name,
+      whatsAppNumber: phone,
+      avatarUrl: profile.avatarUrl || "",
+    }),
+  );
   notifyStorefrontAuthChanged();
 }
 

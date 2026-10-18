@@ -17,8 +17,10 @@ import {
   Box,
 } from "@chakra-ui/react";
 import { FaUserCircle } from "react-icons/fa";
+import { useDispatch } from "react-redux";
 import { useHistory } from "@/src/lib/nav";
-import { clearStorefrontAuth, hasStorefrontToken, STOREFRONT_AUTH_CHANGED } from "@/lib/auth/persistAuth";
+import { toggleUserFormDrawer } from "@/src/Store/action/modalsNDrawers";
+import { clearStorefrontAuth, hasStorefrontToken, setPostAuthRedirect, STOREFRONT_AUTH_CHANGED } from "@/lib/auth/persistAuth";
 import { getTableSession, isDineInSession, exitTableSessionToWebsite } from "@/lib/restaurant/table-session";
 import { useLogoutMutation, useListAddressesQuery } from "@/store/api/storefrontAuthApi";
 import { getUserInFromLocal } from "@/src/utils/CommonFunctions";
@@ -37,8 +39,10 @@ export function ProfileMenu() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
   const [dineIn, setDineIn] = useState(false);
   const history = useHistory();
+  const dispatch = useDispatch();
   const [logout] = useLogoutMutation();
   const { data: serverAddresses, isFetching: addressesLoading } = useListAddressesQuery(undefined, {
     skip: !open || !loggedIn,
@@ -51,6 +55,7 @@ export function ProfileMenu() {
       const localUser = Array.isArray(customer) ? null : customer;
       setName(localUser?.customerName || "");
       setPhone(localUser?.whatsAppNumber || "");
+      setAvatarUrl(localUser?.avatarUrl || "");
       setDineIn(isDineInSession(getTableSession()));
     };
     sync();
@@ -71,10 +76,17 @@ export function ProfileMenu() {
     window.setTimeout(() => history.push(path), 280);
   };
 
+  const onSignIn = () => {
+    setPostAuthRedirect("/profile");
+    setOpen(false);
+    window.setTimeout(() => dispatch(toggleUserFormDrawer(true)), 280);
+  };
+
   const onLogout = async () => {
     setLoggedIn(false);
     setName("");
     setPhone("");
+    setAvatarUrl("");
     const refreshToken = localStorage.getItem("refreshToken");
     try {
       if (refreshToken) await logout({ refreshToken }).unwrap();
@@ -105,7 +117,25 @@ export function ProfileMenu() {
             Account
           </DrawerHeader>
           <DrawerBody px={4} pt={4} pb={6}>
-            <Box mb={4}>
+            <Box mb={4} display="flex" alignItems="center" gap={3}>
+              <Box
+                w="44px"
+                h="44px"
+                borderRadius="full"
+                overflow="hidden"
+                bg="gray.100"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                flexShrink={0}
+              >
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                ) : (
+                  <FaUserCircle size="1.6em" />
+                )}
+              </Box>
+              <Box minW={0}>
               <Text fontWeight="700" fontSize="16px" noOfLines={1}>
                 {name || "Guest"}
               </Text>
@@ -114,7 +144,20 @@ export function ProfileMenu() {
                   {phone}
                 </Text>
               ) : null}
+              </Box>
             </Box>
+
+            {!loggedIn ? (
+              <Button
+                variant="solidFull"
+                mb={4}
+                textTransform="none"
+                fontWeight="600"
+                onClick={onSignIn}
+              >
+                Sign in
+              </Button>
+            ) : null}
 
             <VStack align="stretch" spacing={0} mx={-4}>
               {dineIn ? (

@@ -39,6 +39,7 @@ export interface StorefrontProfile {
   fullName?: string | null;
   email: string | null;
   phone: string | null;
+  avatarUrl?: string | null;
 }
 
 export interface AuthResult {
