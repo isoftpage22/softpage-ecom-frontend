@@ -211,6 +211,8 @@ export const ordersApi = createApi({
         tip?: number;
         payLater?: boolean;
         returnOrigin?: string;
+        /** Signed token from the store's WhatsApp chat link; the order is then confirmed there. */
+        waSession?: string;
       }
     >({
       query: ({
@@ -227,6 +229,7 @@ export const ordersApi = createApi({
         tip,
         payLater,
         returnOrigin,
+        waSession,
       }) => ({
         document: gql`
           ${MENU_CHECKOUT_ORDER_FIELDS}
@@ -262,6 +265,7 @@ export const ordersApi = createApi({
             tip,
             payLater,
             returnOrigin,
+            waSession,
           },
         },
       }),

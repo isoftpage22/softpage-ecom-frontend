@@ -13,6 +13,7 @@ import { StoreAvailabilityGate } from "@/components/StoreAvailabilityGate";
 import { MenuAuthChrome } from "@/components/MenuAuthChrome";
 import { TenantThemeVars } from "@/components/TenantThemeVars";
 import { MenuDesktopFrame } from "@/components/MenuDesktopFrame";
+import { WhatsappHandoffBanner } from "@/components/whatsapp/WhatsappHandoffBanner";
 
 export async function generateMetadata(): Promise<Metadata> {
   const tenant = await resolveTenant();
@@ -66,7 +67,10 @@ export default async function MenuLayout({
       <MenuAuthChrome />
       <Suspense fallback={<MenuDesktopFrame>{children}</MenuDesktopFrame>}>
         <StoreAvailabilityGate>
-          <MenuDesktopFrame>{children}</MenuDesktopFrame>
+          <MenuDesktopFrame>
+            <WhatsappHandoffBanner />
+            {children}
+          </MenuDesktopFrame>
         </StoreAvailabilityGate>
       </Suspense>
       </TenantProvider>
