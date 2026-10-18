@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { DrawerBody, DrawerHeader, Text } from "@chakra-ui/react";
 import DrawerComp from "../../Components/DrawerComp/DrawerComp";
 import DrawerHeaderCustom from "../../Components/DrawerComp/DrawerHeaderCustom";
@@ -9,6 +9,8 @@ import OtpFields from "./OtpFields";
 import { useBusinessId } from "@/lib/tenant/TenantContext";
 import { CHROME_BAR_BG } from "@/lib/menu/storeChrome";
 import { normalizeIndianMobile } from "@/src/utils/phone";
+import { useWhatsappHandoff } from "@/lib/whatsapp/useWhatsappHandoff";
+import { indianMobileFromWaId } from "@/lib/whatsapp/handoff";
 import {
   useSignupInfoMutation,
   useSendOtpMutation,
@@ -109,6 +111,17 @@ const UserFormContainer = (props) => {
       }
     },
   });
+
+  // Came from the store's WhatsApp chat: that number is the one to sign in with.
+  const whatsappHandoff = useWhatsappHandoff();
+  const handoffMobile = whatsappHandoff ? indianMobileFromWaId(whatsappHandoff.waId) : "";
+  useEffect(() => {
+    if (handoffMobile && !formik.values.whatsAppNumber) {
+      formik.setFieldValue("whatsAppNumber", handoffMobile, false);
+    }
+    // formik is a new object every render; the number is what matters.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [handoffMobile]);
 
   const finishAuth = (result) => {
     persistStorefrontAuth(result, formik.values);
