@@ -40,7 +40,7 @@ const MoneyTip = () => {
   };
 
   return (
-    <Box bg="white" mb="5px" px="16px" py="14px">
+    <Box bg="white" px="16px" py="14px">
       <Text fontSize="14px" fontWeight="700" color="#111827" mb="10px">
         Would you like to add a tip?
       </Text>

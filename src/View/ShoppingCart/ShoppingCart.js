@@ -31,6 +31,16 @@ import { getTableSession, isDineInSession, tableSessionLabel, exitTableSessionTo
 import { isProductOutOfStock, isVariantOutOfStock } from '../../../lib/catalog/options'
 import { useStoreSlug, useStoreConfig } from '@/lib/tenant/TenantContext'
 import { deliveryFeeFromQuote, formatEtaMinutes, useDeliveryQuote } from '@/lib/checkout/useDeliveryQuote'
+import { MenuContainer } from '@/components/MenuContainer'
+
+/** White rounded block that groups one part of the cart. */
+function CartPanel({ children, clip = true }) {
+  return (
+    <Box bg="white" borderRadius="14px" border="1px solid" borderColor="gray.100" boxShadow="0 1px 2px rgba(15,23,42,0.04)" overflow={clip ? "hidden" : "visible"}>
+      {children}
+    </Box>
+  )
+}
 
 const ShoppingCart = (props) => {
   const history = useHistory()
@@ -200,40 +210,62 @@ const ShoppingCart = (props) => {
               <TopAddressBarContainer etaLabel={customerEtaLabel} />
             )}
             <TopBarWithBackButton backTo={payment.notice || paymentCancelled ? "/" : undefined} />
-            <Flex
-              direction={{ base: "column", lg: "row" }}
-              align={{ base: "stretch", lg: "flex-start" }}
-              gap={{ lg: "20px" }}
+            <Box
               bg="#f4f4f5"
-              w="100%"
-              maxW="100%"
-              overflow="hidden"
-              px={{ lg: "20px" }}
-              pb={extraFooterSpace ? "calc(220px + env(safe-area-inset-bottom, 0px))" : { base: "calc(140px + env(safe-area-inset-bottom, 0px))", lg: "32px" }}
+              minH="calc(100vh - 56px)"
+              pb={extraFooterSpace ? "calc(220px + env(safe-area-inset-bottom, 0px))" : { base: "calc(120px + env(safe-area-inset-bottom, 0px))", lg: "120px" }}
             >
-              <Box flex="1" minW={0} w="100%">
-              {
-                addToCart.products.map((product, index) => {
-                  return <ItemCardAtCheckout key={product.lineKey || product.product_id || index} quantity={product.quantity} addToCart={addToCart} product={product} addToCartProduct={addToCartProduct} deleteToCartProduct={deleteToCartProduct} />
-
-                })
-              }
-              <SpecialInstructions />
-              <MoneyTip />
-              <DiscountCoupons cart={serverCart} />
-              </Box>
-              <Box w={{ base: "100%", lg: "380px" }} minW={0} flexShrink={0} position={{ lg: "sticky" }} top={{ lg: "16px" }}>
-              <DetailedBill
-                qty={qty}
-                totalCartBill={totalCartBill}
-                showDelivery={!dineIn}
-                hasAddress={hasAddress}
-                quote={quote}
-                etaLabel={customerEtaLabel}
-                totalsSyncing={totalsSyncing}
-              />
-              </Box>
-            </Flex>
+              <MenuContainer px={{ base: "12px", lg: "24px" }} pt={{ base: "12px", lg: "24px" }}>
+                <Flex
+                  direction={{ base: "column", lg: "row" }}
+                  align={{ base: "stretch", lg: "flex-start" }}
+                  gap={{ base: "12px", lg: "24px" }}
+                >
+                  <Flex direction="column" gap="12px" flex="1" minW={0}>
+                    <CartPanel>
+                      <Flex align="center" justify="space-between" gap="12px" px="16px" pt="14px" pb="10px" borderBottom="1px solid" borderColor="gray.100">
+                        <Box minW={0}>
+                          <Text fontSize="16px" fontWeight="700" color="#111827">Your order</Text>
+                          <Text fontSize="12px" color="gray.500">{displayQty} {displayQty === 1 ? "item" : "items"}</Text>
+                        </Box>
+                        <Text
+                          as="button"
+                          type="button"
+                          fontSize="13px"
+                          fontWeight="700"
+                          color="#111827"
+                          textDecoration="underline"
+                          textUnderlineOffset="3px"
+                          flexShrink={0}
+                          onClick={() => history.push("/")}
+                        >
+                          + Add more items
+                        </Text>
+                      </Flex>
+                      {addToCart.products.map((product, index) => (
+                        <ItemCardAtCheckout key={product.lineKey || product.product_id || index} quantity={product.quantity} addToCart={addToCart} product={product} addToCartProduct={addToCartProduct} deleteToCartProduct={deleteToCartProduct} />
+                      ))}
+                    </CartPanel>
+                    <CartPanel><DiscountCoupons cart={serverCart} /></CartPanel>
+                    <CartPanel><SpecialInstructions /></CartPanel>
+                    <CartPanel><MoneyTip /></CartPanel>
+                  </Flex>
+                  <Box w={{ base: "100%", lg: "380px" }} minW={0} flexShrink={0} position={{ lg: "sticky" }} top={{ lg: "72px" }}>
+                    <CartPanel clip={false}>
+                      <DetailedBill
+                        qty={qty}
+                        totalCartBill={totalCartBill}
+                        showDelivery={!dineIn}
+                        hasAddress={hasAddress}
+                        quote={quote}
+                        etaLabel={customerEtaLabel}
+                        totalsSyncing={totalsSyncing}
+                      />
+                    </CartPanel>
+                  </Box>
+                </Flex>
+              </MenuContainer>
+            </Box>
             <Footer {...props} usersAddress={usersAddress} isShoppingCart={true} totalCartBill={totalCartBill} totalsSyncing={totalsSyncing} hideVisual />
           </>
           : null}

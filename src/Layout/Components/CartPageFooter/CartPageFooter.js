@@ -382,6 +382,7 @@ const CartPageFooter = (props) => {
         disabled={stockBlocking}
         busy={placing}
         leftLoading={Boolean(props.totalsSyncing)}
+        dockRight
       />
     </Fragment>
   );

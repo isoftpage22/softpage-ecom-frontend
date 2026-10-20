@@ -13,7 +13,8 @@ import ProductImageSlider from "../../Components/ProductImageSlider/ProductImage
 import ProductCustomizationDrawer from "../../Container/ProductCustomizationDrawer/ProductCustomizationDrawer";
 import ChooseLastItemDrawer from "../../Container/ChooseLastItemDrawer/ChooseLastItemDrawer";
 import { Link } from "../../lib/nav";
-import { useBusinessId } from "@/lib/tenant/TenantContext";
+import { useBusinessId, useStoreConfig } from "@/lib/tenant/TenantContext";
+import ShareButton from "../../Components/ShareButton/ShareButton";
 import {
   useGetProductByIdQuery,
   useGetProductBySlugQuery,
@@ -41,6 +42,7 @@ const ProductDetail = ({ embedded = false } = {}) => {
   const params = useParams();
   const slug = typeof params?.slug === "string" ? params.slug : "";
   const businessId = useBusinessId();
+  const storeConfig = useStoreConfig();
   const dispatch = useDispatch();
   const productList = useSelector((state) => state.products.productList);
   const addToCart = useSelector((state) => state.shoppingCart.addToCart);
@@ -164,9 +166,15 @@ const ProductDetail = ({ embedded = false } = {}) => {
                   <Text fontSize="12px" color="#6b7280">· {product.categoryName}</Text>
                 ) : null}
               </Flex>
-              <Text as="h1" fontSize={{ base: "22px", lg: "30px" }} fontWeight="800" lineHeight={{ base: "28px", lg: "38px" }} mb="16px">
-                {product.productName}
-              </Text>
+              <Flex align="flex-start" justify="space-between" gap="12px" mb="16px">
+                <Text as="h1" fontSize={{ base: "22px", lg: "30px" }} fontWeight="800" lineHeight={{ base: "28px", lg: "38px" }} minW={0}>
+                  {product.productName}
+                </Text>
+                <ShareButton
+                  title={product.productName}
+                  text={`${product.productName} – ₹${price}${storeConfig.name ? ` at ${storeConfig.name}` : ""}`}
+                />
+              </Flex>
 
               <Flex
                 align="center"

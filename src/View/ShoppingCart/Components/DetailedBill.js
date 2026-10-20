@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from 'react'
-import { Box, Text, Flex, Spacer, Container, Divider, Spinner } from '@chakra-ui/react'
-import Card from '../../../Components/Card/Card'
+import { Box, Text, Flex, Spacer, Divider, Spinner } from '@chakra-ui/react'
 import { formatRupee } from '../../../utils/getdetailedBill'
 import { formatPickupEta } from '@/lib/checkout/useDeliveryQuote'
 
@@ -111,19 +110,18 @@ const DetailedBill = (props) => {
   const taxesAmount = totalCartBill.taxesAndOtherCharges ?? totalCartBill.taxAmount
 
   return (
-   <Card mb="3px" flexDirection="column" justify="flex-start" alignItems="flex-start">
-     <Container>
-     <Text>BILL DETAILS</Text>
-     <Box mt="3%"  w="100%">
+   <Box px="18px" py="16px" w="100%">
+     <Text fontSize="16px" fontWeight="700" color="#111827" mb="12px">Bill details</Text>
+     <Flex direction="column" gap="8px" w="100%">
      <Flex w="100%">
-       <Text variant="mutedCart">Item Total</Text>
+       <Text variant="mutedCart">Item total</Text>
        <Spacer/>
-       <Text variant="mutedCart">₹{formatRupee(totalCartBill.totalAmount)}</Text>
+       <Text variant="mutedCart" color="#374151">₹{formatRupee(totalCartBill.totalAmount)}</Text>
      </Flex>
      {showDelivery ? (
        <Flex w="100%" align="flex-start">
          <Box>
-           <Text variant="mutedCart">Delivery Fee</Text>
+           <Text variant="mutedCart">Delivery fee</Text>
            {etaLabel && quote?.serviceable ? (
              <Text
                fontSize="11px"
@@ -138,7 +136,7 @@ const DetailedBill = (props) => {
            ) : null}
          </Box>
          <Spacer />
-         <PriceValue loading={totalsSyncing && !quote}>{feeLabel}</PriceValue>
+         <PriceValue loading={totalsSyncing && !quote} color={!hasAddress ? "#9A9A9A" : "#374151"}>{feeLabel}</PriceValue>
        </Flex>
      ) : null}
      <TaxesAndOtherChargesRow
@@ -146,11 +144,13 @@ const DetailedBill = (props) => {
        breakdown={totalCartBill.breakdown}
        loading={totalsSyncing}
      />
-     <Flex>
-       <Text variant="mutedCart">Tip Amount</Text>
-       <Spacer/>
-       <Text variant="mutedCart">₹{formatRupee(totalCartBill.tip)}</Text>
-     </Flex>
+     {Number(totalCartBill.tip) > 0 ? (
+       <Flex>
+         <Text variant="mutedCart">Tip</Text>
+         <Spacer/>
+         <Text variant="mutedCart" color="#374151">₹{formatRupee(totalCartBill.tip)}</Text>
+       </Flex>
+     ) : null}
      {couponDiscount > 0 ? (
        <Flex>
          <Text variant="mutedCart">Coupon</Text>
@@ -160,17 +160,16 @@ const DetailedBill = (props) => {
          </PriceValue>
        </Flex>
      ) : null}
-     </Box>
-      <Divider mt="3%" mb="3%"/>
+     </Flex>
+      <Divider my="14px" borderStyle="dashed" borderColor="gray.300"/>
       <Flex align="center">
-       <Text lineHeight="30px" >To Pay</Text>
+       <Text fontSize="16px" fontWeight="700" color="#111827">To pay</Text>
        <Spacer/>
-       <PriceValue loading={totalsSyncing} fontWeight="700" lineHeight="30px" muted={false}>
-         ₹{formatRupee(totalCartBill.totalFinalPriceAmount)}
+       <PriceValue loading={totalsSyncing} fontWeight="800" lineHeight="24px" color="#111827" muted={false}>
+         <Text as="span" fontSize="18px">₹{formatRupee(totalCartBill.totalFinalPriceAmount)}</Text>
        </PriceValue>
-       </Flex> 
-     </Container>
-   </Card>
+       </Flex>
+   </Box>
   )
 }
 

@@ -58,6 +58,11 @@ const ItemCardAtCheckout = (props) => {
         alignItems="flex-start"
         gap="10px"
         w="100%"
+        px="16px"
+        py="14px"
+        borderRadius="0"
+        borderBottom="1px solid #F1F1F1"
+        _last={{ borderBottom: "none" }}
         bg={isUnavailable ? "#F7F7F7" : "white"}
         borderLeft={isUnavailable ? "3px solid #C53030" : "3px solid transparent"}
       >

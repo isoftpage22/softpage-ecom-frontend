@@ -1,6 +1,7 @@
 import { Flex, Text, Box, Grid } from '@chakra-ui/react';
 import React, { Fragment, useEffect, useState } from 'react';
 import { MdOutlineEmail, MdOutlinePhone, MdOutlinePlace } from 'react-icons/md';
+import { usePathname } from 'next/navigation';
 import { useSelector } from 'react-redux';
 import FooterCartDetail from '../../../Components/FooterCartDetail';
 import CartPageFooter from '../../../Components/CartPageFooter/CartPageFooter';
@@ -68,6 +69,9 @@ const Footer = (props) => {
     const config = useStoreConfig()
     const { tableReservation } = useStoreCapabilities()
     const openNow = useOpenNow(config)
+    // The menu home has a cart panel on desktop. Every other page needs the floating bar there too.
+    const path = usePathname() || '/'
+    const hasCartRail = path === '/' || path.startsWith('/home/')
     const qty = props.addToCart
         ? props.addToCart.products.reduce((sum, product) => sum + Number(product.quantity || 0), 0)
         : 0;
@@ -204,7 +208,7 @@ const Footer = (props) => {
                     </Grid>
                 </MenuContainer>
             </Box>
-            <Box bg={CHROME_BAR_BG} pb={cartBar ? { base: 'calc(140px + env(safe-area-inset-bottom, 0px))', lg: 0 } : 0}>
+            <Box bg={CHROME_BAR_BG} pb={cartBar ? { base: 'calc(140px + env(safe-area-inset-bottom, 0px))', lg: hasCartRail ? 0 : '110px' } : 0}>
                 <MenuContainer px={{ base: '20px' }} py="16px">
                     <Flex justify="space-between" align="center" gap="12px" flexWrap="wrap" direction={{ base: 'column', md: 'row' }}>
                         <Text textColor="whiteAlpha.700" fontSize="13px">© {currentYear} {config.name || 'Store'}. All rights reserved.</Text>
@@ -227,7 +231,7 @@ const Footer = (props) => {
                 </MenuContainer>
             </Box>
             {isShoppingCart ? cartBar : (
-                <Box display={{ base: "block", lg: "none" }}>{cartBar}</Box>
+                <Box display={{ base: "block", lg: hasCartRail ? "none" : "block" }}>{cartBar}</Box>
             )}
         </Fragment>
     );

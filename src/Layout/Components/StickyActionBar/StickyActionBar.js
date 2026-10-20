@@ -24,6 +24,7 @@ export default function StickyActionBar({
   disabled = false,
   busy = false,
   leftLoading = false,
+  dockRight = false,
 }) {
   const handleClick = (event) => {
     if (disabled || busy) {
@@ -45,6 +46,15 @@ export default function StickyActionBar({
       px="16px"
       bg="transparent"
       pointerEvents="none"
+      sx={dockRight ? {
+        // Desktop cart: sit under the bill column instead of spanning the screen.
+        "@media (min-width: 62em)": {
+          left: "auto",
+          right: "max(24px, calc((100vw - 1240px) / 2 + 24px))",
+          width: "380px",
+          px: 0,
+        },
+      } : undefined}
     >
       <Flex
         as="button"
