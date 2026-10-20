@@ -1,9 +1,10 @@
-import { Flex, Box, Text, Spacer, Button } from '@chakra-ui/react'
+import { Flex, Box, Text } from '@chakra-ui/react'
 import React, { useState } from 'react'
 import { useSelector } from 'react-redux'
 import Card from '../../Components/Card/Card'
 import { ChevronDownIcon } from '@chakra-ui/icons'
 import VegMarker from '../../Components/VegMarker/VegMarker'
+import QtyStepper from '../../Components/QtyStepper/QtyStepper'
 import ProductCustomizationDrawer from '../ProductCustomizationDrawer/ProductCustomizationDrawer'
 import ChooseLastItemDrawer from '../ChooseLastItemDrawer/ChooseLastItemDrawer'
 import {
@@ -54,25 +55,22 @@ const ItemCardAtCheckout = (props) => {
   return (
     <>
       <Card
-        justifyContent="flex-end"
-        alignItems="center"
+        alignItems="flex-start"
+        gap="10px"
         w="100%"
         bg={isUnavailable ? "#F7F7F7" : "white"}
         borderLeft={isUnavailable ? "3px solid #C53030" : "3px solid transparent"}
       >
-        <Box mr="4px" mt="4px" alignSelf="flex-start" opacity={dimmed}>
+        <Box mt="3px" flexShrink={0} opacity={dimmed}>
           <VegMarker isVeg={!!catalogProduct?.isVeg} />
         </Box>
-        <Flex direction="column" w="40%" opacity={dimmed}>
-          <Flex flexDirection="column" flexWrap="wrap">
-            <Text variant="solidCart">{line?.productName}</Text>
-            {isUnavailable ? (
-              <Text fontSize="11px" fontWeight="700" color="#C53030" pt="2px">
-                Out of stock
-              </Text>
-            ) : null}
-          </Flex>
-
+        <Flex direction="column" flex="1" minW="0" opacity={dimmed}>
+          <Text variant="solidCart" noOfLines={2} wordBreak="break-word">{line?.productName}</Text>
+          {isUnavailable ? (
+            <Text fontSize="11px" fontWeight="700" color="#C53030" pt="2px">
+              Out of stock
+            </Text>
+          ) : null}
           {hasOptions ? (
             <Box as="button" type="button" textAlign="left" mt="4px" onClick={openCustomization} cursor="pointer">
               <Flex align="center" gap="2px">
@@ -82,29 +80,28 @@ const ItemCardAtCheckout = (props) => {
                 <ChevronDownIcon size="sm" />
               </Flex>
               {customization ? (
-                <Text fontSize="12px" color="gray.600" noOfLines={2} pr="4px">
+                <Text fontSize="12px" color="gray.600" noOfLines={2}>
                   {customization}
                 </Text>
               ) : null}
             </Box>
           ) : customization ? (
-            <Text variant="solidCart" fontSize="12px">
+            <Text variant="solidCart" fontSize="12px" noOfLines={2}>
               ({customization})
             </Text>
           ) : null}
         </Flex>
-        <Spacer />
-        <Box w="54px" h="22px" border="1px solid #D7D7D7" py="2px" display="flex" justifyContent="space-between" opacity={isUnavailable ? 0.7 : 1}>
-          <Button onClick={handleMinus} right="10px" colorScheme="none" size="sm" variant="outline" h="15px" p="0px"> - </Button>
-          <Spacer />
-          <Text variant="solidCart" pb="2px">{quantity}</Text>
-          <Spacer />
-          <Button onClick={handlePlus} isDisabled={isUnavailable} left="10px" colorScheme="none" size="sm" variant="outline" h="15px" p="0px"> + </Button>
-        </Box>
-        <Spacer />
-        <Box w="66px" ml="auto" opacity={dimmed}>
-          <Text alignSelf="center" variant="solidCart" pb="2px">₹{line?.total_amount}</Text>
-        </Box>
+        <Flex direction="column" align="flex-end" gap="6px" flexShrink={0}>
+          <Box opacity={isUnavailable ? 0.7 : 1}>
+            <QtyStepper
+              quantity={quantity}
+              onDecrement={handleMinus}
+              onIncrement={handlePlus}
+              incrementDisabled={isUnavailable}
+            />
+          </Box>
+          <Text variant="solidCart" fontWeight="700" opacity={dimmed} whiteSpace="nowrap">₹{line?.total_amount}</Text>
+        </Flex>
       </Card>
       <ProductCustomizationDrawer
         product={catalogProduct}

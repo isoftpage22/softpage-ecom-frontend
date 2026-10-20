@@ -28,7 +28,7 @@ const ProductImageSlider = ({ images = [], alt = "" }) => {
 
   if (!urls.length) {
     return (
-      <Box w="100%" h="280px" bg="#E4E1E1">
+      <Box w="100%" h={{ base: "280px", lg: "440px" }} bg="#E4E1E1">
         <img src={DEFAULT_PRODUCT_IMAGE} alt={alt} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
       </Box>
     );
@@ -52,7 +52,7 @@ const ProductImageSlider = ({ images = [], alt = "" }) => {
             key={`${src}-${i}`}
             flex="0 0 100%"
             w="100%"
-            h="280px"
+            h={{ base: "280px", lg: "440px" }}
             scrollSnapAlign="start"
           >
             <img

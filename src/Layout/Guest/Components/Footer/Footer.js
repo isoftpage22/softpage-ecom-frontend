@@ -1,9 +1,11 @@
 import { Flex, Text, Box, Grid } from '@chakra-ui/react';
-import React, { Fragment } from 'react';
+import React, { Fragment, useEffect, useState } from 'react';
+import { MdOutlineEmail, MdOutlinePhone, MdOutlinePlace } from 'react-icons/md';
 import { useSelector } from 'react-redux';
 import FooterCartDetail from '../../../Components/FooterCartDetail';
 import CartPageFooter from '../../../Components/CartPageFooter/CartPageFooter';
-import { useStoreConfig } from '@/lib/tenant/TenantContext';
+import { useStoreCapabilities, useStoreConfig } from '@/lib/tenant/TenantContext';
+import { isStoreAcceptingOrders } from '@/lib/store/operationalHours';
 import { Link } from '../../../../lib/nav';
 import { StoreLogo } from '@/components/StoreLogo';
 import { CHROME_ACCENT, CHROME_BAR_BG, CHROME_SURFACE, CHROME_TEXT } from '@/lib/menu/storeChrome';
@@ -13,9 +15,9 @@ import { contactEmail, contactPhone, fullAddress, mapsHref, socialLinks, telHref
 
 const linkStyle = { textDecoration: 'none' };
 
-function FooterHeading({ children }) {
+function FooterHeading({ children, mb = '12px' }) {
     return (
-        <Text fontSize="12px" fontWeight="700" letterSpacing="0.08em" textTransform="uppercase" opacity={0.6} mb="12px">
+        <Text fontSize="12px" fontWeight="700" letterSpacing="0.08em" textTransform="uppercase" opacity={0.6} mb={mb}>
             {children}
         </Text>
     );
@@ -28,9 +30,44 @@ function FooterLink({ href, external, children }) {
         : <Link to={href} href={href} style={linkStyle}>{text}</Link>;
 }
 
+function ContactRow({ icon, href, external, children }) {
+    return (
+        <Flex
+            as="a"
+            href={href}
+            target={external ? '_blank' : undefined}
+            rel={external ? 'noopener noreferrer' : undefined}
+            align="flex-start"
+            gap="10px"
+            py="5px"
+            fontSize="14px"
+            style={linkStyle}
+            _hover={{ textDecoration: 'underline' }}
+        >
+            <Box as={icon} boxSize="18px" mt="1px" flexShrink={0} opacity={0.7} />
+            <Box minW={0} lineHeight="1.5">{children}</Box>
+        </Flex>
+    );
+}
+
+/** "Open now" / "Closed now", worked out in the browser so it matches the visitor's clock. */
+function useOpenNow(config) {
+    const [open, setOpen] = useState(null)
+    useEffect(() => {
+        if (!config.businessHours) return undefined
+        const check = () => setOpen(isStoreAcceptingOrders({ isStoreOpen: config.isStoreOpen, businessHours: config.businessHours, timezone: config.timezone }))
+        check()
+        const timer = setInterval(check, 60000)
+        return () => clearInterval(timer)
+    }, [config.isStoreOpen, config.businessHours, config.timezone])
+    return open
+}
+
 const Footer = (props) => {
     const { isShoppingCart, hideVisual } = props
     const config = useStoreConfig()
+    const { tableReservation } = useStoreCapabilities()
+    const openNow = useOpenNow(config)
     const qty = props.addToCart
         ? props.addToCart.products.reduce((sum, product) => sum + Number(product.quantity || 0), 0)
         : 0;
@@ -74,6 +111,8 @@ const Footer = (props) => {
     const socials = socialLinks(social)
     const policyLinks = legal.map((p) => ({ name: p.title, href: `/pages/${p.slug}` }))
     const companyLinks = [
+        { name: 'Order online', href: '/' },
+        ...(tableReservation ? [{ name: 'Reserve a table', href: '/book' }] : []),
         ...company.map((p) => ({ name: p.title, href: `/pages/${p.slug}` })),
         ...(contactHref && !company.some((p) => p.slug === 'contact-us') ? [{ name: 'Contact Us', href: contactHref, external: true }] : []),
     ]
@@ -84,20 +123,21 @@ const Footer = (props) => {
                 <MenuContainer px={{ base: '20px' }} py={{ base: '28px', lg: '44px' }}>
                     <Grid templateColumns={{ base: '1fr', md: 'repeat(2, minmax(0, 1fr))', lg: '1.5fr 1fr 1fr 1.2fr' }} gap={{ base: '28px', lg: '40px' }}>
                         <Box>
-                            <Flex align="center" gap="12px" mb="14px">
+                            <Flex align="center" gap="12px" mb="12px">
                                 <StoreLogo src={config.logo} name={config.name || 'Store'} size="48px" />
                                 <Text fontSize="18px" fontWeight="800">{config.name || 'Store'}</Text>
                             </Flex>
-                            {address ? (
-                                <Text fontSize="14px" opacity={0.8} lineHeight="1.6" mb="10px">
-                                    {address}
-                                    {mapHref ? (
-                                        <Box as="a" href={mapHref} target="_blank" rel="noopener noreferrer" display="block" fontWeight="600" mt="4px" style={linkStyle}>Get directions →</Box>
-                                    ) : null}
-                                </Text>
+                            {config.description ? (
+                                <Text fontSize="14px" opacity={0.75} lineHeight="1.6" mb="12px" noOfLines={3}>{config.description}</Text>
                             ) : null}
-                            {phone ? <Box as="a" href={telHref(phone)} display="block" fontSize="14px" fontWeight="600" py="2px" style={linkStyle}>{phone}</Box> : null}
-                            {email ? <Box as="a" href={`mailto:${email}`} display="block" fontSize="14px" fontWeight="600" py="2px" style={linkStyle}>{email}</Box> : null}
+                            {address ? (
+                                <ContactRow icon={MdOutlinePlace} href={mapHref || undefined} external>
+                                    <Text as="span" display="block" opacity={0.85}>{address}</Text>
+                                    {mapHref ? <Text as="span" display="block" fontWeight="600" mt="2px">Get directions →</Text> : null}
+                                </ContactRow>
+                            ) : null}
+                            {phone ? <ContactRow icon={MdOutlinePhone} href={telHref(phone)}><Text as="span" fontWeight="600">{phone}</Text></ContactRow> : null}
+                            {email ? <ContactRow icon={MdOutlineEmail} href={`mailto:${email}`}><Text as="span" fontWeight="600" wordBreak="break-all">{email}</Text></ContactRow> : null}
                         </Box>
                         {policyLinks.length ? (
                             <Box as="nav" aria-label="Policies">
@@ -115,7 +155,15 @@ const Footer = (props) => {
                             <Box>
                                 {hours.length ? (
                                     <Box mb={socials.length ? '20px' : 0}>
-                                        <FooterHeading>Opening hours</FooterHeading>
+                                        <Flex align="center" justify="space-between" gap="8px" mb="12px">
+                                            <FooterHeading mb="0">Opening hours</FooterHeading>
+                                            {openNow != null ? (
+                                                <Flex align="center" gap="6px" px="10px" py="3px" borderRadius="999px" bg={openNow ? 'green.50' : 'red.50'} color={openNow ? 'green.700' : 'red.700'} fontSize="12px" fontWeight="700" flexShrink={0}>
+                                                    <Box w="6px" h="6px" borderRadius="full" bg="currentColor" />
+                                                    {openNow ? 'Open now' : 'Closed now'}
+                                                </Flex>
+                                            ) : null}
+                                        </Flex>
                                         {hours.map((row) => (
                                             <Flex key={row.days} justify="space-between" gap="12px" fontSize="14px" py="3px">
                                                 <Text fontWeight="600">{row.days}</Text>

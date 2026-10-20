@@ -13,14 +13,15 @@ const WEEK = [
 
 export type HoursRow = { days: string; hours: string };
 
-/** Opening hours grouped into runs of days, e.g. "Mon – Fri  11:00 AM – 11:00 PM". */
+/** Opening hours grouped into runs of days, e.g. "Mon – Fri  11:00 AM – 11:00 PM" or "Every day  Open 24 hours". */
 export function weeklyHours(hours?: BusinessHours | null): HoursRow[] {
   if (!hours) return [];
   const daily = WEEK.map(([key, short]) => {
     const day = hours[key];
     const open = formatClock(day?.openTime);
     const close = formatClock(day?.closeTime);
-    const value = !day ? "" : day.isOpen === false ? "Closed" : open && close ? `${open} – ${close}` : "";
+    const allDay = open && (open === close || (open === "12:00 AM" && close === "11:59 PM"));
+    const value = !day ? "" : day.isOpen === false ? "Closed" : allDay ? "Open 24 hours" : open && close ? `${open} – ${close}` : "";
     return { short, value };
   });
   if (!daily.some((day) => day.value && day.value !== "Closed")) return [];

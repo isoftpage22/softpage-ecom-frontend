@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import {
   Box,
   Flex,
@@ -39,6 +39,35 @@ const CommonTopBar = ({ searchQuery, onSearchChange, asHeading = false }) => {
     history.push('/')
   }
 
+  const rootRef = useRef(null)
+  const addressRef = useRef(null)
+  const [scrolled, setScrolled] = useState(false)
+
+  // The header sticks to the top of the screen. On phones the address strip
+  // scrolls away first (negative sticky top), so only the logo row and search stay.
+  // Other sticky bars read --menu-header-h to sit just below it.
+  useEffect(() => {
+    const root = document.documentElement
+    const measure = () => {
+      const total = rootRef.current?.offsetHeight || 0
+      const address = addressRef.current?.offsetHeight || 0
+      root.style.setProperty('--menu-addr-h', `${address}px`)
+      root.style.setProperty('--menu-header-h', `${Math.max(0, total - address)}px`)
+    }
+    measure()
+    const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : null
+    if (rootRef.current) observer?.observe(rootRef.current)
+    const onScroll = () => setScrolled(window.scrollY > 8)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      observer?.disconnect()
+      window.removeEventListener('scroll', onScroll)
+      root.style.removeProperty('--menu-addr-h')
+      root.style.removeProperty('--menu-header-h')
+    }
+  }, [])
+
   useEffect(() => {
     const session = getTableSession()
     setDineIn(isDineInSession(session))
@@ -46,9 +75,17 @@ const CommonTopBar = ({ searchQuery, onSearchChange, asHeading = false }) => {
   }, [])
 
   return (
-    <>
+    <Box
+      ref={rootRef}
+      data-menu-header
+      position="sticky"
+      top="calc(-1 * var(--menu-addr-h, 0px))"
+      zIndex={30}
+      boxShadow={scrolled ? '0 4px 16px rgba(15,23,42,0.12)' : 'none'}
+      transition="box-shadow 0.2s ease"
+    >
       <Box bg="var(--sp-section-surface, var(--brand-secondary, #111111))">
-        {!dineIn ? <Box display={{ base: 'block', lg: 'none' }}><TopAddressBarContainer /></Box> : null}
+        {!dineIn ? <Box ref={addressRef} display={{ base: 'block', lg: 'none' }}><TopAddressBarContainer /></Box> : null}
         <MenuContainer>
         <Flex px={{ base: '10px', lg: '0' }} py={{ base: '8px', lg: '12px' }} minH={{ base: '72px', lg: '76px' }} alignItems="center">
           <Flex alignItems="center" minW={0} flex="1" mr="8px">
@@ -170,17 +207,12 @@ const CommonTopBar = ({ searchQuery, onSearchChange, asHeading = false }) => {
       </Box>
       <Box
         display={{ base: 'block', lg: 'none' }}
-        position="sticky"
-        top="0"
-        zIndex={20}
         w="100%"
         bg="white"
-        px={{ base: "12px", lg: "24px" }}
+        px="12px"
         py="10px"
         borderBottom="1px solid"
         borderColor="gray.100"
-        boxShadow="0 2px 8px rgba(0,0,0,0.06)"
-        style={{ position: 'sticky', top: 0, zIndex: 20 }}
       >
         <InputGroup maxW={{ lg: "640px" }} mx={{ lg: "auto" }}>
           <InputLeftElement pointerEvents="none" h="42px">
@@ -212,7 +244,7 @@ const CommonTopBar = ({ searchQuery, onSearchChange, asHeading = false }) => {
           ) : null}
         </InputGroup>
       </Box>
-    </>
+    </Box>
   )
 }
 export default CommonTopBar;

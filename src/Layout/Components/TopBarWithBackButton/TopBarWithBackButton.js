@@ -6,6 +6,7 @@ import { ArrowBackIcon } from '@chakra-ui/icons'
 import { useHistory } from '../../../lib/nav'
 import SearchBarDrawer from '../../../Container/SearchBarDrawer/SearchBarDrawer'
 import { ProfileMenu } from '../../../Components/ProfileMenu/ProfileMenu'
+import { MENU_MAX_WIDTH } from '@/components/MenuContainer'
 
 /**
  * @param {{
@@ -37,7 +38,8 @@ const TopBarWithBackButton = ({ addToCart = null, getProductListOnSearch = null,
 
     return (
         <>
-            <Flex bg="var(--brand-secondary, #111111)" px="8px" h="56px" alignItems="center">
+            <Box bg="var(--brand-secondary, #111111)" position="sticky" top="0" zIndex={30}>
+            <Flex maxW={{ lg: MENU_MAX_WIDTH }} mx="auto" px={{ base: '8px', lg: '16px' }} h="56px" alignItems="center">
                 <Box textAlign="left" boxSizing="border-box" fontWeight="700" alignSelf="center">
                     <Flex >
                         <IconButton
@@ -89,6 +91,7 @@ const TopBarWithBackButton = ({ addToCart = null, getProductListOnSearch = null,
                     <ProfileMenu />
                 </Box>
             </Flex>
+            </Box>
             {/* <Divider/> */}
             <SearchBarDrawer toggleDrawer={toggleDrawer} setToggleDrawer={setToggleDrawer} />
         </>

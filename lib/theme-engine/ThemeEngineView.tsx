@@ -418,6 +418,8 @@ export function ThemeEngineView({
     ...(engine.regions?.footer || []),
   ];
   const used = { header: false, catalog: false };
+  // While a shopper searches, promos and coupon banners push the results down. Hide them.
+  const searching = searchQuery.trim().length > 0;
   const headerLook = mergeLooks(...sections.filter((item) => ["top-bar", "store-header", "search-bar"].includes(widgetKey(item))).map((item) => item.style));
   const catalogLook = mergeLooks(...sections.filter((item) => ["category-nav", "menu-catalog"].includes(widgetKey(item))).map((item) => item.style));
   const catalogProducts = sections
@@ -450,6 +452,8 @@ export function ThemeEngineView({
           used.header = true;
           look = headerLook;
           node = <CommonTopBar searchQuery={searchQuery} onSearchChange={onSearchChange} asHeading={engine.page?.key === "home"} />;
+        } else if ((key === "product-rail" || key === "coupon-offers") && searching) {
+          return null;
         } else if (key === "product-rail") {
           node = (
             <ProductPromotions
@@ -478,7 +482,7 @@ export function ThemeEngineView({
           if (used.catalog) return null;
           used.catalog = true;
           look = catalogLook;
-          node = <Home hideChrome initialCatalog={initialCatalog} searchQuery={searchQuery} reserveLook={reserveLook} boundProductIds={arrangedMenu ? undefined : boundProductIds} arrangedMenu={arrangedMenu} arrangedProducts={arrangedMenu ? catalogProducts : undefined} menuStrategy={arrangedMenu ? undefined : menuBinding?.strategy} />;
+          node = <Home hideChrome initialCatalog={initialCatalog} searchQuery={searchQuery} onClearSearch={() => onSearchChange("")} reserveLook={reserveLook} boundProductIds={arrangedMenu ? undefined : boundProductIds} arrangedMenu={arrangedMenu} arrangedProducts={arrangedMenu ? catalogProducts : undefined} menuStrategy={arrangedMenu ? undefined : menuBinding?.strategy} />;
         } else if (key === "reservation-cta") {
           return null;
         } else if (key === "social-links") {
@@ -494,9 +498,13 @@ export function ThemeEngineView({
           if (typeof console !== "undefined") console.warn("Unknown theme widget", section.widget);
           node = <GenericSection section={section} />;
         }
+        // The top bar sticks inside its own wrapper, so the wrapper is what has to stick.
+        const sticky = key === "top-bar" || key === "store-header" || key === "search-bar"
+          ? { position: "sticky" as const, top: "calc(-1 * var(--menu-addr-h, 0px))", zIndex: 30 }
+          : null;
         return (
           <WidgetBoundary key={section.id} id={section.id}>
-            <div className={`sp-${section.id}`} data-sp-id={section.id} data-sp-catalog={key === "category-nav" || key === "menu-catalog" ? "1" : undefined} style={lookCssVars(look)}>
+            <div className={`sp-${section.id}`} data-sp-id={section.id} data-sp-catalog={key === "category-nav" || key === "menu-catalog" ? "1" : undefined} style={{ ...lookCssVars(look), ...sticky }}>
               {node}
             </div>
           </WidgetBoundary>
@@ -614,7 +622,7 @@ export function PreviewBridge() {
   }, []);
   if (!previewing) return null;
   return (
-    <div style={{ position: "sticky", top: 0, zIndex: 40, background: "var(--sp-color-brand-accent, #b45309)", color: "#fff", textAlign: "center", padding: "8px 12px" }}>
+    <div style={{ position: "relative", zIndex: 40, background: "var(--sp-color-brand-accent, #b45309)", color: "#fff", textAlign: "center", padding: "8px 12px" }}>
       This is a preview. Ordering and payment are turned off.
     </div>
   );

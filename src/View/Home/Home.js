@@ -76,6 +76,7 @@ const Home = (props) => {
     arrangedMenu,
     arrangedProducts,
     menuStrategy,
+    onClearSearch,
   } = props
   useMenuCatalog(initialCatalog)
 
@@ -226,6 +227,8 @@ const Home = (props) => {
   useMenuListingRestore(ready)
 
   const searching = typedSearch.length > 0
+  const resultCount = (visibleProductList?.categories || []).reduce((sum, category) => sum + (category.products?.length || 0), 0)
+  const clearSearch = controlledSearch ? onClearSearch : () => setInternalSearch("")
 
   return (
     <>
@@ -257,12 +260,21 @@ const Home = (props) => {
       <Flex align="flex-start" w="100%" gap={{ lg: '24px' }} pt={{ lg: '20px' }} pb={{ lg: '32px' }}>
         <DesktopCategoryNav productList={showSearchLoading ? { categories: [] } : visibleProductList} isSearch={search.active} />
         <Box flex="1" minW={0}>
-          {search.active ? (
-            <Text px={{ base: "6%", lg: "0" }} pt="16px" fontSize="14px" color="gray.600">
-              {typedSearch ? `Dishes matching “${typedSearch}”` : "Search results"}
-            </Text>
-          ) : null}
           <ToggleSwitch vegOnly={vegOnly} onVegOnlyChange={setVegOnly} reserveLook={reserveLook} liftReserve={(addToCart?.products?.length || 0) > 0} />
+          {searching && !(search.isError && !search.items?.length) ? (
+            <Flex px={{ base: "6%", lg: "0" }} pt="16px" align="center" justify="space-between" gap="12px">
+              <Text fontSize="15px" color="gray.700" noOfLines={1}>
+                {showSearchLoading
+                  ? `Searching for “${typedSearch}”…`
+                  : `${resultCount} ${resultCount === 1 ? "dish" : "dishes"} for “${typedSearch}”`}
+              </Text>
+              {clearSearch ? (
+                <Text as="button" type="button" fontSize="13px" fontWeight="700" textDecoration="underline" textUnderlineOffset="2px" flexShrink={0} onClick={clearSearch}>
+                  Clear search
+                </Text>
+              ) : null}
+            </Flex>
+          ) : null}
           <CategoryWithProducts
             productList={visibleProductList}
             addToCart={addToCart}
