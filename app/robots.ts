@@ -1,11 +1,11 @@
 import type { MetadataRoute } from "next";
-import { resolveTenant } from "@/lib/tenant/resolveTenant";
+import { publicOrigin, resolveTenant } from "@/lib/tenant/resolveTenant";
 import { apiOrigin } from "@/lib/api/origin";
 
 export default async function robots(): Promise<MetadataRoute.Robots> {
   const tenant = await resolveTenant();
-  const host = tenant?.customDomain || (tenant?.subdomain ? `${tenant.subdomain}.softpage.in` : "");
-  const origin = host ? `https://${host}` : process.env.NEXT_PUBLIC_SITE_URL || "";
+  // The menu answers on its own host ({slug}-restaurant.softpage.in) or the store's domain.
+  const origin = await publicOrigin();
   try {
     const res = await fetch(`${apiOrigin()}/api/v1/public/store/robots?businessId=${tenant?.businessId || 0}&origin=${encodeURIComponent(origin)}`);
     const json = await res.json();

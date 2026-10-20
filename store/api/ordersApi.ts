@@ -211,6 +211,8 @@ export const ordersApi = createApi({
         tip?: number;
         payLater?: boolean;
         returnOrigin?: string;
+        /** Ad click IDs and UTM tags from lib/ads/attribution. */
+        attributionJson?: string;
       }
     >({
       query: ({
@@ -227,6 +229,7 @@ export const ordersApi = createApi({
         tip,
         payLater,
         returnOrigin,
+        attributionJson,
       }) => ({
         document: gql`
           ${MENU_CHECKOUT_ORDER_FIELDS}
@@ -262,6 +265,7 @@ export const ordersApi = createApi({
             tip,
             payLater,
             returnOrigin,
+            attributionJson,
           },
         },
       }),

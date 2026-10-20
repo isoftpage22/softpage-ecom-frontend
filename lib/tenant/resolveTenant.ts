@@ -63,3 +63,17 @@ export const resolveTenant = cache(async (): Promise<TenantInfo | null> => {
     `${API_BASE_URL}/api/v1/public/store/by-subdomain/${encodeURIComponent(subdomain)}`,
   );
 });
+
+/**
+ * Public origin of the store answering this request, e.g.
+ * `https://asian-box-restaurant.softpage.in`. Sitemap and robots URLs use it so
+ * every merchant gets their own address.
+ */
+export async function publicOrigin(): Promise<string> {
+  const host = requestPublicHost(await headers());
+  if (host && !host.endsWith("localhost")) return `https://${host}`;
+  const tenant = await resolveTenant();
+  const fallback = tenant?.customDomain || (tenant?.subdomain ? `${tenant.subdomain}-restaurant.softpage.in` : "");
+  if (fallback) return `https://${fallback}`;
+  return (process.env.NEXT_PUBLIC_SITE_URL || "").replace(/\/$/, "");
+}

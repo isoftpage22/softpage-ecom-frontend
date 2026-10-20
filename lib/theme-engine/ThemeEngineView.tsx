@@ -229,8 +229,15 @@ export type EnginePage = {
     keywords?: string[];
     robots?: { index?: boolean; follow?: boolean };
     openGraph?: { title?: string; description?: string; images?: string[] };
+    /** Next.js Metadata built by the API for this route. */
+    metadata?: Record<string, unknown>;
   };
 };
+
+/** JSON for a `<script>` tag. Escapes `<` so text like `</script>` in a dish name cannot end the tag. */
+export function jsonLdHtml(node: unknown): string {
+  return JSON.stringify(node).replace(/</g, "\\u003c");
+}
 
 function widgetKey(section: Section) {
   return section.widget.split("@")[0];
@@ -497,7 +504,7 @@ export function ThemeEngineView({
       })}
       {!sections.some((item) => widgetKey(item) === "coupon-offers") && <CurrentOffers drawerOnly />}
       {engine.jsonLd?.map((node, index) => (
-        <script key={index} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(node) }} />
+        <script key={index} type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdHtml(node) }} />
       ))}
     </div>
   );

@@ -8,8 +8,16 @@ import {
   HYDRATE_CART,
   SET_ACTIVE_ORDER,
 } from "../../actionTypes";
+import { trackEvent } from "@/lib/ads/track";
 
 export const addToCartProduct = (_payload) => {
+  const id = _payload?.product_id ?? _payload?.id;
+  trackEvent("AddToCart", {
+    content_ids: id != null ? [id] : [],
+    content_name: _payload?.productName || _payload?.name || undefined,
+    content_type: "product",
+    value: (Number(_payload?.unitPrice ?? _payload?.price ?? _payload?.productCost) || 0) * (Number(_payload?.addQuantity) || 1),
+  });
   return { type: ADD_PRODUCT_TO_CART, payload: _payload };
 };
 export const deleteToCartProduct = (_payload) => {

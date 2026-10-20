@@ -1,4 +1,6 @@
 import type { Address, AddToCartInput } from "@/types/cart.types";
+import { attributionJson } from "@/lib/ads/attribution";
+import { trackEvent } from "@/lib/ads/track";
 import type { CheckoutResult } from "@/types/order.types";
 import { getGuestSessionId } from "@/lib/cart/session";
 import { currentShippingRateId } from "@/lib/logisticsApi";
@@ -93,6 +95,7 @@ export async function placeMenuOrder(opts: {
       tip?: number;
       payLater?: boolean;
       returnOrigin?: string;
+    attributionJson?: string;
     },
     CheckoutResult
   >;
@@ -152,6 +155,13 @@ async function runPlaceMenuOrder(
   const notes = buildCheckoutNotes(opts.tableSession, opts.specialInstructions);
   const tip = Math.max(0, Number(opts.tip) || 0);
 
+  const lineTotal = opts.products.reduce((sum, line) => sum + (Number((line as { total_amount?: unknown }).total_amount) || 0), 0);
+  trackEvent("InitiateCheckout", {
+    value: lineTotal,
+    content_ids: opts.products.map((line) => String((line as { product_id?: unknown; id?: unknown }).product_id ?? (line as { id?: unknown }).id ?? "")).filter(Boolean),
+    content_type: "product",
+  });
+
   const startCheckout = () =>
     opts
       .initiateCheckout({
@@ -177,6 +187,7 @@ async function runPlaceMenuOrder(
         payLater: payLater || undefined,
         returnOrigin:
           typeof window !== "undefined" ? window.location.href : undefined,
+        attributionJson: attributionJson(),
       })
       .unwrap();
 

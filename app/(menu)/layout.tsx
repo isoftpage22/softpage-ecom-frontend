@@ -13,6 +13,7 @@ import { StoreAvailabilityGate } from "@/components/StoreAvailabilityGate";
 import { MenuAuthChrome } from "@/components/MenuAuthChrome";
 import { TenantThemeVars } from "@/components/TenantThemeVars";
 import { MenuDesktopFrame } from "@/components/MenuDesktopFrame";
+import { TrackingTags } from "@/components/TrackingTags";
 
 export async function generateMetadata(): Promise<Metadata> {
   const tenant = await resolveTenant();
@@ -64,6 +65,9 @@ export default async function MenuLayout({
       <PersistStoreInfo />
       <PersistMenuCart />
       <MenuAuthChrome />
+      <Suspense fallback={null}>
+        <TrackingTags />
+      </Suspense>
       <Suspense fallback={<MenuDesktopFrame>{children}</MenuDesktopFrame>}>
         <StoreAvailabilityGate>
           <MenuDesktopFrame>{children}</MenuDesktopFrame>
