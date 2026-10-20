@@ -44,7 +44,7 @@ const CategoryWithProducts = (props) => {
         productsWithCategories.map((prodCateg) => {
           if (!Array.isArray(prodCateg.products) || prodCateg.products.length === 0) return null
           return (
-          <Box key={prodCateg.categoryName} id={categoryAnchorId(prodCateg.categoryName)} scrollMarginTop={{ base: "72px", lg: "16px" }}>
+          <Box key={prodCateg.categoryName} id={categoryAnchorId(prodCateg.categoryName)} scrollMarginTop="calc(var(--menu-header-h, 0px) + 64px)">
             <Flex align="center" gap="12px" pt={{ base: '28px', lg: '32px' }} pb={{ base: '12px', lg: '14px' }} px={{ base: '6%', lg: '0' }}>
               {/* {prodCateg.categoryImage ? (
                 <Image

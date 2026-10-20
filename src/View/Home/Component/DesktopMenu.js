@@ -9,6 +9,12 @@ import ItemCardAtCheckout from "../../../Container/ItemCardAtCheckout/ItemCardAt
 import { addToCartProduct, deleteToCartProduct } from "../../../Store/action/shoppingCart";
 import { activeOrderHref, showsOrderBar } from "@/lib/cart/persistCart";
 
+/** Height of the sticky menu header, so scroll-spy measures below it. */
+function headerOffset() {
+  const value = getComputedStyle(document.documentElement).getPropertyValue("--menu-header-h");
+  return parseFloat(value) || 0;
+}
+
 export function DesktopCategoryNav({ productList, isSearch }) {
   const categories = useMemo(
     () =>
@@ -30,7 +36,7 @@ export function DesktopCategoryNav({ productList, isSearch }) {
       let current = ids[0];
       for (const id of ids) {
         const el = document.getElementById(id);
-        if (el && el.getBoundingClientRect().top <= 80) current = id;
+        if (el && el.getBoundingClientRect().top <= headerOffset() + 80) current = id;
       }
       setActive(current);
     };
@@ -60,9 +66,9 @@ export function DesktopCategoryNav({ productList, isSearch }) {
       w="232px"
       flexShrink={0}
       position="sticky"
-      top="16px"
+      top="calc(var(--menu-header-h, 0px) + 16px)"
       alignSelf="flex-start"
-      maxH="calc(100vh - 32px)"
+      maxH="calc(100vh - var(--menu-header-h, 0px) - 32px)"
       overflowY="auto"
       bg="white"
       border="1px solid"
@@ -131,9 +137,9 @@ export function DesktopCartRail() {
       w="320px"
       flexShrink={0}
       position="sticky"
-      top="16px"
+      top="calc(var(--menu-header-h, 0px) + 16px)"
       alignSelf="flex-start"
-      maxH="calc(100vh - 32px)"
+      maxH="calc(100vh - var(--menu-header-h, 0px) - 32px)"
       bg="white"
       border="1px solid"
       borderColor="gray.100"

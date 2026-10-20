@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, Button, Flex, Text } from "@chakra-ui/react";
+import { Box, Button, Flex, Grid, Text } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { trackWhenReady } from "@/lib/ads/track";
 import { useDispatch, useSelector } from "react-redux";
@@ -31,6 +31,7 @@ import {
 } from "../../../lib/catalog/options";
 import { addToCartProduct, deleteToCartProduct } from "../../Store/action/shoppingCart";
 import { CHROME_SURFACE, CHROME_TEXT } from "@/lib/menu/storeChrome";
+import { MENU_MAX_WIDTH } from "@/components/MenuContainer";
 
 function looksLikeHtml(value) {
   return /<[a-z][\s\S]*>/i.test(String(value || ""));
@@ -136,13 +137,10 @@ const ProductDetail = ({ embedded = false } = {}) => {
   return (
     <>
       <TopBarWithBackButton headerText={product.productName} />
-      <Flex direction={{ base: "column", lg: "row" }} align="flex-start" bg={CHROME_SURFACE} color={CHROME_TEXT} pb="24px" maxW={{ lg: "1100px" }} mx="auto">
-        <Box w={{ base: "100%", lg: "46%" }} flexShrink={0}>
-          <ProductImageSlider images={product.productImages} alt={product.productName} />
-        </Box>
-        <Box px="16px" pt="16px" flex="1" minW={0}>
-          <Flex as="nav" aria-label="Breadcrumb" align="center" gap="6px" mb="10px" fontSize="12px" color="#6b7280" flexWrap="wrap">
-            <Link to="/" href="/" style={{ color: "inherit" }}>Home</Link>
+      <Box bg={CHROME_SURFACE} color={CHROME_TEXT}>
+        <Box maxW={{ lg: MENU_MAX_WIDTH }} mx="auto" px={{ base: 0, lg: "24px" }} pt={{ base: 0, lg: "24px" }} pb={{ base: "24px", lg: "48px" }}>
+          <Flex as="nav" aria-label="Breadcrumb" display={{ base: "none", lg: "flex" }} align="center" gap="6px" mb="16px" fontSize="13px" color="#6b7280" flexWrap="wrap">
+            <Link to="/" href="/" style={{ color: "inherit" }}>Menu</Link>
             {product.categoryName ? (
               <>
                 <Text as="span">/</Text>
@@ -150,71 +148,114 @@ const ProductDetail = ({ embedded = false } = {}) => {
               </>
             ) : null}
             <Text as="span">/</Text>
-            <Text as="span">{product.productName}</Text>
+            <Text as="span" color="#111827" fontWeight="600" noOfLines={1}>{product.productName}</Text>
           </Flex>
-          <Flex align="center" gap="8px" mb="6px">
-            <VegMarker isVeg={!!product.isVeg} />
-            <Text as="h1" fontSize="20px" fontWeight="800" lineHeight="26px" noOfLines={3}>
-              {product.productName}
-            </Text>
-          </Flex>
-          <Flex align="center" mb="14px">
-            <Text fontSize="18px" fontWeight="800">
-              ₹{price}
-            </Text>
-            {product.compareAtPrice && product.compareAtPrice > price ? (
-              <Text ml="8px" fontSize="14px" color="#888" textDecoration="line-through">
-                ₹{product.compareAtPrice}
+          <Grid templateColumns={{ base: "1fr", lg: "minmax(0, 1fr) minmax(0, 1fr)" }} gap={{ base: 0, lg: "40px" }} alignItems="start">
+            <Box borderRadius={{ base: 0, lg: "16px" }} overflow="hidden" bg="#f3f4f6">
+              <ProductImageSlider images={product.productImages} alt={product.productName} />
+            </Box>
+            <Box px={{ base: "16px", lg: 0 }} pt={{ base: "16px", lg: "4px" }} minW={0}>
+              <Flex align="center" gap="8px" mb="10px" flexWrap="wrap">
+                <VegMarker isVeg={!!product.isVeg} />
+                <Text fontSize="12px" fontWeight="700" color={product.isVeg ? "#15803d" : "#b91c1c"} textTransform="uppercase" letterSpacing="0.06em">
+                  {product.isVeg ? "Veg" : "Non-veg"}
+                </Text>
+                {product.categoryName ? (
+                  <Text fontSize="12px" color="#6b7280">· {product.categoryName}</Text>
+                ) : null}
+              </Flex>
+              <Text as="h1" fontSize={{ base: "22px", lg: "30px" }} fontWeight="800" lineHeight={{ base: "28px", lg: "38px" }} mb="16px">
+                {product.productName}
               </Text>
-            ) : null}
-          </Flex>
-          {description ? (
-            looksLikeHtml(description) ? (
-              <Box
-                fontSize="14px"
-                lineHeight="22px"
-                color="#4A4A4A"
-                className="store-cms"
-                sx={{
-                  p: { mb: "10px" },
-                  ul: { pl: "18px", mb: "10px" },
-                  ol: { pl: "18px", mb: "10px" },
-                }}
-                dangerouslySetInnerHTML={{ __html: description }}
-              />
-            ) : (
-              <Text fontSize="14px" lineHeight="22px" color="#4A4A4A" whiteSpace="pre-wrap">
-                {description}
-              </Text>
-            )
-          ) : null}
 
-          <Box mt="20px">
-            {isOutOfStock && quantity === 0 ? (
-              <Text fontSize="14px" fontWeight="700" color="#8A8A8A">
-                Sold out
-              </Text>
-            ) : quantity === 0 ? (
-              <Button onClick={handleAdd} colorScheme="none" variant="solidFull">
-                Add to cart
-              </Button>
-            ) : (
-              <QtyStepper
-                size="md"
-                quantity={quantity}
-                onDecrement={() => dispatch(deleteToCartProduct(product))}
-                onIncrement={handlePlus}
-                incrementDisabled={isOutOfStock}
-              />
-            )}
-            {hasOptions && !isOutOfStock ? (
-              <Text mt="8px" fontSize="12px" color="#787676">
-                Customisable
-              </Text>
-            ) : null}
-          </Box>
+              <Flex
+                align="center"
+                justify="space-between"
+                gap="16px"
+                p="14px"
+                mb="20px"
+                border="1px solid"
+                borderColor="gray.200"
+                borderRadius="14px"
+                bg="white"
+              >
+                <Box minW={0}>
+                  <Flex align="baseline" gap="8px">
+                    <Text fontSize={{ base: "20px", lg: "24px" }} fontWeight="800" color="#111827">
+                      ₹{price}
+                    </Text>
+                    {product.compareAtPrice && product.compareAtPrice > price ? (
+                      <Text fontSize="14px" color="#9ca3af" textDecoration="line-through">
+                        ₹{product.compareAtPrice}
+                      </Text>
+                    ) : null}
+                  </Flex>
+                  {hasOptions && !isOutOfStock ? (
+                    <Text fontSize="12px" color="#6b7280" mt="2px">Customisable</Text>
+                  ) : null}
+                </Box>
+                {isOutOfStock && quantity === 0 ? (
+                  <Text fontSize="14px" fontWeight="700" color="#8A8A8A" flexShrink={0}>
+                    Sold out
+                  </Text>
+                ) : quantity === 0 ? (
+                  <Button
+                    onClick={handleAdd}
+                    flexShrink={0}
+                    h="44px"
+                    minW={{ base: "132px", lg: "160px" }}
+                    px="20px"
+                    borderRadius="10px"
+                    bg="var(--brand-secondary, #111)"
+                    color="white"
+                    fontSize="15px"
+                    fontWeight="700"
+                    textTransform="none"
+                    _hover={{ opacity: 0.9 }}
+                    _active={{ opacity: 0.85 }}
+                  >
+                    Add to cart
+                  </Button>
+                ) : (
+                  <QtyStepper
+                    size="md"
+                    quantity={quantity}
+                    onDecrement={() => dispatch(deleteToCartProduct(product))}
+                    onIncrement={handlePlus}
+                    incrementDisabled={isOutOfStock}
+                  />
+                )}
+              </Flex>
+
+              {description ? (
+                <Box>
+                  <Text fontSize="13px" fontWeight="700" letterSpacing="0.06em" textTransform="uppercase" color="#6b7280" mb="8px">
+                    About this dish
+                  </Text>
+                  {looksLikeHtml(description) ? (
+                    <Box
+                      fontSize="15px"
+                      lineHeight="24px"
+                      color="#374151"
+                      className="store-cms"
+                      sx={{
+                        p: { mb: "10px" },
+                        ul: { pl: "18px", mb: "10px" },
+                        ol: { pl: "18px", mb: "10px" },
+                      }}
+                      dangerouslySetInnerHTML={{ __html: description }}
+                    />
+                  ) : (
+                    <Text fontSize="15px" lineHeight="24px" color="#374151" whiteSpace="pre-wrap">
+                      {description}
+                    </Text>
+                  )}
+                </Box>
+              ) : null}
+            </Box>
+          </Grid>
         </Box>
-      </Flex>
+      </Box>
       {embedded ? null : <Footer />}
       <ProductCustomizationDrawer
         product={product}
