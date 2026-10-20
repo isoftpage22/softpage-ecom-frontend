@@ -322,22 +322,47 @@ function EngineProductDetail({ section }: { section: Section }) {
   return <PreviewProductDetail section={section} />;
 }
 
+/** "130.00" → "₹130", "99.5" → "₹99.50". Leaves text that already has a symbol alone. */
+function rupees(price: string | number) {
+  const text = String(price).trim();
+  if (/[^\d.,\s]/.test(text)) return text;
+  const value = Number(text.replace(/,/g, ""));
+  if (!Number.isFinite(value)) return text;
+  return `₹${value.toLocaleString("en-IN", { minimumFractionDigits: Number.isInteger(value) ? 0 : 2, maximumFractionDigits: 2 })}`;
+}
+
+/** Studio stand-in for the product page, laid out like the live one. */
 function PreviewProductDetail({ section }: { section: Section }) {
   const raw = section.resolved?.product;
-  const product = (Array.isArray(raw) ? raw[0] : raw) as { name?: string; image?: string; price?: string | number; description?: string; metaDescription?: string; categoryName?: string } | undefined;
+  const product = (Array.isArray(raw) ? raw[0] : raw) as { name?: string; image?: string; price?: string | number; description?: string; metaDescription?: string; categoryName?: string; isVeg?: boolean } | undefined;
   const name = product?.name || "Product";
+  const description = product?.description || product?.metaDescription;
+  const hasPrice = product?.price != null && String(product.price) !== "";
   return (
-    <section style={{ padding: "var(--sp-space-md, 1rem)" }}>
-      <nav aria-label="Breadcrumb" style={{ fontSize: 13, marginBottom: 8 }}>
-        <a href="/">Home</a>
-        {product?.categoryName ? <span> / {product.categoryName}</span> : null}
-        <span> / {name}</span>
-      </nav>
-      {product?.image ? <img src={product.image} alt={name} style={{ width: "100%", maxHeight: 280, objectFit: "cover", borderRadius: 12 }} /> : <div style={{ height: 180, borderRadius: 12, background: "rgba(0,0,0,0.06)" }} />}
-      <h1 data-sp-title style={{ fontSize: "var(--sp-section-heading, 1.5rem)", margin: "0.75rem 0 0" }}>{name}</h1>
-      {product?.price != null && String(product.price) !== "" && <p style={{ margin: "0.35rem 0 0", color: "var(--sp-color-brand-primary, #111)", fontWeight: 700 }}>{String(product.price)}</p>}
-      {(product?.description || product?.metaDescription) && <p style={{ margin: "0.5rem 0 0" }}>{product.description || product.metaDescription}</p>}
-      <button type="button" style={{ display: "block", width: "100%", marginTop: 16, padding: "12px 16px", border: 0, borderRadius: 8, background: "var(--sp-color-brand-primary, #111)", color: "#fff", fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>Add to cart</button>
+    <section style={{ paddingBottom: 24 }}>
+      {product?.image ? <img src={product.image} alt={name} style={{ display: "block", width: "100%", height: 280, objectFit: "cover", background: "#f3f4f6" }} /> : <div style={{ height: 220, background: "#f3f4f6" }} />}
+      <div style={{ padding: "16px 16px 0" }}>
+        <nav aria-label="Breadcrumb" style={{ fontSize: 12, color: "#6b7280", marginBottom: 8 }}>
+          <a href="/" style={{ color: "inherit" }}>Menu</a>
+          {product?.categoryName ? <span> / {product.categoryName}</span> : null}
+        </nav>
+        {product?.isVeg != null && (
+          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: product.isVeg ? "#15803d" : "#b91c1c", marginBottom: 6 }}>
+            {product.isVeg ? "Veg" : "Non-veg"}
+          </div>
+        )}
+        <h1 data-sp-title style={{ fontSize: "var(--sp-section-heading, 22px)", fontWeight: 800, lineHeight: 1.25, margin: "0 0 16px" }}>{name}</h1>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, padding: 14, border: "1px solid #e5e7eb", borderRadius: 14, background: "#fff", marginBottom: 20 }}>
+          <strong style={{ fontSize: 20, color: "#111827" }}>{hasPrice ? rupees(product!.price!) : ""}</strong>
+          <button type="button" style={{ height: 44, minWidth: 132, padding: "0 20px", border: 0, borderRadius: 10, background: "var(--brand-secondary, var(--sp-color-brand-primary, #111))", color: "#fff", fontSize: 15, fontWeight: 700 }}>Add to cart</button>
+        </div>
+        {description && (
+          <>
+            <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#6b7280", marginBottom: 8 }}>About this dish</div>
+            <p style={{ margin: 0, fontSize: 15, lineHeight: "24px", color: "#374151" }}>{description}</p>
+          </>
+        )}
+      </div>
     </section>
   );
 }
