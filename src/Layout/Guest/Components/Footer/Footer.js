@@ -1,4 +1,4 @@
-import { Flex, Text, Box } from '@chakra-ui/react';
+import { Flex, Text, Box, Grid } from '@chakra-ui/react';
 import React, { Fragment } from 'react';
 import { useSelector } from 'react-redux';
 import FooterCartDetail from '../../../Components/FooterCartDetail';
@@ -8,8 +8,25 @@ import { Link } from '../../../../lib/nav';
 import { StoreLogo } from '@/components/StoreLogo';
 import { CHROME_ACCENT, CHROME_BAR_BG, CHROME_SURFACE, CHROME_TEXT } from '@/lib/menu/storeChrome';
 import { showsOrderBar } from '@/lib/cart/persistCart';
+import { MenuContainer } from '@/components/MenuContainer';
+import { contactEmail, contactPhone, fullAddress, mapsHref, socialLinks, telHref, weeklyHours } from '@/lib/menu/storeInfo';
 
-const SOCIAL_KEYS = ['instagram', 'facebook', 'twitter', 'youtube', 'linkedin', 'whatsapp', 'telegram'];
+const linkStyle = { textDecoration: 'none' };
+
+function FooterHeading({ children }) {
+    return (
+        <Text fontSize="12px" fontWeight="700" letterSpacing="0.08em" textTransform="uppercase" opacity={0.6} mb="12px">
+            {children}
+        </Text>
+    );
+}
+
+function FooterLink({ href, external, children }) {
+    const text = <Text fontSize="14px" fontWeight="500" py="4px" _hover={{ textDecoration: 'underline' }}>{children}</Text>;
+    return external
+        ? <Box as="a" href={href} display="block" style={linkStyle} target={href.startsWith('http') ? '_blank' : undefined} rel={href.startsWith('http') ? 'noopener noreferrer' : undefined}>{text}</Box>
+        : <Link to={href} href={href} style={linkStyle}>{text}</Link>;
+}
 
 const Footer = (props) => {
     const { isShoppingCart, hideVisual } = props
@@ -33,17 +50,6 @@ const Footer = (props) => {
         : contact?.email
             ? `mailto:${contact.email}`
             : null
-    const topLinks = [
-        ...legal.map((p) => ({ name: p.title, href: `/pages/${p.slug}`, external: false })),
-        ...(contactHref && !company.some((p) => p.slug === 'contact-us')
-            ? [{ name: 'Contact Us', href: contactHref, external: true }]
-            : []),
-        ...company.filter((p) => p.slug === 'contact-us').map((p) => ({ name: p.title, href: `/pages/${p.slug}`, external: false })),
-    ]
-    const bottomLinks = company.filter((p) => p.slug !== 'contact-us').map((p) => ({ name: p.title, href: `/pages/${p.slug}` }))
-    const socialLinks = SOCIAL_KEYS
-        .filter((key) => social?.[key])
-        .map((key) => ({ name: key.charAt(0).toUpperCase() + key.slice(1), href: social[key] }))
 
     const activeOrder = useSelector((state) => state.shoppingCart.activeOrder)
     const stickyOrder = showsOrderBar(activeOrder)
@@ -60,54 +66,118 @@ const Footer = (props) => {
         return <Fragment>{cartBar}</Fragment>
     }
 
+    const phone = contactPhone(contact)
+    const email = contactEmail(contact)
+    const address = fullAddress(config.address)
+    const mapHref = mapsHref(config.address)
+    const hours = weeklyHours(config.businessHours)
+    const socials = socialLinks(social)
+    const policyLinks = legal.map((p) => ({ name: p.title, href: `/pages/${p.slug}` }))
+    const companyLinks = [
+        ...company.map((p) => ({ name: p.title, href: `/pages/${p.slug}` })),
+        ...(contactHref && !company.some((p) => p.slug === 'contact-us') ? [{ name: 'Contact Us', href: contactHref, external: true }] : []),
+    ]
+
     return (
         <Fragment>
-            <Flex bg={CHROME_SURFACE} color={CHROME_TEXT} justifyContent="center" alignItems="center" flexDirection="column" pt="16px" pb="8px">
-                <Box mb="24px">
-                    <StoreLogo src={config.logo} name={config.name || 'Store'} size="48px" />
-                </Box>
-                {topLinks.map((link) => (
-                    link.external ? (
-                        <Box as="a" href={link.href} key={link.name} mb="10px">
-                            <Text fontWeight="700">{link.name}</Text>
+            <Box as="footer" bg={CHROME_SURFACE} color={CHROME_TEXT} borderTop="1px solid" borderColor="blackAlpha.100">
+                <MenuContainer px={{ base: '20px' }} py={{ base: '28px', lg: '44px' }}>
+                    <Grid templateColumns={{ base: '1fr', md: 'repeat(2, minmax(0, 1fr))', lg: '1.5fr 1fr 1fr 1.2fr' }} gap={{ base: '28px', lg: '40px' }}>
+                        <Box>
+                            <Flex align="center" gap="12px" mb="14px">
+                                <StoreLogo src={config.logo} name={config.name || 'Store'} size="48px" />
+                                <Text fontSize="18px" fontWeight="800">{config.name || 'Store'}</Text>
+                            </Flex>
+                            {address ? (
+                                <Text fontSize="14px" opacity={0.8} lineHeight="1.6" mb="10px">
+                                    {address}
+                                    {mapHref ? (
+                                        <Box as="a" href={mapHref} target="_blank" rel="noopener noreferrer" display="block" fontWeight="600" mt="4px" style={linkStyle}>Get directions →</Box>
+                                    ) : null}
+                                </Text>
+                            ) : null}
+                            {phone ? <Box as="a" href={telHref(phone)} display="block" fontSize="14px" fontWeight="600" py="2px" style={linkStyle}>{phone}</Box> : null}
+                            {email ? <Box as="a" href={`mailto:${email}`} display="block" fontSize="14px" fontWeight="600" py="2px" style={linkStyle}>{email}</Box> : null}
                         </Box>
-                    ) : (
-                        <Link key={link.name} to={link.href} href={link.href}>
-                            <Text mb="10px" fontWeight="700">{link.name}</Text>
-                        </Link>
-                    )
-                ))}
-            </Flex>
-            <Flex minH="28vh" bg={CHROME_BAR_BG} justifyContent="center" alignItems="center" flexDirection="column" px="16px" py="24px" pb={cartBar ? "calc(140px + env(safe-area-inset-bottom, 0px))" : "24px"}>
-                <Text textColor="whiteAlpha.700" fontSize="14px" fontWeight="400" mb="20px" mt="10px">Platform Powered by</Text>
-                <Box
-                    as="a"
-                    href="https://www.softpage.in"
-                    border="3px solid"
-                    borderColor={CHROME_ACCENT}
-                    p="10px"
-                    mb="30px"
-                    display="inline-block"
-                    aria-label="Contact Softpage"
-                >
-                    <Text textColor="white" fontSize="25px">SOFTPAGE</Text>
-                </Box>
-                {bottomLinks.map((p) => (
-                    <Link key={p.href} to={p.href} href={p.href}>
-                        <Text textColor="#d1d1d1" mb="14px">{p.name}</Text>
-                    </Link>
-                ))}
-                {socialLinks.length > 0 ? (
-                    <Flex gap="16px" flexWrap="wrap" justifyContent="center" mb="18px">
-                        {socialLinks.map((item) => (
-                            <Box as="a" key={item.name} href={item.href} target="_blank" rel="noopener noreferrer">
-                                <Text textColor="whiteAlpha.800" fontSize="13px" fontWeight="600">{item.name}</Text>
+                        {policyLinks.length ? (
+                            <Box as="nav" aria-label="Policies">
+                                <FooterHeading>Policies</FooterHeading>
+                                {policyLinks.map((link) => <FooterLink key={link.href} href={link.href}>{link.name}</FooterLink>)}
                             </Box>
-                        ))}
+                        ) : null}
+                        {companyLinks.length ? (
+                            <Box as="nav" aria-label="About the store">
+                                <FooterHeading>Company</FooterHeading>
+                                {companyLinks.map((link) => <FooterLink key={link.href} href={link.href} external={link.external}>{link.name}</FooterLink>)}
+                            </Box>
+                        ) : null}
+                        {hours.length || socials.length ? (
+                            <Box>
+                                {hours.length ? (
+                                    <Box mb={socials.length ? '20px' : 0}>
+                                        <FooterHeading>Opening hours</FooterHeading>
+                                        {hours.map((row) => (
+                                            <Flex key={row.days} justify="space-between" gap="12px" fontSize="14px" py="3px">
+                                                <Text fontWeight="600">{row.days}</Text>
+                                                <Text opacity={0.8} textAlign="right">{row.hours}</Text>
+                                            </Flex>
+                                        ))}
+                                    </Box>
+                                ) : null}
+                                {socials.length ? (
+                                    <Box>
+                                        <FooterHeading>Follow us</FooterHeading>
+                                        <Flex gap="8px" flexWrap="wrap">
+                                            {socials.map((item) => (
+                                                <Box
+                                                    as="a"
+                                                    key={item.key}
+                                                    href={item.href}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    px="12px"
+                                                    py="6px"
+                                                    borderRadius="999px"
+                                                    border="1px solid"
+                                                    borderColor="blackAlpha.200"
+                                                    fontSize="13px"
+                                                    fontWeight="600"
+                                                    style={linkStyle}
+                                                    _hover={{ bg: 'blackAlpha.50' }}
+                                                >
+                                                    {item.label}
+                                                </Box>
+                                            ))}
+                                        </Flex>
+                                    </Box>
+                                ) : null}
+                            </Box>
+                        ) : null}
+                    </Grid>
+                </MenuContainer>
+            </Box>
+            <Box bg={CHROME_BAR_BG} pb={cartBar ? { base: 'calc(140px + env(safe-area-inset-bottom, 0px))', lg: 0 } : 0}>
+                <MenuContainer px={{ base: '20px' }} py="16px">
+                    <Flex justify="space-between" align="center" gap="12px" flexWrap="wrap" direction={{ base: 'column', md: 'row' }}>
+                        <Text textColor="whiteAlpha.700" fontSize="13px">© {currentYear} {config.name || 'Store'}. All rights reserved.</Text>
+                        <Flex
+                            as="a"
+                            href="https://www.softpage.in"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            align="center"
+                            gap="8px"
+                            aria-label="Powered by Softpage"
+                            style={linkStyle}
+                        >
+                            <Text textColor="whiteAlpha.700" fontSize="12px">Powered by</Text>
+                            <Box border="2px solid" borderColor={CHROME_ACCENT} px="8px" py="2px">
+                                <Text textColor="white" fontSize="13px" fontWeight="700" letterSpacing="0.06em">SOFTPAGE</Text>
+                            </Box>
+                        </Flex>
                     </Flex>
-                ) : null}
-                <Text textColor="#9ea6b9" mb="5px">© {currentYear} {config.name || 'Store'}</Text>
-            </Flex>
+                </MenuContainer>
+            </Box>
             {isShoppingCart ? cartBar : (
                 <Box display={{ base: "block", lg: "none" }}>{cartBar}</Box>
             )}

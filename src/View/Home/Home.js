@@ -18,6 +18,7 @@ import { Box, Flex, Text } from '@chakra-ui/react'
 import { filterVegOnlyCatalog } from '../../../lib/catalog/options'
 import { mapCatalogToProductList } from '@/lib/catalog/mapCatalog'
 import { peekListingRestore, setListingRestoreLive } from '@/lib/menu/listingRestore'
+import { MenuContainer } from '@/components/MenuContainer'
 
 function orderGuestList(list, ids, strategy) {
   const index = new Map((ids || []).map((id, position) => [String(id), position]))
@@ -252,11 +253,12 @@ const Home = (props) => {
       )}
       {!hideChrome && !searching && <ProductPromotions initialCatalog={initialCatalog} />}
       {!hideChrome && !searching && <CurrentOffers />}
-      <Flex align="flex-start" w="100%">
+      <MenuContainer>
+      <Flex align="flex-start" w="100%" gap={{ lg: '24px' }} pt={{ lg: '20px' }} pb={{ lg: '32px' }}>
         <DesktopCategoryNav productList={showSearchLoading ? { categories: [] } : visibleProductList} isSearch={search.active} />
         <Box flex="1" minW={0}>
           {search.active ? (
-            <Text px={{ base: "6%", lg: "16px" }} pt="16px" fontSize="14px" color="gray.600">
+            <Text px={{ base: "6%", lg: "0" }} pt="16px" fontSize="14px" color="gray.600">
               {typedSearch ? `Dishes matching “${typedSearch}”` : "Search results"}
             </Text>
           ) : null}
@@ -273,6 +275,7 @@ const Home = (props) => {
         </Box>
         <DesktopCartRail />
       </Flex>
+      </MenuContainer>
       {!hideChrome && <Footer {...props} />}
       <CategoryMenuFab
         productList={showSearchLoading ? { categories: [] } : visibleProductList}

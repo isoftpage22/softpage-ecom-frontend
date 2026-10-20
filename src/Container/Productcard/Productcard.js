@@ -75,23 +75,29 @@ const ProductCard = (props) => {
         alignItems={{ lg: "stretch" }}
         h={{ lg: "100%" }}
         p={{ lg: "12px" }}
+        position={{ lg: "relative" }}
+        bg={{ lg: "white" }}
         borderBottom={{ lg: "none" }}
-        border={{ lg: "1px solid #EEE" }}
-        borderRadius={{ lg: "12px" }}
+        border={{ lg: "1px solid" }}
+        borderColor={{ lg: "gray.100" }}
+        borderRadius={{ lg: "14px" }}
+        transition="box-shadow 0.15s ease, transform 0.15s ease"
+        _hover={{ lg: { boxShadow: "0 8px 24px rgba(15,23,42,0.08)" } }}
       >
-        <Flex direction="column" justify="flex-start" width={{ base: "62%", lg: "100%" }} pr={{ base: "16px", lg: "0" }} pt={{ lg: "10px" }} gap="6px" opacity={dimmed} order={{ lg: 2 }}>
+        <Flex direction="column" justify="flex-start" width={{ base: "62%", lg: "100%" }} flex={{ lg: "1" }} pr={{ base: "16px", lg: "0" }} pt={{ lg: "12px" }} gap="6px" opacity={dimmed} order={{ lg: 2 }}>
           <VegMarker isVeg={!!product?.isVeg} mb="2px" />
           <Link to={detailHref} href={detailHref} onClick={rememberListingPosition} style={{ textDecoration: 'none' }}>
             <Text data-sp-title fontWeight="extrabold" variant="solid" maxW="100%" color="var(--sp-section-text, var(--chakra-colors-gray-700))" fontFamily="var(--sp-section-font, inherit)" fontSize="calc(1rem * var(--sp-section-scale, 1))" lineHeight="22px" noOfLines={2}>
               {product?.productName ?? 'God Knows'}
             </Text>
           </Link>
-          <Flex alignItems="center" pt="2px">
+          <Flex alignItems="center" pt={{ base: "2px", lg: "8px" }} mt={{ lg: "auto" }} order={{ lg: 3 }} minH={{ lg: "32px" }} pr={{ lg: "96px" }}>
             <Box alignSelf="center">₹</Box>
             <Text fontWeight="extrabold" variant="solid">
               {price}
             </Text>
           </Flex>
+          <Box order={{ lg: 1 }}>
           <Collapse startingHeight={20} in={isOpen}>
             {looksLikeHtml(product?.productDesc) ? (
               <Box
@@ -113,8 +119,9 @@ const ProductCard = (props) => {
               </Text>
             )}
           </Collapse>
+          </Box>
           {product?.productDesc ? (
-          <Text pt="2px" color="black" variant="outline" onClick={onToggle} cursor="pointer">
+          <Text pt="2px" color="black" variant="outline" onClick={onToggle} cursor="pointer" order={{ lg: 2 }} fontSize={{ lg: "12px" }} fontWeight={{ lg: "600" }}>
             Show {isOpen ? "Less" : "More"}
           </Text>
           ) : null}
@@ -128,16 +135,23 @@ const ProductCard = (props) => {
               alt={product?.productName || ""}
               objectFit="cover"
               width={{ base: "110px", lg: "100%" }}
-              height={{ base: "75px", lg: "150px" }}
-              borderRadius="5px"
+              height={{ base: "75px", lg: "168px" }}
+              borderRadius={{ base: "5px", lg: "10px" }}
               backgroundColor="#e4e1e1"
-              mb="10px"
+              mb={{ base: "10px", lg: "0" }}
               loading="lazy"
               decoding="async"
               opacity={dimmed}
               filter={isOutOfStock ? "grayscale(0.35)" : "none"}
             />
           </Link>
+         <Flex
+           direction="column"
+           align={{ base: "center", lg: "flex-end" }}
+           position={{ lg: "absolute" }}
+           right={{ lg: "12px" }}
+           bottom={{ lg: "12px" }}
+         >
          {isOutOfStock && quantity == 0 ? (
           <Text
             fontSize="12px"
@@ -179,6 +193,7 @@ const ProductCard = (props) => {
               customisable
             </Text>
           ) : null}
+         </Flex>
         </Flex>
       </Card>
       <ProductCustomizationDrawer

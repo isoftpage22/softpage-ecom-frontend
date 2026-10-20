@@ -18,6 +18,7 @@ import { exitTableSessionToWebsite, getTableSession, isDineInSession, tableSessi
 import { StoreLogo } from '@/components/StoreLogo'
 import { ProfileMenu } from '../../../Components/ProfileMenu/ProfileMenu'
 import { clearListingRestore } from '@/lib/menu/listingRestore'
+import { MenuContainer } from '@/components/MenuContainer'
 
 const CommonTopBar = ({ searchQuery, onSearchChange, asHeading = false }) => {
   const [internalQuery, setInternalQuery] = useState('')
@@ -47,8 +48,9 @@ const CommonTopBar = ({ searchQuery, onSearchChange, asHeading = false }) => {
   return (
     <>
       <Box bg="var(--sp-section-surface, var(--brand-secondary, #111111))">
-        {!dineIn ? <TopAddressBarContainer /> : null}
-        <Flex px="10px" py="8px" minH="72px" alignItems="center">
+        {!dineIn ? <Box display={{ base: 'block', lg: 'none' }}><TopAddressBarContainer /></Box> : null}
+        <MenuContainer>
+        <Flex px={{ base: '10px', lg: '0' }} py={{ base: '8px', lg: '12px' }} minH={{ base: '72px', lg: '76px' }} alignItems="center">
           <Flex alignItems="center" minW={0} flex="1" mr="8px">
             <Box
               flexShrink={0}
@@ -122,12 +124,52 @@ const CommonTopBar = ({ searchQuery, onSearchChange, asHeading = false }) => {
             </Flex>
           </Flex>
           <Spacer />
+          <InputGroup display={{ base: 'none', lg: 'flex' }} flex="1" maxW="460px" mx="24px">
+            <InputLeftElement pointerEvents="none" h="42px">
+              <SearchIcon color="#6B7280" />
+            </InputLeftElement>
+            <Input
+              h="42px"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search dishes..."
+              aria-label="Search dishes"
+              bg="white"
+              color="#111827"
+              border="none"
+              borderRadius="999px"
+              style={{ color: '#111827', WebkitTextFillColor: '#111827' }}
+              _placeholder={{ color: '#6B7280', opacity: 1 }}
+              _focus={{ boxShadow: '0 0 0 2px rgba(255,255,255,0.35)' }}
+            />
+            {query ? (
+              <InputRightElement h="42px">
+                <IconButton size="xs" variant="ghost" aria-label="Clear search" icon={<CloseIcon boxSize="10px" />} onClick={() => setQuery('')} />
+              </InputRightElement>
+            ) : null}
+          </InputGroup>
+          {!dineIn ? (
+            <Box
+              display={{ base: 'none', lg: 'block' }}
+              maxW="340px"
+              mr="16px"
+              px="14px"
+              py="8px"
+              borderRadius="999px"
+              border="1px solid rgba(255,255,255,0.22)"
+              bg="rgba(255,255,255,0.06)"
+            >
+              <TopAddressBarContainer variant="inline" />
+            </Box>
+          ) : null}
           <Box alignSelf="center" flexShrink={0}>
             <ProfileMenu />
           </Box>
         </Flex>
+        </MenuContainer>
       </Box>
       <Box
+        display={{ base: 'block', lg: 'none' }}
         position="sticky"
         top="0"
         zIndex={20}
@@ -140,7 +182,7 @@ const CommonTopBar = ({ searchQuery, onSearchChange, asHeading = false }) => {
         boxShadow="0 2px 8px rgba(0,0,0,0.06)"
         style={{ position: 'sticky', top: 0, zIndex: 20 }}
       >
-        <InputGroup maxW={{ lg: "720px" }} mx={{ lg: "auto" }}>
+        <InputGroup maxW={{ lg: "640px" }} mx={{ lg: "auto" }}>
           <InputLeftElement pointerEvents="none" h="42px">
             <SearchIcon color="#6B7280" />
           </InputLeftElement>

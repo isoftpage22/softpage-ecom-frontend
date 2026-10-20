@@ -38,14 +38,14 @@ const CategoryWithProducts = (props) => {
       : "No Products available"
 
   return (
-    <Box bg="white" mb="10px">
+    <Box bg="white" mb="10px" sx={{ '@media (min-width: 62em)': { background: 'transparent' } }}>
       {
        productsWithCategories.length > 0 ?
         productsWithCategories.map((prodCateg) => {
           if (!Array.isArray(prodCateg.products) || prodCateg.products.length === 0) return null
           return (
-          <Box key={prodCateg.categoryName} id={categoryAnchorId(prodCateg.categoryName)} scrollMarginTop={{ base: "72px", lg: "88px" }}>
-            <Flex align="center" gap="12px" pt="28px" pb="12px" px="6%">
+          <Box key={prodCateg.categoryName} id={categoryAnchorId(prodCateg.categoryName)} scrollMarginTop={{ base: "72px", lg: "16px" }}>
+            <Flex align="center" gap="12px" pt={{ base: '28px', lg: '32px' }} pb={{ base: '12px', lg: '14px' }} px={{ base: '6%', lg: '0' }}>
               {/* {prodCateg.categoryImage ? (
                 <Image
                   src={prodCateg.categoryImage}
@@ -57,15 +57,17 @@ const CategoryWithProducts = (props) => {
                   bg="#eee"
                 />
               ) : null} */}
-              <Text data-sp-title fontSize="var(--sp-section-heading, 22px)" fontFamily="var(--sp-section-font, inherit)" color="var(--sp-section-text, inherit)" fontWeight="700" lineHeight="28px">
+              <Text as="h2" data-sp-title fontSize="var(--sp-section-heading, 22px)" fontFamily="var(--sp-section-font, inherit)" color="var(--sp-section-text, inherit)" fontWeight="700" lineHeight="28px">
                 {prodCateg.categoryName}
+              </Text>
+              <Text display={{ base: 'none', lg: 'block' }} fontSize="13px" color="gray.500" fontWeight="600">
+                {prodCateg.products.length} item{prodCateg.products.length === 1 ? '' : 's'}
               </Text>
             </Flex>
              <Box
                display={{ base: "block", lg: "grid" }}
                gridTemplateColumns={{ lg: "repeat(2, minmax(0, 1fr))" }}
-               gap={{ lg: "12px" }}
-               px={{ lg: "12px" }}
+               gap={{ lg: "16px" }}
                pb={{ lg: "8px" }}
              >
              {

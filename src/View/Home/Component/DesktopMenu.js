@@ -1,7 +1,7 @@
 "use client";
 
 import { Box, Button, Flex, Text } from "@chakra-ui/react";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from "../../../lib/nav";
 import { categoryAnchorId } from "./CategoryMenuFab";
@@ -18,6 +18,33 @@ export function DesktopCategoryNav({ productList, isSearch }) {
     [productList],
   );
 
+  const [active, setActive] = useState("");
+
+  // Highlight the category whose heading is nearest the top of the screen.
+  useEffect(() => {
+    if (typeof window === "undefined" || !categories.length) return undefined;
+    const ids = categories.map((category) => categoryAnchorId(category.categoryName));
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      let current = ids[0];
+      for (const id of ids) {
+        const el = document.getElementById(id);
+        if (el && el.getBoundingClientRect().top <= 80) current = id;
+      }
+      setActive(current);
+    };
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, [categories]);
+
   if (categories.length === 0) return null;
 
   const jumpTo = (name) => {
@@ -30,44 +57,55 @@ export function DesktopCategoryNav({ productList, isSearch }) {
       display={{ base: "none", lg: "block" }}
       as="nav"
       aria-label={isSearch ? "Matching categories" : "Menu categories"}
-      w="240px"
+      w="232px"
       flexShrink={0}
       position="sticky"
-      top="74px"
+      top="16px"
       alignSelf="flex-start"
-      maxH="calc(100vh - 90px)"
+      maxH="calc(100vh - 32px)"
       overflowY="auto"
       bg="white"
-      borderRight="1px solid"
+      border="1px solid"
       borderColor="gray.100"
-      py="12px"
+      borderRadius="14px"
+      boxShadow="0 1px 2px rgba(15,23,42,0.04)"
+      py="10px"
+      px="8px"
     >
-      <Text px="16px" pb="8px" fontSize="12px" fontWeight="700" letterSpacing="0.4px" color="gray.500">
+      <Text px="10px" pt="4px" pb="8px" fontSize="11px" fontWeight="700" letterSpacing="0.08em" color="gray.500">
         {isSearch ? "MATCHING" : "MENU"}
       </Text>
-      {categories.map((category) => (
-        <Flex
-          key={category.categoryName}
-          as="button"
-          type="button"
-          w="100%"
-          px="16px"
-          py="10px"
-          justify="space-between"
-          align="center"
-          gap="8px"
-          textAlign="left"
-          _hover={{ bg: "gray.50" }}
-          onClick={() => jumpTo(category.categoryName)}
-        >
-          <Text fontSize="14px" fontWeight="600" noOfLines={2}>
-            {category.categoryName}
-          </Text>
-          <Text fontSize="12px" color="gray.500" flexShrink={0}>
-            {category.products.length}
-          </Text>
-        </Flex>
-      ))}
+      {categories.map((category) => {
+        const selected = active === categoryAnchorId(category.categoryName);
+        return (
+          <Flex
+            key={category.categoryName}
+            as="button"
+            type="button"
+            w="100%"
+            px="10px"
+            py="9px"
+            mb="2px"
+            justify="space-between"
+            align="center"
+            gap="8px"
+            textAlign="left"
+            borderRadius="10px"
+            bg={selected ? "gray.100" : "transparent"}
+            color={selected ? "gray.900" : "gray.700"}
+            _hover={{ bg: selected ? "gray.100" : "gray.50" }}
+            aria-current={selected ? "true" : undefined}
+            onClick={() => jumpTo(category.categoryName)}
+          >
+            <Text fontSize="14px" fontWeight={selected ? "700" : "500"} noOfLines={2}>
+              {category.categoryName}
+            </Text>
+            <Text fontSize="12px" color="gray.500" flexShrink={0}>
+              {category.products.length}
+            </Text>
+          </Flex>
+        );
+      })}
     </Box>
   );
 }
@@ -90,15 +128,18 @@ export function DesktopCartRail() {
     <Flex
       display={{ base: "none", lg: "flex" }}
       direction="column"
-      w="340px"
+      w="320px"
       flexShrink={0}
       position="sticky"
-      top="74px"
+      top="16px"
       alignSelf="flex-start"
-      maxH="calc(100vh - 90px)"
+      maxH="calc(100vh - 32px)"
       bg="white"
-      borderLeft="1px solid"
+      border="1px solid"
       borderColor="gray.100"
+      borderRadius="14px"
+      boxShadow="0 1px 2px rgba(15,23,42,0.04)"
+      overflow="hidden"
     >
       <Flex px="16px" py="14px" align="center" justify="space-between" borderBottom="1px solid" borderColor="gray.100" flexShrink={0}>
         <Text fontSize="16px" fontWeight="700">
@@ -112,7 +153,7 @@ export function DesktopCartRail() {
       </Flex>
       <Box flex="1" overflowY="auto" minH="120px" w="100%">
         {products.length === 0 ? (
-          <Text px="16px" py="24px" fontSize="14px" color="gray.500">
+          <Text px="16px" py="28px" fontSize="14px" color="gray.500" textAlign="center">
             {orderBar
               ? "This order is already placed. Open it to track the rider."
               : "Add a dish and it will show up here, including variants and add-ons."}
@@ -143,6 +184,7 @@ export function DesktopCartRail() {
         <Button
           w="100%"
           h="44px"
+          borderRadius="10px"
           bg="brand.500"
           color="white"
           _hover={{ bg: "brand.600" }}

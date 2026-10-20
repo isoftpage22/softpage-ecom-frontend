@@ -8,6 +8,7 @@ import { useBusinessId } from "@/lib/tenant/TenantContext";
 import { useGetProductsQuery } from "@/store/api/productsApi";
 import { catalogHasItems, mapCatalogItem } from "@/lib/catalog/mapCatalog";
 import { isThemePreview } from "@/lib/theme-engine/previewSession";
+import { MenuContainer } from "@/components/MenuContainer";
 import {
   flattenCatalogProducts,
   pickRecommendedProducts,
@@ -69,7 +70,8 @@ const ProductPromotions = ({ initialCatalog, resolvedItems, title }) => {
 
   return (
     <Flex direction="column" bg="var(--sp-section-surface, var(--brand-secondary, #111))" w="100%">
-      <Text data-sp-title color="var(--sp-section-text, white)" fontSize="var(--sp-section-heading, 13px)" fontFamily="var(--sp-section-font, inherit)" fontWeight="700" px="15px" pt="12px" letterSpacing="0">
+      <MenuContainer>
+      <Text data-sp-title color="var(--sp-section-text, white)" fontSize={{ base: "var(--sp-section-heading, 13px)", lg: "var(--sp-section-heading, 18px)" }} fontFamily="var(--sp-section-font, inherit)" fontWeight="700" px={{ base: "15px", lg: "0" }} pt={{ base: "12px", lg: "20px" }} letterSpacing="0">
         {title || "Recommended"}
       </Text>
       <Flex
@@ -79,7 +81,7 @@ const ProductPromotions = ({ initialCatalog, resolvedItems, title }) => {
         h="195px"
         w="100%"
         py="15px"
-        px="15px"
+        px={{ base: "15px", lg: "0" }}
         color="white"
         css={{
           "&::-webkit-scrollbar": {
@@ -106,6 +108,7 @@ const ProductPromotions = ({ initialCatalog, resolvedItems, title }) => {
           ))}
         </Flex>
       </Flex>
+      </MenuContainer>
     </Flex>
   );
 };

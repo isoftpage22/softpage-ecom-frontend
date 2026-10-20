@@ -9,7 +9,7 @@ const OffersCard = ({ heading, text, image, ctaLabel }) => {
       color="var(--sp-offer-text, #FFFFFF)"
       minHeight="168px"
       boxShadow="0 10px 28px rgba(15, 23, 42, 0.12)"
-      mx="16px"
+      mx={{ base: '16px', lg: '0' }}
       borderRadius="16px"
       position="relative"
       overflow="hidden"
