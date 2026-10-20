@@ -71,6 +71,7 @@ const FooterCartDetail = (props) => {
         leftSubtitle={leftSubtitle}
         actionLabel={actionLabel}
         onClick={handleViewCartButton}
+        dockRight
       />
     </Fragment>
   );
