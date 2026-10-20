@@ -1,4 +1,5 @@
 import { cancelStorefrontTokenRefresh } from "@/lib/api/graphqlBaseQuery";
+import { notifyStorefrontAuthChanged } from "@/lib/auth/events";
 import { ordersApi } from "@/store/api/ordersApi";
 import { reservationsApi } from "@/store/api/reservationsApi";
 import { storefrontAuthApi } from "@/store/api/storefrontAuthApi";
@@ -13,13 +14,8 @@ import type { AuthResult, StorefrontProfile } from "@/types/storefront-auth.type
 
 export { rtkErrorMessage } from "@/lib/api/userFacingError";
 
-export const STOREFRONT_AUTH_CHANGED = "storefront-auth-changed";
+export { STOREFRONT_AUTH_CHANGED } from "@/lib/auth/events";
 const POST_AUTH_REDIRECT_KEY = "storefrontPostAuthRedirect";
-
-function notifyStorefrontAuthChanged() {
-  if (typeof window === "undefined") return;
-  window.dispatchEvent(new Event(STOREFRONT_AUTH_CHANGED));
-}
 
 function clearSavedAddresses() {
   if (typeof window === "undefined") return;

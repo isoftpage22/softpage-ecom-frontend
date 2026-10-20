@@ -1,4 +1,5 @@
-import React, { useRef } from "react";
+import React, { useEffect, useRef } from "react";
+import { getUserInFromLocal } from "@/src/utils/CommonFunctions";
 import { DrawerBody, DrawerHeader, Text } from "@chakra-ui/react";
 import DrawerComp from "../../Components/DrawerComp/DrawerComp";
 import DrawerHeaderCustom from "../../Components/DrawerComp/DrawerHeaderCustom";
@@ -109,6 +110,21 @@ const UserFormContainer = (props) => {
       }
     },
   });
+
+  // Someone whose session ended gets their name and number filled in again.
+  useEffect(() => {
+    if (!userFormDrawerStatus) return;
+    const saved = getUserInFromLocal();
+    if (!saved || Array.isArray(saved)) return;
+    const { customerName, whatsAppNumber } = formik.values;
+    if (customerName || whatsAppNumber) return;
+    formik.setValues({
+      customerName: saved.customerName || "",
+      whatsAppNumber: saved.whatsAppNumber || "",
+    }, false);
+    // Only when the drawer opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userFormDrawerStatus]);
 
   const finishAuth = (result) => {
     persistStorefrontAuth(result, formik.values);
