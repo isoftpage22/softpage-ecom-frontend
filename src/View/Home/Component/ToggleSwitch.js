@@ -32,7 +32,7 @@ const ToggleSwitch = ({ vegOnly, onVegOnlyChange, hideReserve = false, reserveLo
   const scale = LOOK_SCALE[reserveLook?.fontSize] || 1
 
   return (
-    <Box px="6%" pt="8px" pb="0">
+    <Box px={{ base: '6%', lg: '0' }} pt={{ base: '8px', lg: '0' }} pb="0">
       <Flex justify="space-between" align="center" gap="12px">
         <FormControl display="flex" alignItems="center" w="auto" mb="0">
           <FormLabel

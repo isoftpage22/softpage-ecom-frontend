@@ -8,6 +8,7 @@ import { useStoreLayout, useBusinessId } from '@/lib/tenant/TenantContext'
 import { getMenuOffers } from '@/lib/menu/storeChrome'
 import { isThemePreview } from '@/lib/theme-engine/previewSession'
 import { useGetCouponBannersQuery } from '@/store/api/promotionsApi'
+import { MenuContainer } from '@/components/MenuContainer'
 
 const CurrentOffers = ({ offers: offersProp, drawerOnly = false } = {}) => {
   const [toggleDrawer, setToggleDrawer] = useState(false)
@@ -61,15 +62,15 @@ const CurrentOffers = ({ offers: offersProp, drawerOnly = false } = {}) => {
 
   return (
     <>
-      <Box bg="var(--sp-section-surface, var(--brand-background, #ffffff))" py="16px">
-        <Box onClick={() => setToggleDrawer(!toggleDrawer)} cursor="pointer">
+      <Box bg="var(--sp-section-surface, var(--brand-background, #ffffff))" py={{ base: '16px', lg: '20px' }}>
+        <MenuContainer onClick={() => setToggleDrawer(!toggleDrawer)} cursor="pointer">
           <OffersCard
             heading={featured.heading}
             text={featured.text}
             image={featured.image}
             ctaLabel={featured.ctaLabel}
           />
-        </Box>
+        </MenuContainer>
       </Box>
       <ViewOffersDrawer
         toggleDrawer={toggleDrawer}
