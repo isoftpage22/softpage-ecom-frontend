@@ -37,7 +37,7 @@ const DiscountCoupons = ({ cart: cartProp }) => {
   }
 
   return (
-    <Box bg="white" w="100%" mb="3px">
+    <Box bg="white" w="100%">
       <Flex w="100%" alignItems="center" px="16px" py="12px">
         <Flex
           flex="1"
