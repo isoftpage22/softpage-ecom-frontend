@@ -1,4 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { withSessionRefresh } from "@/lib/api/withSessionRefresh";
 import { apiOrigin } from "@/lib/api/origin";
 import type {
   SignupInfoResult,
@@ -22,7 +23,7 @@ function unwrap<T>(res: unknown): T {
 
 export const storefrontAuthApi = createApi({
   reducerPath: "storefrontAuthApi",
-  baseQuery: fetchBaseQuery({
+  baseQuery: withSessionRefresh(fetchBaseQuery({
     baseUrl: BASE_URL,
     prepareHeaders: (headers) => {
       if (typeof window !== "undefined") {
@@ -31,7 +32,7 @@ export const storefrontAuthApi = createApi({
       }
       return headers;
     },
-  }),
+  })),
   tagTypes: ["Me", "Addresses"],
   endpoints: (builder) => ({
     signupInfo: builder.mutation<

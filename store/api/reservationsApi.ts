@@ -1,4 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { withSessionRefresh } from "@/lib/api/withSessionRefresh";
 import { apiOrigin } from "@/lib/api/origin";
 
 const API_ORIGIN = apiOrigin();
@@ -198,7 +199,7 @@ export interface StayQuote {
 
 export const reservationsApi = createApi({
   reducerPath: "reservationsApi",
-  baseQuery: fetchBaseQuery({
+  baseQuery: withSessionRefresh(fetchBaseQuery({
     baseUrl: BASE_URL,
     prepareHeaders: (headers) => {
       if (typeof window !== "undefined") {
@@ -208,7 +209,7 @@ export const reservationsApi = createApi({
       headers.set("Content-Type", "application/json");
       return headers;
     },
-  }),
+  })),
   tagTypes: ["Availability", "MyReservations"],
   endpoints: (builder) => ({
     getBookables: builder.query<Bookable[], { businessId: number }>({

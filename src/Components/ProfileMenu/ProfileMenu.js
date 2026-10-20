@@ -67,6 +67,9 @@ export function ProfileMenu() {
     };
   }, [open]);
 
+  // Name and number are kept after a session ends so we can offer to sign back in.
+  const signedOut = !loggedIn && Boolean(name || phone);
+
   const addresses = loggedIn
     ? (serverAddresses || []).map((row) => customerAddressToLocal(row))
     : [];
@@ -139,24 +142,36 @@ export function ProfileMenu() {
               <Text fontWeight="700" fontSize="16px" noOfLines={1}>
                 {name || "Guest"}
               </Text>
-              {phone ? (
+              {loggedIn && phone ? (
                 <Text mt={1} fontSize="13px" color="gray.600">
                   {phone}
+                </Text>
+              ) : null}
+              {!loggedIn && signedOut ? (
+                <Text mt={1} fontSize="13px" color="gray.600">
+                  Signed out
                 </Text>
               ) : null}
               </Box>
             </Box>
 
             {!loggedIn ? (
-              <Button
-                variant="solidFull"
-                mb={4}
-                textTransform="none"
-                fontWeight="600"
-                onClick={onSignIn}
-              >
-                Sign in
-              </Button>
+              <>
+                {signedOut ? (
+                  <Text fontSize="13px" color="gray.600" mb={3}>
+                    Your sign-in has expired. Sign in again with {phone ? `+91 ${phone}` : "your number"} to see your orders, bookings and saved addresses.
+                  </Text>
+                ) : null}
+                <Button
+                  variant="solidFull"
+                  mb={4}
+                  textTransform="none"
+                  fontWeight="600"
+                  onClick={onSignIn}
+                >
+                  {signedOut ? "Sign in again" : "Sign in"}
+                </Button>
+              </>
             ) : null}
 
             <VStack align="stretch" spacing={0} mx={-4}>

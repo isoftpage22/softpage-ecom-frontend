@@ -2,6 +2,7 @@ import { BaseQueryFn } from "@reduxjs/toolkit/query/react";
 import { getGuestSessionId } from "@/lib/cart/session";
 import { extractErrorMessages } from "@/lib/api/userFacingError";
 import { apiOrigin } from "@/lib/api/origin";
+import { notifyStorefrontAuthChanged } from "@/lib/auth/events";
 
 const API_BASE_URL = apiOrigin();
 // GraphQL is served under the backend's global API prefix (useGlobalPrefix:
@@ -25,29 +26,24 @@ export interface GraphQLResponse<T = unknown> {
   errors?: GraphQLError[];
 }
 
-let isRefreshing = false;
 let refreshGeneration = 0;
-let failedQueue: Array<{
-  resolve: (token: string) => void;
-  reject: (error: unknown) => void;
-}> = [];
+let inflightRefresh: Promise<string | null> | null = null;
 
 /** Drop an in-flight token refresh so logout cannot be undone by a late write. */
 export function cancelStorefrontTokenRefresh(): void {
   refreshGeneration += 1;
-  isRefreshing = false;
-  processQueue(new Error("Signed out"), null);
+  inflightRefresh = null;
 }
 
-function processQueue(error: Error | null, token: string | null): void {
-  failedQueue.forEach(({ resolve, reject }) => {
-    if (error) {
-      reject(error);
-    } else {
-      resolve(token!);
-    }
-  });
-  failedQueue = [];
+/**
+ * The server said the session is over: drop the tokens and tell the UI.
+ * The saved name and number stay so the account drawer can offer
+ * "sign in again" instead of looking signed in.
+ */
+function endStorefrontSession(): void {
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("refreshToken");
+  notifyStorefrontAuthChanged();
 }
 
 function storefrontBusinessId(): number {
@@ -64,24 +60,54 @@ function storefrontBusinessId(): number {
   return parseInt(process.env.NEXT_PUBLIC_BUSINESS_ID || "1", 10);
 }
 
+/**
+ * Get a new access token. Every request that hits an expired token shares one
+ * refresh, so the single-use refresh token is only spent once.
+ * Returns null when there is no session to renew or the server can't be reached.
+ */
+export function refreshStorefrontSession(): Promise<string | null> {
+  if (typeof window === "undefined") return Promise.resolve(null);
+  if (!inflightRefresh) {
+    const run = refreshAccessToken();
+    inflightRefresh = run;
+    run.finally(() => {
+      if (inflightRefresh === run) inflightRefresh = null;
+    });
+  }
+  return inflightRefresh;
+}
+
 async function refreshAccessToken(): Promise<string | null> {
-  if (typeof window === "undefined") return null;
   const generation = refreshGeneration;
   const refreshToken = localStorage.getItem("refreshToken");
-  if (!refreshToken) return null;
+  if (!refreshToken) {
+    if (localStorage.getItem("accessToken")) endStorefrontSession();
+    return null;
+  }
 
+  let response: Response;
   try {
-    const response = await fetch(`${API_BASE_URL}/api/v1/storefront/auth/refresh`, {
+    response = await fetch(`${API_BASE_URL}/api/v1/storefront/auth/refresh`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refreshToken, businessId: storefrontBusinessId() }),
     });
+  } catch {
+    // Offline or the API is down. Keep the session and try again next time.
+    return null;
+  }
+  if (generation !== refreshGeneration) return null;
 
-    if (generation !== refreshGeneration) return null;
-    if (!response.ok) {
-      return null;
-    }
+  if (!response.ok) {
+    // Another tab may have renewed the session while this request was out.
+    const latest = localStorage.getItem("refreshToken");
+    if (latest && latest !== refreshToken) return localStorage.getItem("accessToken");
+    if (response.status >= 500) return null;
+    endStorefrontSession();
+    return null;
+  }
 
+  try {
     const json = await response.json();
     const payload = json?.data && typeof json.data === "object" ? json.data : json;
     const tokens = payload?.tokens || payload;
@@ -93,17 +119,17 @@ async function refreshAccessToken(): Promise<string | null> {
       }
       return tokens.accessToken as string;
     }
-    return null;
   } catch {
-    return null;
+    /* unreadable reply: treat like a failed refresh but keep the session */
   }
+  return null;
 }
 
 export const graphqlBaseQuery: BaseQueryFn<
   GraphQLRequest,
   unknown,
   { status: number; data?: unknown; message: string }
-> = async ({ document, variables }, api, extraOptions) => {
+> = async ({ document, variables }, _api, extraOptions) => {
   const executeQuery = async (token: string | null) => {
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
@@ -163,59 +189,23 @@ export const graphqlBaseQuery: BaseQueryFn<
   let result = await executeQuery(token);
 
   if (result.authError) {
-    if (isRefreshing) {
-      return new Promise((resolve) => {
-        failedQueue.push({
-          resolve: async (newToken) => {
-            const retryResult = await executeQuery(newToken);
-            resolve(retryResult.error ? { error: retryResult.error } : { data: retryResult.data });
-          },
-          reject: (error) => {
-            resolve({
-              error: {
-                status: 401,
-                message: "Authentication failed",
-              },
-            });
-          },
-        });
-      });
-    }
-
-    isRefreshing = true;
-
-    try {
-      const newToken = await refreshAccessToken();
-
-      if (newToken) {
-        processQueue(null, newToken);
-        result = await executeQuery(newToken);
-      } else {
-        const error = new Error("Token refresh failed");
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
-        api.dispatch({ type: "auth/clearAuth" });
-        processQueue(error, null);
-        return {
-          error: {
-            status: 401,
-            message: "Authentication required",
-          },
-        };
-      }
-    } catch (error) {
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-      api.dispatch({ type: "auth/clearAuth" });
-      processQueue(error as Error, null);
+    const newToken = await refreshStorefrontSession();
+    if (!newToken) {
       return {
         error: {
           status: 401,
-          message: "Authentication failed",
+          message: "Authentication required",
         },
       };
-    } finally {
-      isRefreshing = false;
+    }
+    result = await executeQuery(newToken);
+    if (result.authError) {
+      return {
+        error: {
+          status: 401,
+          message: "Authentication required",
+        },
+      };
     }
   }
 
