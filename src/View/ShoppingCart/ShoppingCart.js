@@ -246,11 +246,12 @@ const ShoppingCart = (props) => {
                         <ItemCardAtCheckout key={product.lineKey || product.product_id || index} quantity={product.quantity} addToCart={addToCart} product={product} addToCartProduct={addToCartProduct} deleteToCartProduct={deleteToCartProduct} />
                       ))}
                     </CartPanel>
+                  </Flex>
+                  {/* Phones: these follow the items. Desktop: they sit in the right column above the bill. */}
+                  <Flex direction="column" gap="12px" w={{ base: "100%", lg: "380px" }} minW={0} flexShrink={0} position={{ lg: "sticky" }} top={{ lg: "72px" }}>
                     <CartPanel><DiscountCoupons cart={serverCart} /></CartPanel>
                     <CartPanel><SpecialInstructions /></CartPanel>
                     <CartPanel><MoneyTip /></CartPanel>
-                  </Flex>
-                  <Box w={{ base: "100%", lg: "380px" }} minW={0} flexShrink={0} position={{ lg: "sticky" }} top={{ lg: "72px" }}>
                     <CartPanel clip={false}>
                       <DetailedBill
                         qty={qty}
@@ -262,7 +263,7 @@ const ShoppingCart = (props) => {
                         totalsSyncing={totalsSyncing}
                       />
                     </CartPanel>
-                  </Box>
+                  </Flex>
                 </Flex>
               </MenuContainer>
             </Box>
