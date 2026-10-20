@@ -11,6 +11,7 @@ import TopBarWithBackButton from '../../Layout/Components/TopBarWithBackButton/T
 import { useBusinessId, useStoreConfig } from '@/lib/tenant/TenantContext'
 import { restaurantPhoneFromConfig, restaurantTelHref } from '@/lib/tenant/restaurantPhone'
 import { useGetOrderByIdQuery, useGetOrderTrackingQuery } from '@/store/api/ordersApi'
+import { trackWhenReady } from '@/lib/ads/track'
 import { ShipmentTrackingMap } from '../../Components/OrderTracking/ShipmentTrackingMap'
 import { Button } from '@chakra-ui/react'
 import {
@@ -51,6 +52,17 @@ const OrderStatus = (props) => {
     paymentStatus,
   })
   const showOrderPanel = Boolean(orderId) && !cancelled && !timedOut && !awaitingPayment
+
+  // Prepaid orders report the purchase here. Cash orders are sent from our server
+  // on delivery. The order number is the event ID, matching the server copy.
+  const purchaseSent = useRef(false)
+  useEffect(() => {
+    if (purchaseSent.current || !order || !isServerPaid(paymentStatus) || isCodLikePayment(paymentMethod)) return undefined
+    purchaseSent.current = true
+    // No cleanup: the order is re-fetched while payment confirms, and that must not cancel the event.
+    trackWhenReady('Purchase', { value: Number(order.total) || 0, currency: order.currency || 'INR' }, order.orderNumber || orderId)
+    return undefined
+  }, [order, paymentStatus, paymentMethod, orderId])
 
   const { data: tracking } = useGetOrderTrackingQuery(
     { businessId, orderId, refresh: false },

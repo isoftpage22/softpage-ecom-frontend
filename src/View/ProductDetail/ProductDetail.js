@@ -1,7 +1,8 @@
 "use client";
 
 import { Box, Button, Flex, Text } from "@chakra-ui/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { trackWhenReady } from "@/lib/ads/track";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "next/navigation";
 import TopBarWithBackButton from "../../Layout/Components/TopBarWithBackButton/TopBarWithBackButton";
@@ -69,6 +70,18 @@ const ProductDetail = ({ embedded = false } = {}) => {
   const isOutOfStock = isProductOutOfStock(product);
   const price = catalogUnitPrice(product);
   const description = product?.productDesc || "";
+
+  useEffect(() => {
+    if (!product?.id) return undefined;
+    return trackWhenReady("ViewContent", {
+      content_ids: [product.id],
+      content_name: product.productName,
+      content_type: "product",
+      value: Number(price) || 0,
+    });
+    // One view per product, not per price recalculation.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product?.id]);
 
   const handleAdd = () => {
     if (!product || isOutOfStock) return;
