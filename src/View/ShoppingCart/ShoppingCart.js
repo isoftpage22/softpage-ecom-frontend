@@ -31,6 +31,7 @@ import { getTableSession, isDineInSession, tableSessionLabel, exitTableSessionTo
 import { isProductOutOfStock, isVariantOutOfStock } from '../../../lib/catalog/options'
 import { useStoreSlug, useStoreConfig } from '@/lib/tenant/TenantContext'
 import { deliveryFeeFromQuote, formatEtaMinutes, useDeliveryQuote } from '@/lib/checkout/useDeliveryQuote'
+import { checkOrderRules, formatEtaRange } from '@/lib/checkout/orderRules'
 import { MenuContainer } from '@/components/MenuContainer'
 
 /** White rounded block that groups one part of the cart. */
@@ -38,6 +39,22 @@ function CartPanel({ children, clip = true }) {
   return (
     <Box bg="white" borderRadius="14px" border="1px solid" borderColor="gray.100" boxShadow="0 1px 2px rgba(15,23,42,0.04)" overflow={clip ? "hidden" : "visible"}>
       {children}
+    </Box>
+  )
+}
+
+const NOTICE_TONES = {
+  info: { bg: '#EFF6FF', border: '#BFDBFE', title: '#1E3A8A', text: '#1E40AF' },
+  warn: { bg: '#FFFBEB', border: '#FDE68A', title: '#92400E', text: '#92400E' },
+  error: { bg: '#FFF5F5', border: '#FEB2B2', title: '#9B2C2C', text: '#742A2A' },
+}
+
+function OrderNotice({ tone, title, children }) {
+  const c = NOTICE_TONES[tone]
+  return (
+    <Box bg={c.bg} border="1px solid" borderColor={c.border} borderRadius="12px" px="16px" py="12px">
+      <Text fontSize="13px" fontWeight="700" color={c.title} textTransform="none">{title}</Text>
+      <Text fontSize="13px" lineHeight="18px" color={c.text} mt="2px" textTransform="none">{children}</Text>
     </Box>
   )
 }
@@ -93,9 +110,17 @@ const ShoppingCart = (props) => {
       : quotedFee != null
         ? quotedFee
         : Number(serverCart?.shippingCost) || 0
+  // The locked range includes kitchen prep and the rider reaching the store.
   const customerEtaLabel = feeLocked
-    ? formatEtaMinutes(serverCart?.quotedCustomerEtaMinutes)
+    ? formatEtaRange(serverCart?.quotedEtaMinMinutes, serverCart?.quotedEtaMaxMinutes) ||
+      formatEtaMinutes(serverCart?.quotedCustomerEtaMinutes)
     : null
+  // Table orders are settled in the restaurant; bulk-order rules are for delivery.
+  const orderRules = checkOrderRules(dineIn ? null : storeConfig.payment, {
+    itemCount: displayQty,
+    subtotal: serverCart?.subtotal ?? price,
+  })
+  const tooLarge = !dineIn && quote?.reason === 'too_large'
   const totalCartBill = buildMenuBill({
     cart: serverCart,
     tip,
@@ -222,6 +247,20 @@ const ShoppingCart = (props) => {
                   gap={{ base: "12px", lg: "24px" }}
                 >
                   <Flex direction="column" gap="12px" flex="1" minW={0}>
+                    {tooLarge ? (
+                      <OrderNotice tone="warn" title="Too large for delivery">
+                        This order is too large for our delivery partners. Please order less, or call the store to arrange it.
+                      </OrderNotice>
+                    ) : null}
+                    {orderRules.itemCapExceeded != null ? (
+                      <OrderNotice tone="error" title="Too many items">
+                        This store takes up to {orderRules.itemCapExceeded} items per order. Please remove some items, or call the store for a bigger order.
+                      </OrderNotice>
+                    ) : orderRules.needsStoreConfirmation ? (
+                      <OrderNotice tone="info" title="Large order">
+                        The store will confirm your order and tell you when it will be ready. We&apos;ll send you an update as soon as they do.
+                      </OrderNotice>
+                    ) : null}
                     <CartPanel>
                       <Flex align="center" justify="space-between" gap="12px" px="16px" pt="14px" pb="10px" borderBottom="1px solid" borderColor="gray.100">
                         <Box minW={0}>

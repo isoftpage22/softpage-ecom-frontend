@@ -15,6 +15,7 @@ import {
   isVariantOutOfStock,
 } from '../../../lib/catalog/options'
 import { lineMatchesItemNames } from '../../../lib/api/userFacingError'
+import { cartQtyForProduct, isAtMax, qtyLimitLabel } from '@/lib/cart/orderLimits'
 
 const ItemCardAtCheckout = (props) => {
   const { product: line, addToCartProduct, deleteToCartProduct, quantity } = props
@@ -24,6 +25,8 @@ const ItemCardAtCheckout = (props) => {
   const [optionsOpen, setOptionsOpen] = useState(false)
   const [repeatOpen, setRepeatOpen] = useState(false)
   const checkoutError = useSelector((state) => state.shoppingCart.checkoutError)
+  const cartLines = useSelector((state) => state.shoppingCart.addToCart?.products)
+  const atMax = isAtMax(cartQtyForProduct(cartLines, line?.product_id), catalogProduct)
   const selectedVariant = (catalogProduct?.variants || []).find(
     (variant) => String(variant.id) === String(line?.variantId)
   )
@@ -38,7 +41,7 @@ const ItemCardAtCheckout = (props) => {
   }
 
   const handlePlus = () => {
-    if (isUnavailable) return
+    if (isUnavailable || atMax) return
     if (hasOptions) {
       setRepeatOpen(true)
       return
@@ -102,9 +105,12 @@ const ItemCardAtCheckout = (props) => {
               quantity={quantity}
               onDecrement={handleMinus}
               onIncrement={handlePlus}
-              incrementDisabled={isUnavailable}
+              incrementDisabled={isUnavailable || atMax}
             />
           </Box>
+          {qtyLimitLabel(catalogProduct) ? (
+            <Text fontSize="11px" color="gray.500" textTransform="none" whiteSpace="nowrap">{qtyLimitLabel(catalogProduct)}</Text>
+          ) : null}
           <Text variant="solidCart" fontWeight="700" opacity={dimmed} whiteSpace="nowrap">₹{line?.total_amount}</Text>
         </Flex>
       </Card>

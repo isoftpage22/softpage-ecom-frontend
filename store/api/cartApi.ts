@@ -32,6 +32,8 @@ const CART_FIELDS = gql`
     shippingCost
     selectedShippingRateId
     quotedCustomerEtaMinutes
+    quotedEtaMinMinutes
+    quotedEtaMaxMinutes
     total
     currency
     appliedCoupon {

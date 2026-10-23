@@ -16,6 +16,8 @@ const PRODUCT_FIELDS = gql`
     taxInclusive
     categoryId
     availableQuantity
+    minOrderQty
+    maxOrderQty
     isVeg
     tags
     trackQuantity
@@ -89,6 +91,8 @@ const SLIM_PRODUCT_FIELDS = gql`
     status
     categoryId
     availableQuantity
+    minOrderQty
+    maxOrderQty
     media {
       id
       url

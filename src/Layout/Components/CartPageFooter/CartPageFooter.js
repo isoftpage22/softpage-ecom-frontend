@@ -4,7 +4,8 @@ import { flushSync } from "react-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from "../../../lib/nav";
 import { getUserInFromLocal } from "../../../utils/CommonFunctions";
-import { useBusinessId, useBusinessAppId, useTenant } from "@/lib/tenant/TenantContext";
+import { useBusinessId, useBusinessAppId, useStoreConfig, useTenant } from "@/lib/tenant/TenantContext";
+import { checkOrderRules } from "@/lib/checkout/orderRules";
 import {
   getTableSession,
   isDineInSession,
@@ -47,6 +48,7 @@ const CartPageFooter = (props) => {
   const { qty, price } = props;
   const [placing, setPlacing] = useState(false);
   const checkoutError = useSelector((state) => state.shoppingCart.checkoutError);
+  const storeConfig = useStoreConfig();
 
   const catalogBlockedNames = useMemo(() => {
     const names = [];
@@ -95,7 +97,10 @@ const CartPageFooter = (props) => {
     dispatch(toggleUserFormDrawer(true));
   };
 
+  const units = (addToCart?.products || []).reduce((sum, line) => sum + (Number(line.quantity) || 0), 0);
+  const itemCap = dineIn ? null : checkOrderRules(storeConfig.payment, { itemCount: units }).itemCapExceeded;
   const stockBlocking =
+    itemCap != null ||
     catalogBlockedNames.length > 0 ||
     (checkoutError?.kind === "stock" && (checkoutError?.itemNames || []).length > 0) ||
     checkoutError?.kind === "unavailable";

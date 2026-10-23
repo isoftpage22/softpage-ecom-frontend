@@ -73,6 +73,9 @@ export interface Cart {
   selectedShippingRateId?: string | null;
   /** Prep plus the ride from the store. Locked with shippingCost. */
   quotedCustomerEtaMinutes?: number | null;
+  /** Delivery estimate locked with the fee, as a range in minutes. */
+  quotedEtaMinMinutes?: number | null;
+  quotedEtaMaxMinutes?: number | null;
   total: number;
   currency: string;
   appliedCoupon?: {

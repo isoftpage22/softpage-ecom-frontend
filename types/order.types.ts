@@ -183,4 +183,10 @@ export interface OrderTracking {
   scans: OrderTrackingScan[];
   message?: string;
   attempts?: OrderTrackingAttempt[];
+  /** "15–25 min" range until the order reaches the customer. */
+  arrivalLabel?: string | null;
+  /** ISO time the order should arrive by. */
+  arrivalBy?: string | null;
+  /** Code the customer gives the rider at the door. */
+  deliveryOtp?: string | null;
 }
