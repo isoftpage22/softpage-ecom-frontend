@@ -22,6 +22,7 @@ import {
   shouldAwaitPayment,
 } from '@/lib/orders/paymentConfirmation'
 import { isDeliveryOrder } from '@/lib/orders/statusLabels'
+import DeliveryArrival from '../../Components/OrderTracking/DeliveryArrival'
 
 const OrderStatus = (props) => {
   const history = useHistory()
@@ -159,6 +160,7 @@ const OrderStatus = (props) => {
           </Text>
         ) : null}
 
+        {showDelivery ? <DeliveryArrival tracking={tracking} /> : null}
         {showDelivery && (tracking?.driverName || tracking?.driverPhone || tracking?.vehicleNumber) ? (
           <Box bg="gray.50" borderRadius="md" p={3} mb={3}>
             {tracking.driverName ? <Text fontSize="sm">Rider: {tracking.driverName}</Text> : null}

@@ -15,7 +15,7 @@ export function currentShippingRateId() {
 
 export type ServiceabilityQuote = {
   serviceable: boolean;
-  reason: "ok" | "out_of_zone" | "not_serviceable" | "in_zone_unchecked";
+  reason: "ok" | "out_of_zone" | "not_serviceable" | "in_zone_unchecked" | "too_large";
   etaMinutes: number | null;
   codAllowed: boolean;
   class: string | null;

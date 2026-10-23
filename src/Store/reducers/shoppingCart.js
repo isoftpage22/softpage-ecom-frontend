@@ -12,6 +12,7 @@ import {
 import { cartLineKey, catalogUnitPrice } from "../../../lib/catalog/options";
 import { lineMatchesItemNames } from "../../../lib/api/userFacingError";
 import { loadMenuCart } from "@/lib/cart/persistCart";
+import { cartQtyForProduct, qtyBounds } from "@/lib/cart/orderLimits";
 
 const EMPTY_CART = {
   addToCart: {
@@ -65,7 +66,15 @@ const shoppingCart = (state = INITIAL_STATE, action) => {
       const _addToCart = _.cloneDeep(state.addToCart);
       const stateProducts = _addToCart.products;
       const productId = productInfo.id;
-      const addQuantity = Number(productInfo.addQuantity) > 0 ? Number(productInfo.addQuantity) : 1;
+      const requested = Number(productInfo.addQuantity) > 0 ? Number(productInfo.addQuantity) : 1;
+      // Store limits: the first add brings the item up to its minimum; adds stop at its maximum.
+      const { min, max } = qtyBounds(productInfo);
+      const replacing = productInfo.replaceLineKey
+        ? stateProducts.find((line) => line.lineKey === productInfo.replaceLineKey)
+        : null;
+      const inCart = cartQtyForProduct(stateProducts, productId) - (Number(replacing?.quantity) || 0);
+      const addQuantity = Math.min(Math.max(requested, min - inCart), max - inCart);
+      if (addQuantity <= 0) return state;
       const variantId = productInfo.variantId ?? null;
       const addons = productInfo.addons || [];
       const comboSelections = productInfo.comboSelections || [];
@@ -146,7 +155,10 @@ const shoppingCart = (state = INITIAL_STATE, action) => {
         }
       }
       if (productIndex !== -1) {
-        if (stateProducts[productIndex].quantity === 1) {
+        const line = stateProducts[productIndex];
+        const belowMin =
+          cartQtyForProduct(stateProducts, line.product_id) - 1 < qtyBounds(line.product).min;
+        if (Number(line.quantity) === 1 || belowMin) {
           stateProducts.splice(productIndex, 1);
         } else {
           stateProducts[productIndex].quantity = stateProducts[productIndex].quantity - 1;

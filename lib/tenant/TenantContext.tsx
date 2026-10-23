@@ -63,6 +63,15 @@ export interface StorefrontPaymentConfig {
   keyId: string | null;
   /** Whether Cash on Delivery is offered at checkout for this store. */
   codEnabled: boolean;
+  /** Cash on delivery is refused above this subtotal (₹). Null = no cap. */
+  codMaxOrderValue?: number | null;
+  /** Bulk-order rules; orders at or above a threshold wait for the store to confirm. */
+  largeOrder?: {
+    minItems: number | null;
+    minValue: number | null;
+    maxItemsPerOrder: number | null;
+    requireAcceptance: boolean;
+  } | null;
 }
 
 /** Shipping source: merchant profiles, Softpage platform delivery, or none. */

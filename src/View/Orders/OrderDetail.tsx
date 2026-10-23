@@ -48,6 +48,7 @@ import { getUserInFromLocal } from "@/src/utils/CommonFunctions";
 import type { Address } from "@/types/cart.types";
 import type { Order, OrderLine, OrderTracking } from "@/types/order.types";
 import { formatStructuredAddress } from "@/lib/checkout/addressMapping";
+import DeliveryArrival from "@/src/Components/OrderTracking/DeliveryArrival";
 
 function money(amount?: number | null, currency = "INR"): string {
   const n = Number(amount) || 0;
@@ -501,6 +502,7 @@ export default function OrderDetail() {
                     </Text>
                   </Text>
                 ) : null}
+                <DeliveryArrival tracking={displayTracking} closed={shipmentClosed} />
                 {!shipmentClosed && (displayTracking?.driverName || displayTracking?.driverPhone || displayTracking?.vehicleNumber) ? (
                   <Box bg="gray.50" borderRadius="md" p={3} mb={3}>
                     {displayTracking.driverName ? (

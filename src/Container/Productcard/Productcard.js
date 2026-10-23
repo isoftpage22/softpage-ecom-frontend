@@ -16,6 +16,7 @@ import {
   isProductOutOfStock,
   catalogUnitPrice,
 } from '../../../lib/catalog/options'
+import { isAtMax, qtyLimitLabel } from '@/lib/cart/orderLimits'
 
 function looksLikeHtml(value) {
   return /<[a-z][\s\S]*>/i.test(String(value || ''))
@@ -46,7 +47,7 @@ const ProductCard = (props) => {
   }
 
   const handlePlus = () => {
-    if (isOutOfStock) return
+    if (isOutOfStock || isAtMax(quantity, product)) return
     if (hasOptions) {
       setRepeatOpen(true)
       return
@@ -173,9 +174,14 @@ const ProductCard = (props) => {
               quantity={quantity}
               onDecrement={() => deleteToCartProduct(product)}
               onIncrement={handlePlus}
-              incrementDisabled={isOutOfStock}
+              incrementDisabled={isOutOfStock || isAtMax(quantity, product)}
             />
           </Box>}
+          {qtyLimitLabel(product) ? (
+            <Text mt="4px" fontSize="11px" lineHeight="14px" color="gray.500" textAlign="center" textTransform="none">
+              {qtyLimitLabel(product)}
+            </Text>
+          ) : null}
           {isOutOfStock && quantity > 0 ? (
             <Text mt="4px" fontSize="11px" lineHeight="14px" fontWeight="600" color="#C53030" textAlign="center" textTransform="none">
               Out of stock

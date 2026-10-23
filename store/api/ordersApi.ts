@@ -572,6 +572,9 @@ export const ordersApi = createApi({
               drop { lat lng label source at }
               scans { at activity location lat lng }
               message
+              arrivalLabel
+              arrivalBy
+              deliveryOtp
               attempts {
                 id
                 provider

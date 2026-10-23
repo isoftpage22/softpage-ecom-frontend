@@ -33,6 +33,7 @@ import {
 import { addToCartProduct, deleteToCartProduct } from "../../Store/action/shoppingCart";
 import { CHROME_SURFACE, CHROME_TEXT } from "@/lib/menu/storeChrome";
 import { MENU_MAX_WIDTH } from "@/components/MenuContainer";
+import { isAtMax, qtyLimitLabel } from '@/lib/cart/orderLimits'
 
 function looksLikeHtml(value) {
   return /<[a-z][\s\S]*>/i.test(String(value || ""));
@@ -96,7 +97,7 @@ const ProductDetail = ({ embedded = false } = {}) => {
   };
 
   const handlePlus = () => {
-    if (!product || isOutOfStock) return;
+    if (!product || isOutOfStock || isAtMax(quantity, product)) return;
     if (hasOptions) {
       setRepeatOpen(true);
       return;
@@ -230,10 +231,13 @@ const ProductDetail = ({ embedded = false } = {}) => {
                     quantity={quantity}
                     onDecrement={() => dispatch(deleteToCartProduct(product))}
                     onIncrement={handlePlus}
-                    incrementDisabled={isOutOfStock}
+                    incrementDisabled={isOutOfStock || isAtMax(quantity, product)}
                   />
                 )}
               </Flex>
+              {qtyLimitLabel(product) ? (
+                <Text fontSize="13px" color="#6b7280" textTransform="none">{qtyLimitLabel(product)}</Text>
+              ) : null}
 
               {description ? (
                 <Box>
