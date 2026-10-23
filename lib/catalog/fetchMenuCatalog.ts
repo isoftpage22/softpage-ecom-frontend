@@ -20,6 +20,8 @@ const PRODUCT_FIELDS = `
     status
     categoryId
     availableQuantity
+    minOrderQty
+    maxOrderQty
     isVeg
     tags
     trackQuantity
@@ -56,6 +58,8 @@ const SLIM_PRODUCT_FIELDS = `
     status
     categoryId
     availableQuantity
+    minOrderQty
+    maxOrderQty
     media { id url altText type position }
   }
 `;
