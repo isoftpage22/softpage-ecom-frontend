@@ -1,0 +1,12 @@
+---
+description: SoftPage menu/storefront project context (single source of truth)
+alwaysApply: true
+---
+
+Follow the project guidance in `AGENTS.md` at the repository root. It is the
+single, tool-agnostic source of truth for architecture, conventions, and how to
+run and change this storefront. This app runs on Next.js 16 (App Router) — check
+framework behavior against this version, not older Next APIs. When a doc
+conflicts with the code, the code wins.
+
+@AGENTS.md
