@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react'
 import {
   Box,
   Flex,
-  Spacer,
   Text,
   Input,
   InputGroup,
@@ -87,8 +86,8 @@ const CommonTopBar = ({ searchQuery, onSearchChange, asHeading = false }) => {
       <Box bg="var(--sp-section-surface, var(--brand-secondary, #111111))">
         {!dineIn ? <Box ref={addressRef} display={{ base: 'block', lg: 'none' }}><TopAddressBarContainer /></Box> : null}
         <MenuContainer>
-        <Flex px={{ base: '10px', lg: '0' }} py={{ base: '8px', lg: '12px' }} minH={{ base: '72px', lg: '76px' }} alignItems="center">
-          <Flex alignItems="center" minW={0} flex="1" mr="8px">
+        <Flex px={{ base: '10px', lg: '0' }} py={{ base: '8px', lg: '12px' }} minH={{ base: '72px', lg: '76px' }} alignItems="center" gap="8px">
+          <Flex alignItems="center" minW={0} flex="1">
             <Box
               flexShrink={0}
               cursor="pointer"
@@ -106,7 +105,8 @@ const CommonTopBar = ({ searchQuery, onSearchChange, asHeading = false }) => {
                 fontSize="calc(16px * var(--sp-section-scale, 1))"
                 fontFamily="var(--sp-section-font, inherit)"
                 fontWeight="700"
-                noOfLines={1}
+                noOfLines={2}
+                wordBreak="break-word"
                 cursor="pointer"
                 onClick={goHome}
               >
@@ -160,8 +160,7 @@ const CommonTopBar = ({ searchQuery, onSearchChange, asHeading = false }) => {
               ) : null}
             </Flex>
           </Flex>
-          <Spacer />
-          <InputGroup display={{ base: 'none', lg: 'flex' }} flex="1" maxW="460px" mx="24px">
+          <InputGroup display={{ base: 'none', lg: 'flex' }} flex="1" maxW="460px" mx={{ base: 0, lg: '24px' }}>
             <InputLeftElement pointerEvents="none" h="42px">
               <SearchIcon color="#6B7280" />
             </InputLeftElement>
