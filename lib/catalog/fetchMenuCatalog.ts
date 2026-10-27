@@ -2,14 +2,16 @@ import { cache } from "react";
 import { apiOrigin } from "@/lib/api/origin";
 import { mapCatalogToProductList } from "./mapCatalog";
 import { MENU_PAGE_SIZE } from "./menuPaging";
+import { AVAILABILITY_GQL_FIELDS } from "@/lib/menu/itemAvailabilityCore";
 
 export type MenuCatalog = ReturnType<typeof mapCatalogToProductList>;
 
 const EMPTY_CATALOG: MenuCatalog = { categories: [] };
 const PAGE_SIZE = MENU_PAGE_SIZE;
 
-const PRODUCT_FIELDS = `
+const productFields = (extra = "") => `
   fragment ProductFields on ItemTypeGql {
+    ${extra}
     id
     name
     description
@@ -64,8 +66,8 @@ const SLIM_PRODUCT_FIELDS = `
   }
 `;
 
-const FULL_PRODUCTS_QUERY = `
-  ${PRODUCT_FIELDS}
+const fullProductsQuery = (extra = "") => `
+  ${productFields(extra)}
   query GetProducts($businessId: Int!, $filter: CatalogFilterInput, $pagination: PaginationInput) {
     ecommerceProducts(businessId: $businessId, filter: $filter, pagination: $pagination) {
       items { ...ProductFields }
@@ -76,6 +78,10 @@ const FULL_PRODUCTS_QUERY = `
     }
   }
 `;
+
+const FULL_PRODUCTS_QUERY = fullProductsQuery();
+/** Adds serving times; older backends reject it and the plain query is used. */
+const TIMED_PRODUCTS_QUERY = fullProductsQuery(AVAILABILITY_GQL_FIELDS);
 
 const SLIM_PRODUCTS_QUERY = `
   ${SLIM_PRODUCT_FIELDS}
@@ -195,12 +201,15 @@ export const fetchMenuCatalog = cache(async (businessId?: number | null): Promis
   if (!Number.isFinite(id) || id <= 0) return EMPTY_CATALOG;
 
   const [fullItems, categories] = await Promise.all([
-    fetchProductPages(id, FULL_PRODUCTS_QUERY),
+    fetchProductPages(id, TIMED_PRODUCTS_QUERY),
     fetchCategories(id),
   ]);
 
   const items =
-    fullItems ?? (await fetchProductPages(id, SLIM_PRODUCTS_QUERY)) ?? [];
+    fullItems ??
+    (await fetchProductPages(id, FULL_PRODUCTS_QUERY)) ??
+    (await fetchProductPages(id, SLIM_PRODUCTS_QUERY)) ??
+    [];
 
   if (!items.length) return EMPTY_CATALOG;
   return mapCatalogToProductList(items, categories);

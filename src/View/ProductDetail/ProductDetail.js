@@ -20,6 +20,7 @@ import {
   useGetProductBySlugQuery,
 } from "@/store/api/productsApi";
 import { mapCatalogItem } from "@/lib/catalog/mapCatalog";
+import { useItemAvailability } from "@/lib/menu/itemAvailability";
 import { findCatalogProduct, looksLikeCatalogItemId } from "@/lib/catalog/href";
 import {
   productHasOptions,
@@ -72,6 +73,8 @@ const ProductDetail = ({ embedded = false } = {}) => {
   const hasOptions = productHasOptions(product);
   const lastLine = lastCartLineForProduct(addToCart?.products, product?.id);
   const isOutOfStock = isProductOutOfStock(product);
+  const timing = useItemAvailability(product);
+  const notServedNow = !timing.availableNow;
   const price = catalogUnitPrice(product);
   const description = product?.productDesc || "";
 
@@ -88,7 +91,7 @@ const ProductDetail = ({ embedded = false } = {}) => {
   }, [product?.id]);
 
   const handleAdd = () => {
-    if (!product || isOutOfStock) return;
+    if (!product || isOutOfStock || notServedNow) return;
     if (hasOptions) {
       setOptionsOpen(true);
       return;
@@ -97,7 +100,7 @@ const ProductDetail = ({ embedded = false } = {}) => {
   };
 
   const handlePlus = () => {
-    if (!product || isOutOfStock || isAtMax(quantity, product)) return;
+    if (!product || isOutOfStock || notServedNow || isAtMax(quantity, product)) return;
     if (hasOptions) {
       setRepeatOpen(true);
       return;
@@ -207,6 +210,10 @@ const ProductDetail = ({ embedded = false } = {}) => {
                   <Text fontSize="14px" fontWeight="700" color="#8A8A8A" flexShrink={0}>
                     Sold out
                   </Text>
+                ) : notServedNow && quantity === 0 ? (
+                  <Text fontSize="14px" fontWeight="700" color="#8A8A8A" flexShrink={0} maxW="180px" textAlign="right" textTransform="none">
+                    {timing.label}
+                  </Text>
                 ) : quantity === 0 ? (
                   <Button
                     onClick={handleAdd}
@@ -231,7 +238,7 @@ const ProductDetail = ({ embedded = false } = {}) => {
                     quantity={quantity}
                     onDecrement={() => dispatch(deleteToCartProduct(product))}
                     onIncrement={handlePlus}
-                    incrementDisabled={isOutOfStock || isAtMax(quantity, product)}
+                    incrementDisabled={isOutOfStock || notServedNow || isAtMax(quantity, product)}
                   />
                 )}
               </Flex>
