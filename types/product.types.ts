@@ -92,6 +92,10 @@ export interface Product {
   isCombo?: boolean;
   comboGroups?: ComboGroup[];
   isVeg?: boolean | null;
+  servingWindows?: { day: string; from: string; to: string }[] | null;
+  availabilityHidden?: boolean | null;
+  availableNow?: boolean | null;
+  availabilityLabel?: string | null;
   tags?: string[];
   availableQuantity?: number;
   trackQuantity?: boolean;

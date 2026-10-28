@@ -1,6 +1,7 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { graphqlBaseQuery, gql } from "@/lib/api/graphqlBaseQuery";
 import type { Product, ProductsResponse, Category } from "@/types/product.types";
+import { AVAILABILITY_GQL_FIELDS } from "@/lib/menu/itemAvailabilityCore";
 
 const PRODUCT_FIELDS = gql`
   fragment ProductFields on ItemTypeGql {
@@ -158,26 +159,30 @@ export const productsApi = createApi({
     getProducts: builder.query<ProductsResponse, { businessId: number; filters?: ProductFilters }>({
       async queryFn({ businessId, filters = {} }, _api, _extraOptions, baseQuery) {
         const variables = catalogQueryVariables(businessId, filters);
-        const full = await baseQuery({
-          document: gql`
-            ${PRODUCT_FIELDS}
-            query GetProducts($businessId: Int!, $filter: CatalogFilterInput, $pagination: PaginationInput) {
-              ecommerceProducts(businessId: $businessId, filter: $filter, pagination: $pagination) {
-                items {
-                  ...ProductFields
+        // Serving times first; a backend without them rejects the query and the plain one is used.
+        for (const extra of [AVAILABILITY_GQL_FIELDS, ""]) {
+          const full = await baseQuery({
+            document: gql`
+              ${PRODUCT_FIELDS}
+              query GetProducts($businessId: Int!, $filter: CatalogFilterInput, $pagination: PaginationInput) {
+                ecommerceProducts(businessId: $businessId, filter: $filter, pagination: $pagination) {
+                  items {
+                    ...ProductFields
+                    ${extra}
+                  }
+                  total
+                  page
+                  pageSize
+                  totalPages
                 }
-                total
-                page
-                pageSize
-                totalPages
               }
-            }
-          `,
-          variables,
-        });
-        const fullData = (full.data as { ecommerceProducts?: ProductsResponse } | undefined)?.ecommerceProducts;
-        if (!full.error && fullData) {
-          return { data: fullData };
+            `,
+            variables,
+          });
+          const fullData = (full.data as { ecommerceProducts?: ProductsResponse } | undefined)?.ecommerceProducts;
+          if (!full.error && fullData) {
+            return { data: fullData };
+          }
         }
         const slim = await baseQuery({
           document: gql`

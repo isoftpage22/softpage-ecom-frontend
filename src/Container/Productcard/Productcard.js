@@ -17,6 +17,7 @@ import {
   catalogUnitPrice,
 } from '../../../lib/catalog/options'
 import { isAtMax, qtyLimitLabel } from '@/lib/cart/orderLimits'
+import { useItemAvailability } from '@/lib/menu/itemAvailability'
 
 function looksLikeHtml(value) {
   return /<[a-z][\s\S]*>/i.test(String(value || ''))
@@ -31,14 +32,17 @@ const ProductCard = (props) => {
   const hasOptions = productHasOptions(product)
   const lastLine = lastCartLineForProduct(addToCart?.products, product?.id)
   const isOutOfStock = isProductOutOfStock(product)
-  const dimmed = isOutOfStock ? 0.42 : 1
+  const timing = useItemAvailability(product)
+  // Outside the dish's serving times (e.g. a dinner-only dish at 4 pm).
+  const notServedNow = !timing.availableNow
+  const dimmed = isOutOfStock || notServedNow ? 0.42 : 1
   const detailHref = productDetailHref(product)
   const rememberListingPosition = () => {
     saveListingRestore()
   }
 
   const handleAdd = () => {
-    if (isOutOfStock) return
+    if (isOutOfStock || notServedNow) return
     if (hasOptions) {
       setOptionsOpen(true)
       return
@@ -47,7 +51,7 @@ const ProductCard = (props) => {
   }
 
   const handlePlus = () => {
-    if (isOutOfStock || isAtMax(quantity, product)) return
+    if (isOutOfStock || notServedNow || isAtMax(quantity, product)) return
     if (hasOptions) {
       setRepeatOpen(true)
       return
@@ -68,6 +72,8 @@ const ProductCard = (props) => {
     }
     setOptionsOpen(true)
   }
+
+  if (timing.hidden && notServedNow && quantity == 0) return null
 
   return (
     <>
@@ -164,6 +170,19 @@ const ProductCard = (props) => {
           >
             Sold out
           </Text>
+         ) : notServedNow && quantity == 0 ? (
+          <Text
+            maxW="110px"
+            fontSize="12px"
+            lineHeight="15px"
+            fontWeight="700"
+            color="#8A8A8A"
+            textAlign="center"
+            textTransform="none"
+            letterSpacing="0"
+          >
+            {timing.label}
+          </Text>
          ) : quantity == 0 ?
 
          <Button onClick={handleAdd} alignSelf="center" colorScheme="none" size="sm" variant="solid">Add</Button>
@@ -174,7 +193,7 @@ const ProductCard = (props) => {
               quantity={quantity}
               onDecrement={() => deleteToCartProduct(product)}
               onIncrement={handlePlus}
-              incrementDisabled={isOutOfStock || isAtMax(quantity, product)}
+              incrementDisabled={isOutOfStock || notServedNow || isAtMax(quantity, product)}
             />
           </Box>}
           {qtyLimitLabel(product) ? (
@@ -186,7 +205,11 @@ const ProductCard = (props) => {
             <Text mt="4px" fontSize="11px" lineHeight="14px" fontWeight="600" color="#C53030" textAlign="center" textTransform="none">
               Out of stock
             </Text>
-          ) : hasOptions && !isOutOfStock ? (
+          ) : notServedNow && quantity > 0 ? (
+            <Text mt="4px" maxW="110px" fontSize="11px" lineHeight="14px" fontWeight="600" color="#C53030" textAlign="center" textTransform="none">
+              {timing.label}
+            </Text>
+          ) : hasOptions && !isOutOfStock && !notServedNow ? (
             <Text
               mt="4px"
               fontSize="11px"

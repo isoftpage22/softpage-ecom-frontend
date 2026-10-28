@@ -213,6 +213,8 @@ export const ordersApi = createApi({
         returnOrigin?: string;
         /** Ad click IDs and UTM tags from lib/ads/attribution. */
         attributionJson?: string;
+        /** Signed token from the store's WhatsApp chat link; the order is then confirmed there. */
+        waSession?: string;
       }
     >({
       query: ({
@@ -230,6 +232,7 @@ export const ordersApi = createApi({
         payLater,
         returnOrigin,
         attributionJson,
+        waSession,
       }) => ({
         document: gql`
           ${MENU_CHECKOUT_ORDER_FIELDS}
@@ -266,6 +269,7 @@ export const ordersApi = createApi({
             payLater,
             returnOrigin,
             attributionJson,
+            waSession,
           },
         },
       }),

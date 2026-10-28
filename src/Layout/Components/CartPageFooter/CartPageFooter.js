@@ -16,6 +16,7 @@ import { toggleUserFormDrawer } from "../../../Store/action/modalsNDrawers";
 import { setLoader } from "../../../Store/action/loader";
 import { hasStorefrontToken, setPostAuthRedirect } from "@/lib/auth/persistAuth";
 import { PaymentInProgressError, placeMenuOrder } from "@/lib/checkout/placeMenuOrder";
+import { readHandoff } from "@/lib/whatsapp/handoff";
 import { isCartLockedError } from "@/lib/checkout/cartLock";
 import { useCartUnlock } from "@/lib/checkout/useCartUnlock";
 import { isThemePreview } from "@/lib/theme-engine/previewSession";
@@ -136,6 +137,7 @@ const CartPageFooter = (props) => {
           customer: Array.isArray(customer) ? {} : customer,
           tip: tip || totalCartBill?.tip || 0,
           specialInstructions: specialInstructions || "",
+          waSession: readHandoff(businessId)?.token,
           replaceCartLines,
           initiateCheckout,
         }),
