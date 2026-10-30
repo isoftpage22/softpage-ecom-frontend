@@ -7,10 +7,11 @@ const PromotionCard = ({ image, href, heading, loading = "lazy" }) => {
   const card = (
     <Box
       mr="15px"
-      maxWidth="310px"
-      minWidth="310px"
-      maxHeight="150px"
-      minHeight="150px"
+      // Fixed size: min/max alone leave the height indefinite, so the image's 100% height
+      // fell back to its natural (square) size and only its top half showed.
+      w="310px"
+      h="150px"
+      flexShrink={0}
       borderRadius="8px"
       overflow="hidden"
       position="relative"
@@ -26,7 +27,12 @@ const PromotionCard = ({ image, href, heading, loading = "lazy" }) => {
           decoding="async"
           fetchPriority={eager ? "high" : "low"}
           style={{
+            // Pinned to the card's box so every browser crops around the middle of the dish.
+            position: "absolute",
+            inset: 0,
             objectFit: "cover",
+            objectPosition: "center",
+            display: "block",
             width: "100%",
             height: "100%",
             minWidth: "100%",
