@@ -84,6 +84,14 @@ store/          # Redux store (Redux Toolkit + redux-saga)
   `robots.ts`) — keep pages SSR-friendly and fast (there's a
   `lighthouse-budget.json`).
 
+## Monitoring (New Relic)
+
+- Browser monitoring via `@newrelic/browser-agent` in
+  `components/NewRelicBrowser.tsx` (mounted in `app/(menu)/layout.tsx`). Off unless
+  `NEXT_PUBLIC_NEW_RELIC_ACCOUNT_ID`, `NEXT_PUBLIC_NEW_RELIC_BROWSER_APP_ID` and
+  `NEXT_PUBLIC_NEW_RELIC_BROWSER_LICENSE_KEY` are set in Vercel (compile-time —
+  redeploy after changing). Setup: `NEW_RELIC.md` in the backend repo.
+
 ## Documentation index
 
 - No standalone docs yet — this file is the primary reference. Add topic docs at

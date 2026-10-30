@@ -19,6 +19,7 @@
     "@emotion/styled": "^11.14.1",
     "@fontsource/open-sans": "^5.2.7",
     "@fontsource/raleway": "^5.2.8",
+    "@newrelic/browser-agent": "1.324.1",
     "@reduxjs/toolkit": "^2.12.0",
     "axios": "^1.16.1",
     "formik": "^2.4.5",
