@@ -14,6 +14,7 @@ import { MenuAuthChrome } from "@/components/MenuAuthChrome";
 import { TenantThemeVars } from "@/components/TenantThemeVars";
 import { MenuDesktopFrame } from "@/components/MenuDesktopFrame";
 import { TrackingTags } from "@/components/TrackingTags";
+import { NewRelicBrowser } from "@/components/NewRelicBrowser";
 import { WhatsappHandoffBanner } from "@/components/whatsapp/WhatsappHandoffBanner";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -69,6 +70,7 @@ export default async function MenuLayout({
       <Suspense fallback={null}>
         <TrackingTags />
       </Suspense>
+      <NewRelicBrowser />
       <Suspense fallback={<MenuDesktopFrame>{children}</MenuDesktopFrame>}>
         <StoreAvailabilityGate>
           <MenuDesktopFrame>
